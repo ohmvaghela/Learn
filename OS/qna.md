@@ -1,0 +1,25 @@
+- What is OS with example
+- Its uses with examples
+- Goals while desiging OS
+- Types of OS
+- Components of OS
+- Functions of kernel
+- Types of kernels
+- Two methods of IPC
+- What are system calls
+- How OS boots up
+- 32 bit v/s 64 bit
+- Types of storage in PC
+- How process is created in OS
+- Process architecture
+- Errors while handling process
+- PCB
+- Process lifecycle
+- Schedular types
+- Medium term schedular
+- Context switching
+- Orphan process
+- Zombie process
+- Prempting and non prempting process
+- Goals for process scheduling
+- Job Scheduling Algo
