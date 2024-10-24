@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cus-nginx-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "ingress-test"
+    networking.gke.io/pre-shared-cert: "classic-server-cert"
+    kubernetes.io/ingress.class: "gce" 
+
+spec:
+  rules:
+  - host: autobilling.backend.vibevaulttech.co.in
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: cus-nginx-svc
+            port:
+              number: 4000
+
+  

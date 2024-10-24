@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cus-nginx-gm-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "client-test"
+    networking.gke.io/managed-certificates: "gm-clent-mcrt"
+    kubernetes.io/ingress.class: "gce" 
+
+spec:
+  rules:
+  - host: autobilling.vibevaulttech.co.in
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: cus-nginx-gm-svc
+            port:
+              number: 4000
+
+  

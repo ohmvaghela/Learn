@@ -1,0 +1,10 @@
+POST http://localhost:8000/set
+Content-Type: application/json
+
+{
+  "name":"ohm",
+  "last":"jan"
+}
+
+### get
+GET http://localhost:8000

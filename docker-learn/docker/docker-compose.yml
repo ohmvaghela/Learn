@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    networks:
+      - node-redis-network
+  node-app:
+    image: node-redis-app:latest
+    container_name: node-app
+    networks:
+      - node-redis-network
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+networks:
+  node-redis-network:
+    driver: bridge      

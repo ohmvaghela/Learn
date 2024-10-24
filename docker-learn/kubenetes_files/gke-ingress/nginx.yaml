@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  nginx-dep
+  namespace: default
+  labels:
+    app:  cus-nginx
+spec:
+  selector:
+    matchLabels:
+      app: cus-nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  cus-nginx
+    spec:
+      containers:
+      - name:  cus-nginx
+        image:  nginx
+        ports:
+        - containerPort:  80
+          name:  nginx-port
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cus-nginx-svc
+  namespace: default
+spec:
+  selector:
+    app: cus-nginx
+  type: NodePort
+  ports:
+  - name: nginx
+    protocol: TCP
+    port: 4000
+    targetPort: 80 

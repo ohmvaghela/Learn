@@ -1,0 +1,1 @@
+command = '/home/ohm/webd/django_md'

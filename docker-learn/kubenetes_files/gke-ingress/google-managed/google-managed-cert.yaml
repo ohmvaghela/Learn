@@ -1,0 +1,7 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: gm-clent-mcrt
+spec:
+  domains:
+    - autobilling.vibevaulttech.co.in
