@@ -76,6 +76,11 @@ docker rm $(docker ps -aq)
 docker image rm <image-name>
 ```
 
+## Changing tag name of docker image
+```
+docker tag <image_id> <new_image_name>:<new_tag>
+```
+
 
 ## Layers Caching 
 - Docker caches automatically so if a same code runs it will be faster

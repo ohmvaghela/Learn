@@ -297,10 +297,94 @@
 # Tests in software development
 ### There are 5 types of test in software development 
 - The complexicity decrease along the list
-1. Unit Test
-  - Where we test each line of the code
-2. Component Test
-  - Testing all the api, functions, components
-3. Integration Test
-4. End-to-End Test
-5. Manual Test
+  1. Unit Test
+      - Where we test each line of the code
+  2. Component Test
+      - Testing all the api, functions, components
+  3. Integration Test
+  4. End-to-End Test
+  5. Manual Test
+
+# Polling or Short Polling
+- Client makes a request if server has the response then it will return response or else wil return empty response
+- This repeats after set interval of time as shown in figure
+- Pros : Easy to implement, Compatible, <b>near</b> real time updates
+- Cons : Network load, Connection overloading
+- Examples :
+  - Chat applications
+  - Stock ticker
+  - Weather updates
+<img src="image-3.png" height=500/>
+
+# Long polling 
+- Here client waits for response once request is sent for specified amount of time
+- If no response then again it sennds request
+- Pros : Less network load, Low latancy, Efficient
+- Cons : server load, Complex implemention
+- Example : 
+  - Chat application
+  - Real time notifications
+  - Live updates
+  - Online gamming
+
+
+<img src="image-4.png" height=500/>
+
+# Server Side Events (SSE)
+- Here once the connection is established server sends the data continuously
+- Only Server sends data clinet only listens to the data
+- Pros : Simple, Auto-Reconnect
+- Cons : Uni-directional, Text support only
+- Example : Real time news, Live sports updates
+
+<center>
+<img src="image-5.png" height=300/>
+</center>
+
+# Web sockets
+- First client sends request 
+  - Then server response with `upgrade request`
+- This is bidirectional
+- If even one side close then communication is closed
+- if `ws://` : unsecured connection | `wss://` : secured connection
+<img src="image-6.png"/>
+
+## CDN (Content Delivery Network)
+- developed to speedup delivery of static content
+- There are hundreds of CDN present which are called PoP(Point of Presence)
+  - Server inside a pop is called edge server
+- There is basically a main server 
+  - then there child servers which are connected to main server
+  - The user makes a request to child server and if the data is cached then it is returned if not the it is requested from main server
+- There are two main technologies used by CDN two commom ones are 
+  1. DNS based routing : Each pop has its own IP address
+  2. Anycast : All the POP have save IP address
+
+## Proxy and Reverse Proxy
+- Proxy or Forward Proxy
+  - Server that sits between client and internet
+  - This is done because
+    - It protects clients idnetity
+    - When we use this only the IP of proxy server is visible and that of client is hidden 
+    - Can be used to bypass certian restrictions
+    - Can be used to block certain contents
+- Reverse Proxy
+  - Sits between web server and the internet
+  - Takes request from the clients and talks to web servers on behalf of client
+  - One example is Nginx
+  - Why used
+    - Protect web servers as they hide the IP of webservices
+    - Used for load balancing 
+    - These reverse proxy servers are placed at 100's of location so are closer to user as compared to server
+    - Can be used for caching 
+## Nginx
+- Webserver software used for `reverse proxy`, `load balancing` and `caching`
+- For concurrency it uses `highly efficient run loops` in a single thread processes called `workers`
+- It has 3 main things
+  1. Workers : Threads
+  2. Masters : Manage threads
+  3. Proxy caches : Used for caching
+- When a request comes it can consist of two parts `static` and `dynamic` part
+  - Static part is handled by nginx and dynamic part is forwarded to WSGI
+    - Then this WSGI sends request to django app and recieves response and then returns this response to Nginx 
+

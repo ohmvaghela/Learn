@@ -15,7 +15,7 @@
   - queueMicrotask(()=>{...})
   - new MutationOberserver()
 
-<img src="image.png" width=500/>
+<img src="./images/readme_img/image.png" width=500/>
 
 - Everything that is not handled by JS is usually a webAPI
 - The webapi processes the request and sends the response to `Task queue` and `MicroTask Queue`

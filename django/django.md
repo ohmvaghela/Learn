@@ -37,6 +37,11 @@
     django-admin startproject mytestsite
   ```
   
+- Migrate changes
+  ```
+    python3 manage.py makemigrations
+    python3 manage.py migrate
+  ```
 - Starting project
   ```
     python3 manage.py runserver
@@ -108,8 +113,11 @@ urlpatterns += [
 ```
 - We can also redirect the route like from base to /my_app (not necessary)
 ```py
-urlpatterns += [
-    path('', RedirectView.as_view(url='catalog/', permanent=True)),
+from django.urls import path
+from . import views
+
+urlpatterns = [
+  path("add_sim/",views.AddSimulation.as_view(),name="add-simulation"),
 ]
 ```
 - Django does not serve static files like CSS, JavaScript, and images by default

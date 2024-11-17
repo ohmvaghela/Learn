@@ -1,4 +1,27 @@
 # NGINX
+- To add nginx file 
+	- Add file to sites-available
+	- Like say the file name is django
+		```
+		server {
+				listen 80;
+				server_name localhost;
+
+				location /static/ {
+						root /home/ohm/static;
+				}
+
+				location / {
+						proxy_pass http://localhost:8000;
+				}
+		} 
+		```
+	- Then create a symbolic link (like shortcut in windows)
+		```
+		sudo ln -s /etc/nginx/sites-available/<file-name> /etc/nginx/sites-enabled/
+		sudo ln -s /etc/nginx/sites-available/django /etc/nginx/sites-enabled/
+		```
+
 - Uses 
   - Loadbalance
   - Reverse Proxy
