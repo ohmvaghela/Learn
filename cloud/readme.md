@@ -62,9 +62,19 @@
 	- Bootstrap script (First launch)
 
 ## Storage in AWS
+- Types:
 	- Block storage : EBS (Elastic block store) for persistant data, Instance storage( Cache storage) 
 	- Object storage : S3(simple Storage Service) 
 	- File storage : EFS(Elastic File System) only for linux works on NFS, FSX for windows
+- Types of SQL and No-SQL
+	- Amazon Arora : Fully managed RDBMS
+		- Combines MySQL and PostgreSQL
+	- DynamoDB: NoSQL, key value pair
+	- Amazon Redshift: Data warehouse & Petabyte Storage
+		- Data warehouse: centralized repository of data from multiple sources, designed for analysis and reporting
+			- Basically incomming data is not stored directly and it is processed first and then stored
+	- Amazon Neptune: Graph based DB
+
 
 
 ## ELB ( Elastic Load Balancer )
@@ -141,9 +151,83 @@
 > - Logical networking component in a VPC that represents a virtual network card / Virtual NIC
 > ### By default each instance is connected to a Virtual NIC but if we want to attach another Virtual NIC for higher performance we can by creating additional Virtual NIC  
 
+## AWS cloudwatch
+- Used for monitering services and instances
+- If there is anormality then it collects data of it and rings an alarm
+	- Eg: CPU utilization 90% alarm
+- Types of monitering 
+	- Basic: Metric published after every 5mins
+		- Free of charge
+		- Supported by most services
+	- Detailed: Metric published after every 1min
+		- Additional charges incured
+		- Supported by some services and needs manual config
+- Metric resolution: `Standard resolution` and `High resolution`
+ 	- Basic: 
+		- Standard resolution: data collected after every 5 mins
+		- Detailed resolution: data collected every 1min and published every 5min
+	- Detailed:
+    - Standard resolution: data collected after every 1 mins
+    - Detailed resolution: data collected every 1sec and published every 1min 
+## CloudTrail
+- Analyze `who` performed `what` action and `when` on your resources
+## Auto Scaling Groups (ASG)
+- Automatically scales up and scales down
+	- Just specify min and max number of instances
+## AWS System Manager
+- Automate and manage admin task
+- Manage multiple instances
+- ### Fleet manager
+	- Single platform for monitering health, server and perfrom various system admin task
+- ### Session manager
+	- Fully managed service that allows to `securely manage and access` `EC2 instance`
+## Loadbalancer in AWS
+- Types:
+	1. Application load balancer
+		- Distributes traffic based on HTTP, HTTPS, websockets etc.
+	2. Network Load Balancer
+		- Distributes traffic at Network layer (Layer 4)
+	3. Gateway load Balancer
+		- Serves as a gateway for incoming internet traffic
+	4. Classic Load balancer
+		- Old not used now 
+- Health Checks for Load Balancer
+	- As load balancer forward traffic to different instances they need to know if it is healthy
+	- We just need to provide the route that performs health check
+- Stickiness | session affinity | session persistance
+	- Directs incoming traffic from a specific client to specific server for the duration of session
+	- Required in stateful instances
+- `X-Forwarded-For (XFF)` :  header is a standard HTTP header used to identify the original IP address of a client when its request is forwarded by one or more proxies, such as a load balancer
 
+## AWS CloudFormation
+- Infrastructure as code
+- Its Teraform for AWS cloud
 
-- Amazon CloudWatch
-- DNS and CDN
-
+## AWS Elastic BeanStalk (EBS)
+- It is a fully managed PaaS (Platform as a Service)
+- We just need to upload code and rest of deployment is taken care by EBS 
+	- The env can be node, django, container
+- Health monitering, load balancers, autoscalling, security is managed by EBS
+## AWS direct connect 
+- Service that allows to establish a dedicated network connection between on-premise networks or one or more VPC 
+- Basically allows to bypass internet to connect with local services 
+## Amazon Route 53
+- Domain Name service (DNS)
+## AWS lambda v/s Elastic BeanStalk
+- Both are PaaS in a way
+- While lambda is triggered by events
+- Lambda is ideal for microservices and small applications
+- We usually create full fledge application using Elastic Beanstalk 
+## AWS SNS (Simple notification service)
+- Uses Pub-Sub system
+- Fan-out approach
+- Eg. of subscriber SQS, Lambda, Email
+## AWS SQS (Simple queue system)
+- Queing service for message processing
+- A system must have a provision to notify SQS about new event discovered
+- Typically processed by a single consumer
+## AWS CloudFront
+- CDN service offered by aws
+## AWS ElastiCache
+- Similar to Redis for AWS which is AWS managed 
 
