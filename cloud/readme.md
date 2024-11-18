@@ -231,3 +231,149 @@
 ## AWS ElastiCache
 - Similar to Redis for AWS which is AWS managed 
 
+# Shared Responsibility Model
+> - ### AWS is reponsibe for security `of` the cloud
+> - ### customers is reponsibe for security `in` the cloud
+- Managed svc : S3, RDS, DynamoDB
+- Unmanaged svc : EC2, EBS
+
+<img src="readme_img/image-3.png"/>
+
+## AWS IAM 
+- Things in IAM
+	- User : 
+	- Groups : Collection of users with same access
+	- Role : Used for `deligations` and are `assumed`
+	- Policy : It can be applied to group
+		- Permission for the identities and resources associated to it
+ 		- User gains the permissions that are applied to the group in which they are in
+		- It can also be called `identity based policy` as it is applied to an identity like user, group and/or roles  
+- IAM users: 	
+	- Root user: The one who creates account and has full access to everything in account
+		- Best practice is to avoid using root user and using user with limited permissions
+	- User : Have no premissions by default
+		- Friendly name
+		- Amazon resource name
+- IAM groups: are of three types
+	- Admin group
+	- Development group
+	- Operations group 	
+- IAM Role: 
+	- Roles are entites that we create to grant temperory security credentials to user, application, svc.
+	- These credentials allow entity to perform specific actions with your AWS account
+
+## AWS Inspector
+- Amazon Inspector is an automated security assessment service to test the network accessibility of EC2 instances
+
+## DDoS (Distributed Denial of Service)
+- A cyber attack on a server or network, intending to distupt normal operations
+- This is done by flooding the target with a constant flood to traffic
+- If attack is from single network it is called DoS attack and can be identified and connection can be closed
+- And when attack comes from multiple systems it is called DDoS
+- `Botnet` : An army of infected computers to do DDoS attack
+
+## AWS shield
+- Protect against all known infra level 3 & 4 attack
+- There are two tier of AWS shield: `Standard` and `Advanced`
+- They are auto applied on following svc: 
+	- Elastic Load Balancers 
+	-	Amazon CloudFront distributions
+	- Amazon Route 53
+- Difference between `AWS shield` and `AWS WAF(Web Application Firewall)`
+- AWS WAF provide protection on application layer
+- While AWS shild provide protection on Infra layer of OSI model 
+
+## AWS well architected framework
+- 6 pillars of well architectured framework
+	- Operational Excellence
+	- Security
+	- Reliability
+	- Performance Efficiency
+	- Cost optimization
+	- Sustainability
+- Operational Excellence
+	- Perform Operations as code (Infra as code)
+	- Make frequest small reversible changes
+	- Anticipate failure
+	- Learn from operational failures
+- Security
+	- Implement a Strong Identity Foundation
+		- Grant minimum necessary permissions to user
+		- Divide responsibilities among multiple individuals to prevent unauthorized access and malicious activities
+		- Use central system to manage user identity, access control and auth
+		- Eleminate long term static credentials
+	- Enable traceability
+		- Real-time monitering
+		- Log and metric collection
+		- Automated investication and response
+	- Apply security to all layers
+	- Automate Security best practice
+	- Protect data in transit and at rest
+	- Keep people away from data
+	- Prepare for Security events
+-  Reliability
+	- Automatically recover from failure
+	- Test recovery procedures
+	- Scale horizontally to increase aggregate workload availability
+	- Stop guessing capacity
+	- Manage change in automation
+- Performance Efficieny pillar
+	- Democratize Advanced Technologies : use managed service, PaaS, Low-code/no-code tools
+	- Go Global in minuites: Use CDN, Global infra(Multiple availability zones)
+	- Use serverless arch
+	- Experiment more often
+- Cost Optimization pillar
+	- Implement Cloud Financial Management: Set budgets and foracast, cost allocations, cost monitering
+	- Adopt consumption model: Pay-As-You-Go
+	- Measure overall efficiency
+	- Stop Spending Money on Undifferentiated Heavy Lifting: Use managed service, PaaS, Low-code/No-code tools
+- Sustainability
+	- Understand impact: carbon footprint, energy consumption
+	- Establish Sustainability Goals, Maximize Utilization(No unused resources)
+	- Use Managed Services, and latest service
+	- Choose data center location wisely 
+
+<img src="readme_img/image-4.png"/>
+
+# Pricing AWS
+### Pay-as-you-go
+- Pay only for the service that you have used
+### Reserved Instance (Save as you commit)
+- When you commit for a specific period of time 1-3 years you get discount
+- The discount is upto 72% compared to on-demand pricing
+- There are three types in Reseved Instance (RI)
+	1. All up-front (AURI) : Max discount
+	2. Partial up-front(PURI) : Less discount compared to AURI
+	3. No Up-front (NURI) : Least discount
+### Pay less use more
+- More the service you use less the usage charge 
+
+### More on pricing
+1. Compute
+	- EC2 : pay for EC2 instances by the hour or second, depending on the instance type.
+		- more you use, less pay less
+	- Lambda : Pay based on number of requests and execution time
+		- more you use, less you pay  
+2. Storage	
+	- S3 : Offers tiered storage depending on frequency of access 
+		- Standard, Intelligent-Tiering, Standard-IA, One Zone-IA, Glacier, and Glacier Deep Archive
+	- EBS : Priced based of storage size and amount of data transfered
+3. Data Transfer
+	- Data Transfer Out: Fees is charged in data transfered out of AWS
+	- Data Transfer In: Generally no fees is charged
+
+### EC2 instance types based on cost
+- On-Demand Instances
+	- Pay-as-you-go model
+	- Ideal for short-term or unpredictable workloads
+	- More expensive at long terms 
+- Savings Plans
+	- Commit using it for 1-3 years
+- Dedicated Hosts
+	- Physical server dedicated to you
+	- High performance and security
+	- More expensive than shared instances but offers better performance and control 
+- Spot Instances
+	- Other user's unused EC2 instances are used by my services
+	- Cons: If the EC2 of other user gains workload then mine EC2 would drop in performance
+		-	Instances can be interrupted if demand of other's EC2 instance increases
