@@ -215,6 +215,144 @@ $$
 
 
 # Machine Learning model deployment
-- https://www.youtube.com/watch?v=SHyFjJ-tIJE
+- Integrating machine learning model into existing prod env where it can take input and give output
+### Criteria before deploying a model
+	1. Portability: Ability to transfer model/software from one system to another
+		- Low response time 
+		- Easily re-written
+	2. Scability
+		- Doesn't need to be redefined to maintain its performance
+### High level arch of ML system (4 main parts)
+	1. Data layer : Access to all data source
+	2. Feature layer : Generating feature data in transparent, scalable and usable manner
+	3. Scoring layer : Transfrom features to predictions
+	4. Evaluation layer : Monitering how closely model output is to real output on live traffic
+### Ways to deploy model (3 general ways)
+	- One-off
+		- Not required frequently
+		- After pushing in prod only require changes when it degreades
+	- Batch training 
+		- Training model on live data
+	- Real time
+		- Eg. Fraud transaction 
+### Factors to consider 
+	- How frequently predictions are done 
+	- How urgent results are required
+	- Predictions? batch or individually
+	- Latency/Computing power required
+	- Cost to deploy and required for sustainability
+### Stages in ML model deployment
+	1. Data collection
+	2. Data storage? SQL, NoSQL, Data Warehouse 
+	3. Data preparation : Preprocessing data for model training 
+		- Spliting data for training, validation, and testing set
+	4. Data Analysis
+		- Data distribution, correlation, relationships
+		- Statistical analysis
+		- Handle imbalanced dataset and outliers
+	5. Prototyping & Testing
+		- Develop and train ML model
+	6. ML in Prod
 
+# Challanges in training ML model
+1. Data-Related Challanges
+	- Imbalanced dataset
+		- There is a significant difference between data instances
+		- This leads to biased results i.e accurate results on majority and poor result on minority
+	- Data quality issue
+		- Missing data
+		- Noisy data
+		- Inconsistant data
+	- Data scarcity
+		- Insufficient data
+	- Concept drift
+		- Data distribution change over time
+2. Model related challanges
+	- Overfitting : Model complexicity lead to poor generalization
+	- Underfitting : Model simplicity leads to fail in capturing pattern
+	- Model selection : Choosing right model and algo
+	- Regularization : Preventing overfitting techniques
+3. Computational Challanges
+	- Scaling : Handling large sets of data
+	- Computational resources : limited CPU/TPU
+	- Parallelization : Efficiently distributing computations
+4. Optimization challenges
+	- Non-Convex optimization : Many ML problems has multiple local minima 
+		- This cause difficulties in finding global optimum
+	- Gradient Vanishing/ Exploding
+	- Hyperparameter tuning
+		- Hyperparameters are parameters that are set before training a model, 
+		- such as learning rate, batch size, and regularization strength 
+# Generative ML model
+- GANs (Generative Adversial Network)
+- VAEs (Variational AutoEncoders)
+- Autoregressive Models
+
+## 1. Generative Adversial Network
+- Generator is used to create fake images from the data provided 
+- Discriminator is used to Classify wether the data is fake or not
+### Generator training
+- Goal is to produce realistic data that can fool discriminator
+- Objective is to minimize the `Generator loss function`
+### Discriminator training
+- Goal is to correctly distingusih between real and generated data correctly
+- Objective is to minimize the `Discriminator loss function`
+### Training process
+- Generator : Creates synthetic data
+- Discriminator : Evaluates the data and ouput probability that it's real
+- Generator Training: Adjust params to improve the realism of its ouput
+- Discriminator Training: adjusts its parameters to better distinguish real from fake data
+- Then the Generator is used to provide data in prod
+### Non generative model
+- They dont generate new data samples instead they focus on making predictions or classification on existing data
+
+
+
+# VAE (Variational AutoEncoder)
+
+## Autoencoder
+- Unsupervised Leaning model / Self supervised learning model
+- We can get features that can be applied to other models and algos
+- Say in a 3D space we have points at random and they have no relation between them
+	- Hence we need 3 params to describe each point
+- but say we have a 3D spiral it can be represented in less then 3 dimensions 
+- Same is in the real life the data that we is structured to some extent
+- The Autoencoders shrink data / reduce dimension of the data to some extent 
+- This is done till we reach bottle neck
+	- This forces the data to have info loss
+- Then the data is decoded and compared with the original data
+	- Then the error is found out
+	- The loss is known as `Reconstruction loss`=Generated image - Original image
+- The auto encoders improve themselves via comparing the input and the output
+	- This may converge to no data loss and the input is same as output
+- To avoid this noise is added to encoders and then feed to autoencoders 
+	- Then the output is compared with real image
+- This is done to improve performance
+
+<img src="image.png"/>
+
+## VAEs
+- Unlike Autoencoders, VAEs are designed to learn probabilistic representation of the data
+	- This allows it to generate new data samples similar to training data
+- In Traditional Autoencoders or Vanilla Autoencoders the data is mapped to z-vector
+- But in VAEs data is mapped to probability distribution specifically a Guasian distribution
+- So for basic understanding
+	- Assume the bottle neck mentioned as a Vector 
+	- Now Say we give input to vector and it is selected from pool of vector 
+	- So this feed to vectors when decoded by decoders it will generate a sample 
+- Here mu in the image is mean which is the exact data point 
+	- and the sigma is the distribution or data pool from where the vector is selected 
+	- Then it is sent to `z` and then the decoder 
+<img src="image-1.png"/>
+
+# RNN (Recurrent Neural Networks)
+- Generally used to handle sequential data
+- Process one input at a time and maintains previous hidden state that has captured previous information
+- Then runs feedback loop
+- Types : Simple RNN, LSTM(Long Short-Term memory), GRU(Gated Recurrent Unit)
+
+<img src="image-2.png"/>
+
+# Transformers
+- Algos based on transformers : GPT-3, BERT, T5	
 
