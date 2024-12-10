@@ -66,14 +66,19 @@
 - It is a supervised machine learning algo
 - It tries to fit model on a single line 
 - It assumes relation between input and output is linear
-$$ y(x) = a*x(i) + b $$
+
+$$ 
+y(x) = a*x(i) + b 
+$$
 
 ## Logistic regression
 - Used to model probability of event, that what is probability of event to occur
 	- Then we can define threshold if the probability if greater then it is Yes, no otherwise
+
 $$
 f(x) = \frac{1}{1+ e^{b_{1}*x + b_{o}}}
 $$
+
 
 ## Decision Tree
 - Used for classification and regression task
@@ -146,6 +151,7 @@ $$
 
 ### Step Functions:
 - If value is greater then threshold then neuron will be activated
+
 $$
 
 f(x) =
@@ -159,6 +165,7 @@ $$
 ### Sigmoid
 - Most used 
 - Output in range 0-1
+
 $$
 f(x) = \frac{1}{1+e^{-x}}
 $$
@@ -166,6 +173,7 @@ $$
 ### TanH
 - Range -1 to +1
 - Good choise for hidden layer
+
 $$
 f(x) = \frac{2}{1+e^{-2x}} - 1
 $$
@@ -173,11 +181,13 @@ $$
 ### ReLU
 - Also a popular choise for hidden layer
 - But after prolong use it can give 0 always so leaky ReLU is used sometimes
+
 $$
 f(x) = max(0,x)
 $$
 
 ### Leaky ReLU
+
 $$
 f(x) = 
 \begin{cases}
@@ -185,11 +195,13 @@ x \text{ if } x >= 0 \\
 a.x \text{ if } x < 0 
 \end{cases}
 $$
+
 - Here a is very small value in range of 0.001
 
 ### Softmax
 - Outputs btwn 0-1 like a probability
 - Usually used in last layer
+
 $$
 S(x_{i}) = \frac{e^{x_{i}}}{\sum e^{x_{i}}}
 $$
