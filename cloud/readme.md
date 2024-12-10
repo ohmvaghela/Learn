@@ -203,8 +203,9 @@
 - Infrastructure as code
 - Its Teraform for AWS cloud
 
-## AWS Elastic BeanStalk (EBS)
+## AWS Elastic BeanStalk 
 - It is a fully managed PaaS (Platform as a Service)
+- A little like Vercel and Render which allows to delpoy website without managing underlying infra.
 - We just need to upload code and rest of deployment is taken care by EBS 
 	- The env can be node, django, container
 - Health monitering, load balancers, autoscalling, security is managed by EBS
@@ -220,7 +221,7 @@
 - We usually create full fledge application using Elastic Beanstalk 
 ## AWS SNS (Simple notification service)
 - Uses Pub-Sub system
-- Fan-out approach
+- Fan-out approach (Single message to multiple subs)
 - Eg. of subscriber SQS, Lambda, Email
 ## AWS SQS (Simple queue system)
 - Queing service for message processing
@@ -261,6 +262,8 @@
 - IAM Role: 
 	- Roles are entites that we create to grant temperory security credentials to user, application, svc.
 	- These credentials allow entity to perform specific actions with your AWS account
+
+<img src="readme_img/image-4.png"/>
 
 ## AWS Inspector
 - Amazon Inspector is an automated security assessment service to test the network accessibility of EC2 instances
@@ -333,7 +336,6 @@
 	- Use Managed Services, and latest service
 	- Choose data center location wisely 
 
-<img src="readme_img/image-4.png"/>
 
 # Pricing AWS
 ### Pay-as-you-go
