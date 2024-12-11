@@ -26,17 +26,22 @@
 	5. Customer Involvement
 	6. Continous Improvement
 - AGILE Family
-	1. CRYSTAL 
+	- AGILE is recomended when the client requirements are evolving(but they are clear)
+	- Not much focus of documentation
+  	1. CRYSTAL 
 		- Deliver software in short working cycles
 		- Crystal is tailored to specific project and organizational requirements
+		- Good for `small project`
 	2. SCRUM
 		- Deliver software in short cycles called `sprints`
+		- Good for `mid` to `large` project  
 		- Terminologies
 			- Sprints : Timed box iterations 2-4 weeks
 			- Daily SCRUM : Team meeting to discuss progress and plans
 			- SCRUM Master : Facilitates SCRUM and remove impurities
 	3. DSDM (Dynamic systems Development method)
 		- same as other ass-holes
+		- Good for large `projects`
 		- Consist of 3 phases
 			1. Feasibility Study : Access project viability
 			2. Business Study : Define business requirements
@@ -44,11 +49,52 @@
 - Non AGILE
 	- SPIRAL
 		- Spiral is a risk-driven software development methodology
-		- same iterative and incremental
+		- It can handle changing requirements but is more structured than pure prototyping
 		- focuses on addressing risks and uncertainties in the development process.
 		- 4 Phases
 			- Planning: Identify and prioritize risks
 			- Risk Analysis: Analyze and mitigate risks
 			- Engineering: Develop the software
 			- Evaluation: Review and refine the software 
+## Prototype Methodology (Other methodology then AGILE)
+- When client requirement are not clear
 
+## Terminologies in AGILE
+> ### Configuration Items(CIs)
+> - components that need to be managed in order to deliver a product or service
+- Management
+  	- Overall pocess handling, managing workflow
+- Check-in
+	- When developer submit or checkin code to Version control system (VCS) like `Github`
+- BaseLine
+	- Represent a referecnce point in a project like a stable software version
+- Check-out
+	- Retreving latest code from the VCS like github to stay updated
+- Configuration Database (CMDB)
+	- Repo that stores info about all the assets like software, hardware, docs etc...
+- SVN (SubVersion)
+	- Version Control like Github
+- Audit
+	- Reviewing code to ensure compliance with policies, standards, and procedures.
+- Testing Report
+	- Results of tests including what was testing, what were outcomes and what were issues
+- Design Document
+- Software Requirement Specifications (SRS)
+- Source Code Document
+
+## Different development methodology
+- Lean software development
+	- Env where efficiency, resources are critial
+	- cohesiveness of the team and individual commitment of the team
+- Feature driven develop
+	- Large Scale projects
+	- Client Centric
+- Extreme Programming (XP)
+	- Rapid Chaging env
+- SCRUM
+	- Project requirement are flexible and evloving 
+
+## Kanban
+- Visualizing workflow
+- Limiting work in progress : Minimum backlogs
+- Make Process Policies Explicit : Clear defination of rules and policies
