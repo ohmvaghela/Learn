@@ -71,5 +71,42 @@ Prescriptive Analytics - Optimization
 		- Building models
 		- Exploring and Validatig models
 		- Deploying and Upadting models
--	Research challenges for KDD
+- Research challenges for KDD
+
+## Enterprice Information Systems (EIS)
+- ERP : Enterprice Resource Planning
+- SCM : Supply Chain Management
+- BPM : Business Process Management
+- CRM : Customer Resource Managemnt
+
+## CI/CD tools
+- CircleCI
+	- Ease of use : Yes
+	- Scalability : Yes
+	- Infra as code : Yes
+	- Plugins : Limited compared to Jenkins
+	- Integrations : Few integrations compared to jenkins
+	- Cost : Not mentioned
+- TeamCity
+	- Ease of use : Yes
+	- Scalability : Yes
+	- Infra as code : Limited
+	- Plugins : Limited compared to Jenkins
+	- Integrations : Few integrations compared to jenkins
+	- Cost : Costly for small teams
+- Jenkins
+	- Ease of use : No
+	- Scalability : Yes but Complex
+	- Infra as code : Full
+	- Plugins : Max
+	- Integrations : Max
+	- Cost : - 
+- Bamboo
+	- Ease of use : Yes
+	- Scalability : Yes
+	- Infra as code : - 
+	- Plugins : Limited compared to Jenkins
+	- Integrations : Few integrations compared to jenkins
+	- Cost : Costly for small teams
+
 
