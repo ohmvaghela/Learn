@@ -1,0 +1,45 @@
+- Gratuity
+- Meals
+- Insurance
+- Dearness allowance (DA)
+- What is basic + DA
+EPF (Employee Provident fund)
+- For EPF we need to generate ID with EPFO (EPF organisation)
+- EPFO creates a UAN(Universal Account Number) for that employee
+- Both employee and employer have to contri the same amount decided by employee
+- And that same amount has a limit
+- For 15K+ salary it is min 12% (Basic + DA)
+- The amount we set for EPF 
+  - For employee it directly goes to EPF
+  - For employeer out of that 12% 3.67% goes to EPF and 8.33 goes to EPS(Employees' Pension Scheme)
+-  EPF is a retirement account : We get interest on that
+- EPS is Pension account we dont get interest on that
+- The amount in EPS we get as monthly pension
+- Max amount that can go into EPS is 1250
+- The rest is added to EPF
+- Pension in EPS : 
+(Average salary of 60 months x Years of Service) / 70 : Min 1000 - Max 7500 per month
+- EDLI : Employee Deposit Linked Insurace (Employeer Bears these charges)
+ - 0.5% (Basic + DA) : Insurace upto 7 Lakhs
+ - 0.5% (Admin Charges) : Admin Charges
+Taxes of EPF
+- There are exemptions upto a limit on EEE (Investment Stage, Accrual Stage, Maturity Stage)
+- Investment Stage
+  - Employee's contrib : upto 1.5L p.a. exampted ( 80C )
+  - Employeer's contrib : upto 7.5L (EPF + NPS ) after that tax will be applied
+- Accrual Stage (Interest on PFA)
+  - Employer's contrib : No limit
+  - Employee's contrib : Upto 2.5L exampted
+- Maturity
+  - No tax if there is 5+ years of continous service 
+- EPF withdrawal
+  - EPF is retirement product
+     - 100% withdrawal : Retirement or Unemployed for 2+ months
+     - 75% : 1+ month of unemployment
+     - 90% : 1 year before retirement + 54years+
+  - Partial Withdrawal
+    - Purchase/ Construction  of house
+    - Loan repayment
+    - Critical illness
+    - Marrage or Higer education of kids
+- 
