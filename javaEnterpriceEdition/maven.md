@@ -21,6 +21,9 @@ Hence tools like Maven are used for the same
     - ArtifactID : unique identifier for each project
     - version
   - Model version : Version of maven POM
+<details>
+<summary>xml code</summary>
+
   ```xml
   <project
       xmlns="http://maven.apache.org/POM/4.0.0"
@@ -37,6 +40,7 @@ Hence tools like Maven are used for the same
   
   </project>
   ```
+  </details>
 
   - Build config
     - packaging : JAR, ZIP, WAR...
@@ -44,6 +48,9 @@ Hence tools like Maven are used for the same
   - Plugins : List of plugin to be used
     - Plugins are executed as part of the build lifecycle
     - Plugin : Individual plugin element with groupId, artifactId, and version
+<details>
+<summary>xml code</summary>
+
   ```xml
   <packaging>jar</packaging>
   <build>
@@ -68,8 +75,12 @@ Hence tools like Maven are used for the same
 
   </build>
   ```
+</details>  
   - Dependencies
     - Dependency : Individual dependency elements specifying groupId, artifactId, and version.
+<details>
+<summary>xml code</summary>
+
     ```xml
     <dependencies>
     
@@ -88,12 +99,15 @@ Hence tools like Maven are used for the same
 
     </dependencies>
     ```
-    
+</details>    
   > - Dependencies provide libraries your project needs to function, while plugins define tasks to be executed during the build process
   > - Maven handles the downloading and inclusion of dependencies automatically, whereas plugins require explicit configuration and goals to run.
 
   - Repositories : A list of repositories where dependencies can be found.
     - Repository : Individual repository elements specifying id, url, and layout
+<details>
+<summary>xml code</summary>
+
   ```xml
   <repositories>
     <repository>
@@ -102,7 +116,7 @@ Hence tools like Maven are used for the same
     </repository>
   </repositories>
   ```
-
+</details>
   - Profiles : Allows to customise the `build process` for specific users
     - Like tester may need other plugins as compared to dev
     - Activation : Activated when a specific Maven property is set
@@ -112,6 +126,9 @@ Hence tools like Maven are used for the same
       --- develpment profile
       mvn clean install -Pdevelopment
       ```
+<details>
+<summary>xml code</summary>
+
   ```xml
   <profiles>
     <!-- Development Profile -->
@@ -156,10 +173,15 @@ Hence tools like Maven are used for the same
   </profiles>
   
   ```
+</details>
   - Properties : Used to define custom properties like
     - Version management
     - Directory path
     - Custom Values
+
+<details>
+<summary>xml code</summary>
+
   ```
   <properties>
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -168,8 +190,12 @@ Hence tools like Maven are used for the same
       <spring.version>2.3.4.RELEASE</spring.version>
   </properties>
   ```
+  </details>
  - Project info 
  - Organisation and Developer : Info about developer and orgainisation
+<details>
+<summary>xml code</summary>
+
   ```xml
   <!-- More Project Information -->
   <name>My Application</name>
@@ -191,7 +217,10 @@ Hence tools like Maven are used for the same
     </developer>
   </developers>
   ```
+  </details>
 - Continous integration and Issues tool
+<details>
+<summary>xml code</summary>
   ```xml
   <!-- Continuous Integration and Issue Management -->
   <ciManagement>
@@ -203,3 +232,48 @@ Hence tools like Maven are used for the same
     <url>https://issues.example.com</url>
   </issueManagement> 
   ```
+</details>
+
+## Creating project using `maven`
+
+```
+mvn archetype:generate \
+  -DgroupId=com.example \
+  -DartifactId=helloworld \
+  -DarchetypeArtifactId=maven-archetype-quickstart \
+  -DinteractiveMode=false
+```
+- Parts of code
+  - archtype:generate 
+    - Tell maven to run Archetype Plugin and generate a new project.
+  - DgroupId=com.example
+    - The Group ID acts as a namespace to uniquely identify your project
+    - Create a chained child dirs 
+    - Like for the given code it create `com` dir and then `example` as its sub dir
+    - and this `com` is under src/main/java
+    - And main `App.java` is at `src/main/java/com/example` 
+  - DartifactId=helloworld
+    - Name of the project/module
+  - DarchetypeArtifactId=maven-archetype-quickstart
+    - archetypeArtifactId : Boiler plate for the project
+    - `quickstart` is used for basic java project
+    - It generates a basic project structure with:
+      - A `src/main/java` directory for your application code.
+      - A `src/test/java` directory for unit test code.
+      - A basic `App.java` file in `src/main/java`.
+      - A corresponding `AppTest.java` file in `src/test/java`.
+      - A `pom.xml` file configured with minimal settings.
+  - DinteractiveMode=false
+    - Assumes default for many things like 
+      - version name : default to  `1.0-SNAPSHOT`
+      - GroupID 
+
+## Compiling project for first time
+`mvn compile`
+## Updating pom.xml then updating file
+`mvn clean compile`
+## Run test
+- Test can be run without packaging
+`mvn test`
+## Create jar file 
+`mvn package`
