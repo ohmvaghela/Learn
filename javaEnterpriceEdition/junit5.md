@@ -18,7 +18,41 @@
 - Allows Junit4 and Junit3 to run test on Junit5 platform
 
 ## Annotations
-- In the test class we need to mention annotation `@Test` on top of each method which will be used for testing
+- Test
+  - In the test class we need to mention annotation `@Test` on top of each method which will be used for testing
+- BeforeAll, Afterall
+  - Ran once before/after all the tests
+```java
+@BeforeAll
+static void initAll() {
+    System.out.println("Before all tests");
+}
+@AfterAll
+static void tearDownAll() {
+    System.out.println("After all tests");
+}
+
+@Test
+void test1() {
+    System.out.println("Test 1 executed");
+}
+
+@Test
+void test2() {
+    System.out.println("Test 2 executed");
+}
+
+```
+- Output
+```
+Before all tests
+Test 1 executed
+Test 2 executed
+After all tests
+```
+- BeforeEach/AfterEach 
+  - Ran once before/after each test
+
 
 ## Test Methods
 - Test methods must not be `abstract` and `private`
@@ -163,3 +197,4 @@ public void testException() {
   assertEquals("This is Custom exception message", exception.getMessage());
 }
 ```
+
