@@ -585,10 +585,12 @@ int main() {
 - Here just after getting shared lock the transaction will try to acquire exclusive without releasing shared lock
 - and once the entire transaction is completed exclusive lock is released
 - This can cause dead lock 
+
 | Timestep | Transaction A | Transaction B | 
 |-|-|-|
 | T1 | Shared Lock on resource A | Shared Lock on resource B |
 | T2 | Try Exclusive Lock on resource B | Try Exclusive Lock on resource A |
+
 - As seen above this can cause deadlock
 - After this all the resource are released and it starts again
 
@@ -2646,7 +2648,5 @@ int main() {
   return 0;
 }
 ```
- 
-
 
 ![alt text](image.png)
