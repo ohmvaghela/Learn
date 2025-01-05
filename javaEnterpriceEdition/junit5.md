@@ -1,5 +1,6 @@
 # Junit5 
 - It consist of 3 main parts
+> # IMP
 > - Always remeber to import the assert and other conditions that you are using like this
 > ```java
 >   import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ After all tests
 
 
 ## Test Methods
-- Test methods must not be `abstract` and `private`
+- Test methods must `not` be `abstract` and `private`
   - Private test methods wont be detected in java
 - Test methods can be `default` 
 - The return type of test methods must be `void`
@@ -134,6 +135,13 @@ assertFalse(boolean condition,                String message)
 assertFalse(BooleanSupplier booleanSupplier,  String message)
 assertFalse(boolean condition,                Supplier<String> messageSupplier)
 assertFalse(BooleanSupplier booleanSupplier,  Supplier<String> messageSupplier)
+// BooleanSupplier example
+
+import java.util.function.BooleanSupplier;
+BooleanSupplier condition = () -> 5 > 3; // Lazy evaluation
+assertFalse(condition, "5 should be greater than 3");
+
+
 ```
 - Other asserts
   - assertTrue()
@@ -175,8 +183,8 @@ assumeFalse(/*boolean supplier*/, Supplier<String> messageSupplier);
 ## Exception assertions
 - Check if exception exist if it should or not if should not 
 
-
 ```java
+
 assertThrows(Class<T> expectedType, Executable executable)
 assertThrows(Class<T> expectedType, Executable executable, String message)
 assertThrows(Class<T> expectedType, Executable executable, Supplier<String> messageSupplier)
@@ -185,6 +193,7 @@ assertDoesNotThrow(Executable executable)
 assertDoesNotThrow(Executable executable, String message)
 assertDoesNotThrow(Executable executable, Supplier<String> messageSupplier)
 assertDoesNotThrow(ThrowingSupplier<T> supplier)
+
 ```
 
 ```java
@@ -196,5 +205,13 @@ public void testException() {
   });
   assertEquals("This is Custom exception message", exception.getMessage());
 }
+
+@Test
+void testIllegalArgumentException() {
+  assertThrows(IllegalArgumentException.class, () -> {
+    Integer.parseInt("invalid"); // Invalid input
+  });
+}
+
 ```
 
