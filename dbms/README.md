@@ -7,10 +7,78 @@
 - Abstraction : hiding irrelevent data from users so make the usability more simplified
 - DBMS v/s File System
 
+> ### Source of data generation
+> - Experimental data : Generated through clinical research and investigations
+> - Observational data : Result of direct human observation and is usually real time
+> - Complied data : Manually gathered data over time
+> - Simulated data : Result of studing behaviour and identifying patterns
+
+> ### Common data source
+> - Human generated
+> - Machine generated
+> - Business generated : Data of stocks, financial institutions
+
+> ### Common data types
+> - Quantative data : Measurable like numbers and values
+> - Qualitative data : Non mesurable, descriptive
+> - Geospatial data : Location data
+> - Digital data : image, audio, video data
+> - Data from docs and scripts : Code, text doc, script etc
+
+> ### Data format
+> - Structured : Defined schema
+> - Semi structured : Flexible schema
+> - Unstructured : No schema
+
+> ### Data Terminologies
+> - Primay Data : Person or group that collect data themself
+> - Secoundary Data : Data collected by third party
+> - Data Analytics : Process to tech used to explore data
+> - Data aggregation : Procedure used to gather data
+> - Meta Data
+> - Time series
+> - Anonymized data
+> - Augmented reality : Data analytics using ML and NLP
+> - Data literacy : The ability to understand data to read and communicate as info
+
+### Data storage and backup
+- Full Backup : Covers backup of all data in hard-drive
+- Differential backup : Backup of data generated and/or revised since last backup
+- Incremental backup : Overs backup of only revised and changes made from previous backup
+
 > DMBS is program to handle data not data itself
 > But nowadays Database and DBMS exists together
 > DBA - DataBase Administrator
 > Consistancy Constraints
+
+## Data migrations
+1. Planning
+    - Identifying stakeholders and data
+    - Determining risks and backup stratergies
+2. Analyzing
+    - Explore the data
+    - Determine the impact of migration cut-off point
+    - Create data directory
+3. Design
+    - Develop source to target mapping
+    - Determine ETL transforation used for migration
+4. Implementation
+    - Configure tools required for migrations and write scripts
+5. Testing
+    - Delpoy all tools required
+    - Create migration test plan
+6. Migration
+    - Execute all the data migration steps
+    - Go-live
+
+### ETL (Extract Transform Load)
+- Process to integrate and manage data from multiple source
+- Extract : Get data from various places like API, CSV, Excel etc.
+- Transform : Raw data is cleaned, validated and transformed
+- Load : Data is finally loaded into the target
+
+
+
 
 # Three Schema Architecture
 
@@ -59,6 +127,26 @@
 - Involve Insertion, retrival, deletion, updating info stored in DB
 - Qurey language
 - Used to manuplate data (CRUD)
+
+## DCL (Data Control Language)
+- Access permision of user
+- Like `GRANT` and  `REVOKE`
+
+## DQL (Data Query Language)
+
+## TCL (Transaction control language)
+- Manage transactions like `commit`, `rollback`, `save point`, `set transaction`
+
+## Database, DateWarehouse, Datalake, Lakehouse
+- Data warehosuse
+  - Data from Database is ETL to data warehosue
+  - Data warehouse is used for data analytics and reporting
+  - Data is scheduled to be sent from database to data warehouse
+- Data lake
+  - Any kind of data can be stored in datalake
+  - Like images, video audo files, zip files...
+- Lakehouse
+  - Combines features of data lakes and data warehouses
 
 # 1,2,3 Tier Architecture
 
