@@ -57,10 +57,9 @@ mv HelloServlet.class MyFirstApp/WEB-INF/classes/
 ```
 
 ### 4. Create `deployment descriptor` 
-
+- web.xml
+> <h3> <u> Do not add blank space before first line of xml </u> </h3>
 ```xml
-<!-- web.xml -->
-
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" version="3.0">
     <servlet>
@@ -87,6 +86,12 @@ mv HelloServlet.class MyFirstApp/WEB-INF/classes/
 # -C : change the dir before adding files to archive
 # . : include all files in current dir
 jar -cvf MyFirstApp.war -C MyFirstApp/ .  
+```
+
+### 6. Copy the .war file to tomcat webapps
+
+```bash
+cp MyFirstApp.war /opt/tomcat9/webapps/ 
 ```
 
 > ### Now you can see result on `localhost:8080/MyFirstApp/hello`
