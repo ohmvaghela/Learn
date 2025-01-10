@@ -78,7 +78,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 @WebServlet("/add")
 public class Add extends HttpServlet {
     public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -99,3 +98,144 @@ public class Add extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse res) throws IOException {}
     protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException {}
 ```
+
+- ### Request forwarding using `RequestDispatcher`
+  - It forwards the request that is recieved from client to another servlet
+  - The client url wont change 
+    - Say from `/add` url I used requestDispatcher to forward it to `/sq` then the client url wont change
+
+  ```java 
+    import java.io.IOException;
+    import javax.servlet.RequestDispatcher; // Import for RequestDispatcher
+    import javax.servlet.ServletException;
+    import javax.servlet.annotation.WebServlet;
+    import javax.servlet.http.HttpServlet;
+    import javax.servlet.http.HttpServletRequest;
+    import javax.servlet.http.HttpServletResponse;
+
+
+    @WebServlet("/add")
+    public class Add extends HttpServlet {
+        public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+
+            RequestDispatcher rd = req.getRequestDispatcher("sq");
+            rd.forward(req, res);
+
+        }
+    }
+
+  ```
+  - #### Methods under request dispatcher
+    - forward(HttpServletRequest req, HttpServletResponse res)
+      - transfers the control to another servlet or resource
+    - include(HttpServletRequest req, HttpServletResponse res)
+      - include the content of another resource 
+      - Control is returned to original servlet
+      
+      ```java
+        
+        RequestDispatcher rd = req.getRequestDispatcher("header");
+        rd.include(req, res);
+
+      ```
+- ### Request forwarding using `Redirect`
+  - Here insteading of forwarding the request 
+  - Response is returned from first request to create a new request-response life cycle with new url
+  - When to use redirect
+    - When forwarding client to external website
+    - When you dont want to pass data to new url
+    - When client needs to know new url
+  - Data during redirect
+    - Cookies remain 
+    - Attributes are lost
+    - new url params remain (coz they are in the new url)
+  ```java
+    res.sendRedirect("sq?result=" + result);
+  ```
+- ### Setting HttpSession
+  - Setting session attribute
+  - used to store stateful info accross multiple request
+
+  ```java
+  HttpSession session = req.getSession();
+  session.setAttribute("attribute_name", attribute_value);
+
+  // Getting session attribute
+  session.getAttribute("attribute_name");
+
+  // Removing it after use
+  session.removeAttribute("attribute_name");
+  ```
+
+  - Another common uses include 
+    - Getting SessionID and setting sessionID
+
+- ### Setting cookie
+  - Cookie comes from server and is sent back to server with every request
+  
+  ```java
+  // sending cookie
+  Cookie cookie = new Cookie(name,value);
+  // name and value must be string
+  ```
+  
+  - Reading cookie when recieved
+  
+  ```java
+  String k;
+  Cookie cookies[] = req.getCookies();
+  for(Cookie c : cookies){
+    if(c.getName().equals("some name")){
+      k = c.getValue();
+    }
+  }
+  ```
+- ### Managing configurations 
+  - `ServletConfig` and `ServletContext` are used to manage config in servlet
+  - They are like initial preset static configs required
+  - ServletConfig : is for perticular servlet
+  - ServletContext : for all servlet 
+  - #### ServletConfig
+  
+  ```xml
+    <servlet>
+        <servlet-name>MyServlet</servlet-name>
+        <servlet-class>com.example.MyServlet</servlet-class>
+        <init-param>
+            <param-name>username</param-name>
+            <param-value>admin</param-value>
+        </init-param>
+    </servlet>
+  ```
+  ```java
+    ServletConfig ctx = getServletConfig();
+    String name = ctx.getInitParameter("username");
+  ```
+
+  - #### ServletContext
+  
+  ```xml
+    <context-param>
+        <param-name>appVersion</param-name>
+        <param-value>1.0.0</param-value>
+    </context-param>
+  ```
+  ```java
+    ServletContext ctx = getServletContext();
+    String name = ctx.getInitParameter("appVersion");
+  ```
+
+
+## Filters 
+- Just like middleware
+- If multipe filters are applied then we have to chain them 
+- One filter does not have info about other filter
+- filter is interface we need to implement them
+- there are 3 main methods to implement
+  - `doFilter(ServletRequest, ServletResponse, FilterChain)`, `init`, `destroy`
+- Once the filtering is complete we need to pass it to next part of chain by using 
+  - `chain.doFilter(ServletRequest, ServletResponse)`
+  - If it the last filter it will call servlet
+
+
+<img src="./images/image1.png" height=400/>
