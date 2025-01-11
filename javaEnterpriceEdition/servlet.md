@@ -1,6 +1,8 @@
 # Servlet
-> ## - What is servlet? (Servlet is an interface that must be implemented for creating any Servlet.)
->   - More refined answer??
+## What is servlet? 
+  - Servlet is a Java class that is used to handle HTTP requests and responses in a web application
+  - The `Servlet` is an interface provided by the `javax.servlet` package
+  - The web container creates only one instance of a servlet and uses multiple threads (one per request) to process client requests
 
 ## Working of servlet 
 - When a client makes a call to server, server passes request to servlet container
