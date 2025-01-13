@@ -30,6 +30,58 @@
   - They are in house, and are not needed to serve customers
   - They are used for data analytics
 
+## - Artifact / Objects
+- Structural representation of data
+- When a raw data is transfored after ETL it is called artifact
+- Types of artifacts
+  - Fact table (data table)
+  - Dimension table (loopup table)
+  - Aggregate table
+  - Mini dimension table : Subset of dimension table
+  - Helper table
+  <hr>
+- Some objects
+  - Degenerate Dimension
+    - These do not have a dimension table of its own
+      - But these exist as attribute of fact table
+      - As adding a new dimension table wont make sense
+    - Examples include invoice numbers, order IDs, or transaction IDs
+  - Junk data 
+    - The data for whome having a specific dimension does not make sense
+    - And also are low cardinaly
+    - So are collected in a single table
+    - Example : IsNewCustomer, IsPromotionalOrder, PaymentMethod
+  - Confirmed Dimension
+    - Dimension that is shared accross multiple fact table
+  - Bridge table
+    - Table used to manage manyToMany realation between fact and dimension table
+  - Factless fact table
+    - A table that does not contain any mesurable metric / Fact
+    - but is used to record events or relationships.
+- Hirerchy in data warehouse
+  - Balanced
+    - Depth of branches is same
+    - Eg. Country->State->City->Locality
+  - Unbalanced
+    - Depth of branched may be different
+    - There may be gaps in table
+  
+    | Organization | Level	| Employee Name	Reports To | 
+    |-|-|-|
+    | CEO	| Alice |	- |
+    | VP	| Bob	| Alice |
+    | Manager	| Charlie	| Bob |
+    | Employee | David |	Charlie |
+
+  - Ragged
+    - When certial levels are skipped and there is gap in between
+
+    | Country |	State |	City |
+    | - | - | - |
+    | USA |	California | Los Angeles | 
+    | USA | - |	Washington DC |
+    
+
 - ## Schema used in data warehousing
 - Tables
   - Fact Table
@@ -39,6 +91,18 @@
   - Dimension Table
     - These are non-denormalized tables
     - The Primary key of dimension table are stored in fact table as foriegn key
+  - Some types of facts
+    - Addtive facts
+      - Facts that can be aggrigated accross all the dimension
+      - Like sales, revenue
+    - Semi Additive facts
+      - Facts that can be aggrigated accross some dimensions
+      - Account balance : Accross all dates is useless, it is taken for a specific time
+      - Inventory level : cant be summed for time and for summed for all regions
+    - Non Additive facts
+      - Facts that can not be aggrigated
+      - Like profit margin, Customer statisfaction score
+       
 1. Star Schema
    - One of the most straight-forward and simple design
    - Dimension tables are not connected to each other directly
@@ -64,7 +128,33 @@
 | **Storage Usage**      | Higher disk space due to data redundancy                                        | Lower disk space due to limited data redundancy                                                           | Low disk space usage compared to the level of sophistication due to the limited data redundancy           |
 | **Design Limitations** | One Fact Table only, no sub-dimensions                                          | One Fact Table only, multiple sub-dimensions are permitted                                                | Multiple Fact Tables permitted, only first-level dimensions are permitted                                 |
 
+- ## Data warehouse design technique
+- Data mart
+  - Subset of data warehouse
+  - focus on specific business area, function or department like HR, marketing, finance etc. 
+- Two types
+  - Inmon(Top Down)
+    - Data is collected at a place and then `data marts` are created  
+  - Kimball (Bottom's up)
+    - Here first `data marts` are created and then the data are clubed together
+    - The data marts are connected via shared attributes and hence create a `dimentional data warehouse`
 
+  | Inmon |Kimball|
+  |-|-|
+  | Enterprice foucs | Business focus |
+  | More time consuming to craete | Simple to create |
+  | Long delivery time | Less delivery time |
+  | Simple maintainance | Complex maintainance |
+  | More normarlized | More De-Normalized |
+  | Slow query as it require more joins | 
+
+- Slowly changing dimensions (SCD)
+  - Dimension that go change under time
+  - Like address of a person it may or may not change
+  - Three ways to handle SCD
+    - Type 1 : Replace the data 
+    - Type 2 : Keep both data
+    - Type 3 : Add a new column to keep track of data change
 
 - ## Using TALEND
 - Demo 1
