@@ -11,6 +11,7 @@
 - [Maven](./maven.md)
 - [Junit5](./junit5.md)
 - [tomcat](./tomcat.md)
+- [jdbc](./jdbc.md)
 - [servlet](./servlet.md)
   - [Configuring_JSP_premissions](./JSP_Permissions.md)
   - [JSP](./JSP.md)
@@ -18,3 +19,5 @@
 - [JSTL](./JSP.md#jstl-jsp-standard-template-library)
 - [Filters](./servlet.md#filters)
 - [Hibernate](./hibernate.md)
+- [jersey](./rest.md)
+- [Spring](./spring.md)
