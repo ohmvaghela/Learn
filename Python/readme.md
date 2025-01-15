@@ -131,7 +131,6 @@ if __name__ == "__main__":
 - Just like condition variable in C++
 ```py
 import time
-
 import threading
 
 condition = threading.Condition()
@@ -177,4 +176,106 @@ if __name__ == "__main__":
         thread.join()
     for thread in bar_threads:
         thread.join()
+```
+
+## Events
+- Say there is a chain in which threads must be executed
+- To do the same we use premitive version of locks which is events
+- Say process one needs to complete before second process starts
+
+```py
+import time
+import threading
+event = threading.Event()
+
+def first():
+    print("First event start")
+    time.sleep(2)
+    print("First event ends")
+    event.set()
+
+
+def second():
+    print("Second event start")
+    event.wait()
+    print("Second event ends")
+
+if __name__ == "__main__":
+    thread1 = threading.Thread(target=first)
+    thread2 = threading.Thread(target=second)
+
+    thread1.start()
+    thread2.start()
+
+    thread2.join()
+    thread1.join()
+```
+
+## Reader writer problem 
+
+```py
+import time
+import threading
+
+readers = 0
+writer_active = False
+lock = threading.Condition()
+
+class Reader:
+    def read(self, id):
+        global readers, writer_active
+        with lock:
+            while writer_active:
+                lock.wait()  # Wait if a writer is active
+            readers += 1  # Increment reader count
+        print(f"Reader {id} started reading")
+        time.sleep(2)  # Simulate reading
+        with lock:
+            readers -= 1  # Decrement reader count
+            print(f"Reader {id} finished reading")
+            if readers == 0:  # Notify writers if no readers are left
+                lock.notify_all()
+
+class Writer:
+    def write(self, id):
+        global readers, writer_active
+        with lock:
+            while readers > 0 or writer_active:
+                lock.wait()  # Wait if readers are active or another writer is active
+            writer_active = True  # Indicate writer is active
+        print(f"Writer {id} started writing")
+        time.sleep(2)  # Simulate writing
+        with lock:
+            writer_active = False  # Release writer lock
+            print(f"Writer {id} finished writing")
+            lock.notify_all()  # Notify readers and writers
+
+if __name__ == "__main__":
+    reader_c = Reader()
+    writer_c = Writer()
+
+    # Create threads
+    reader1 = threading.Thread(target=reader_c.read, args=(1,))
+    writer1 = threading.Thread(target=writer_c.write, args=(1,))
+    reader2 = threading.Thread(target=reader_c.read, args=(2,))
+    reader3 = threading.Thread(target=reader_c.read, args=(3,))
+    writer2 = threading.Thread(target=writer_c.write, args=(2,))
+    reader4 = threading.Thread(target=reader_c.read, args=(4,))
+
+    # Start threads
+    reader1.start()
+    writer1.start()
+    reader2.start()
+    reader3.start()
+    writer2.start()
+    reader4.start()
+
+    # Wait for threads to complete
+    reader1.join()
+    writer1.join()
+    reader2.join()
+    reader3.join()
+    writer2.join()
+    reader4.join()
+
 ```
