@@ -380,3 +380,42 @@ np_arr.reshape(-1) # flat array
     filter1 = [True,False,True,False,True,False]
     print(arr1[filter1]) # 2,4,6
     ```
+
+# Database connectivity
+- import lib `import mysql.connector`
+- load connector
+
+```py
+mydb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="root"
+    # Optionally we can also add DB
+    # database="temp" 
+)
+```
+
+- Executing command
+  - We have to create cursor instance
+  - And using it we can execute query (any DDL, DML, DQL, TCL)
+  ```py
+  cursor = mydb.cursor()
+  cursor.execute(" select * from table_name")
+  for row in cursor.fetchall():
+      print(row)
+  ```
+
+- We need to delete cursor instance once used
+- Also we need to handle error and rollback if it is a transaction
+- Hence we use `with` keyword so cursor is released once used 
+
+```py
+with mydb.cursor() as cursor:
+    try: 
+        cursor.execute("show databases;",multi=False)
+        print(cursor.fetchall())
+        mydb.commit()
+    except Exception as e:
+        print(e)
+        mydb.rollback()
+```
