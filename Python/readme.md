@@ -279,3 +279,104 @@ if __name__ == "__main__":
     reader4.join()
 
 ```
+
+## Numpy
+
+> ### - Array size in numpy is not mutable 
+> ### - But we can reshape it
+
+- Creating basic numpy array
+
+```py
+import numpy as np
+
+arr = [1,2,3]
+
+np_arr = np.array(arr)
+np_arr = np.array([1,2,3]) # Other way
+```
+
+- Defining data type
+
+```py
+np_arr = np.array(arr, dtype='i')
+# other way
+np_arr = np.array(arr)
+np_arr.astype(int)
+```
+
+- Making copy
+  - If we directly assign array like `arr1 = arr` then same memory block will be assigned
+  - so we need to use copy keyword `arr1 = arr.copy()`
+
+```py
+np_arr = np.array([1,2,3])
+np_arr1 = np_arr # now np_arr1 will be reference to np_arr 
+np_arr1[0] = 100
+print(np_arr[0])# this will result 100
+
+# hence we use copy
+np_arr1 = np_arr.copy()
+```
+
+- View
+  - we can create a new object of np_arr with same underlying memory
+  - But can have differnet arributed shape and strides
+  - Both have differnt object but same memory
+  - `np_arr1 = np_arr.view()`
+
+- Reshaping
+  - Say I created an array of size 6
+  - To reshape it to 2,3 matrix we can use reshape
+  - to make it flat we use -1
+
+```py
+np_arr = np.array([0,1,2,3,4,5])
+np_arr.reshape(2,3) # matrix 2,3
+np_arr.reshape(-1) # flat array 
+```  
+
+- Joining array
+
+  - [1,2,3] + [4,5,6] = [1,2,3,4,5,6]
+  ```py
+  arr = np.concatinate((arr1,arr2))
+  arr = np.hstack((arr1,arr2))
+  ```
+
+  - [1,2,3] + [4,5,6] = [[1,2,3],[4,5,6]]
+  ```py
+  arr = np.vstack((arr1,arr2))
+  ```
+
+  - [1,2,3] + [4,5,6] = [[1,4],[2,5],[3,6]]
+  ```py
+  arr = np.dstack((arr1,arr2))
+  ```
+
+- Split
+  - Divided `arrays` into `n arrays of array`
+ 
+  ```py
+  arr = np.array([0,1,2,3,4,5])
+  print(np.split(arr,3))
+  [array([0, 1]), array([2, 3]), array([4, 5])]
+  ```
+
+  - Search
+    - Will return the values in form of array if exist
+
+    ```py
+    arr1 = [1,2,3,4,5]
+    print(np.where(arr1%2 == 0)) # ((array([2,4,6])))
+    print(np.where(arr1%2 == 0))[0] # [2,4,6]
+    ```
+  - Filter
+    - Its like a mask of same size and same shape
+    - Like if array is (1,4) then mask should be of (1,4) shape and size
+   
+    ```py
+    arr1 = np.array([1,2,3,4,5,6])
+    filter1 = [True,False,True,False,True,False]
+    print(arr1[filter1]) # 2,4,6
+    ```
