@@ -419,3 +419,145 @@ with mydb.cursor() as cursor:
         print(e)
         mydb.rollback()
 ```
+
+# Pandas
+- Used for analysing data
+- First we import data, then we clean it and analyse by plotting and correlation
+- Mostly used for tabular data, where as numpy is mostly used for numerical data and homogenous data
+
+## - Series
+- Using for holding 1D array
+- `pandas_series = pd.Series(arr)`
+- To name the rows we can use index
+- `pandas_series = pd.Series(a, index=['a','b'])`
+
+## - Dataframe
+- Used for holding 2D array and above
+- to name row and column we can use 2 ways
+
+```py
+arr = [
+    [[2,34,321],[3,32,2423]],
+    [[2,34,321],[3,32,2423]]
+]
+
+df = pd.DataFrame(arr, index=["a","b"], columns=["b","d"])
+print(df)
+
+              b              d
+a  [2, 34, 321]  [3, 32, 2423]
+b  [2, 34, 321]  [3, 32, 2423]
+
+dict = {
+    "a" : [1,2,3],
+    "b" : [4,5,6]
+}
+df = pd.DataFrame(dict,index=["a","b","C"])
+print(df)
+
+   a  b
+a  1  4
+b  2  5
+C  3  6
+```
+
+- In pandas rows are vertical, and indices are horizontal
+- To locate row use `df.loc[row_number]`
+- to locate multiple rows `df.loc[[row1,row2,row3]]`
+- Or use `df.loc[row1:rown]`
+- To see top n rows use `df.head(number_of_rows)`
+  - By default it is set to 10
+- To see last n rows use `df.tail(number_of_rows)`
+
+- ## Loc (Label Based Selection)
+  - `df.loc[row_label, column_label]`
+  - So for this df.loc[1:10, ['column_1','column_2','column_3']]
+    - This will display row 1 to 10 and column names as specified
+- ## iloc (Position based selection)
+  - `df.iloc[row_position, column_position]`
+  - example : `df.iloc[1:4,3:6]`
+  - This will select row 1 to 4 and column 3 to 6
+- Say we want all the rows where atleast one column is null
+- `df.loc[df.isnull().any(axix=1)]`
+  - df.isnull() -> boolean filer that will be applied to each cell (row,column)
+  - .any(axis=1) -> check if any entry in the row has true? if yes then true for that row
+  - ```py
+    df.isnull().any(axis=1)
+    0       True
+    1      False
+    2       True
+    3      False
+    4       True
+           ...  
+    886     True
+    887    False
+    888     True
+    889    False
+    890     True
+    Length: 891, dtype: bool
+    ```
+  - .any(axis=0) -> Will check if any entry in the column is true is then assign that column as true
+  - ```py
+    df.isnull().any(axis=0)
+    PassengerId    False
+    Survived       False
+    Pclass         False
+    Name           False
+    Sex            False
+    Age             True
+    SibSp          False
+    Parch          False
+    Ticket         False
+    Fare           False
+    Cabin           True
+    Embarked        True
+    dtype: bool
+    ```
+  - As `df.isnull().any(axis=1)` will return a boolean array of rows, which will work as filer for row indices
+  - And these row indices will be displayed by loc
+- Other examples are like
+  - Create a boolean array of size of number_of_rows which has age filer
+    - df['Age'] > 30 # Age is greter the 30
+    - df['Age'].isin([25,30])
+- ## Renameing
+  - df.rename(columns={old_name:new_name , old_name:new_name}, index={old_name:new_name, old_name:new_name}, inplace=False)
+  - Inplace is false by default, it means in place changes. If false then returns new data frame
+    - if true then change the df and does not return anything
+- ## Replace
+  - Replace the value of entry
+  - `df.replace(to_replace, value=None, inplace=False)`
+  - Replace multiple value
+    - `df_replaced_multiple = df.replace({'City': {'New York': 'NYC', 'Chicago': 'Chi-town'}})`
+  - Replace perticular column
+    - `df_replaced_column = df['City'].replace('Los Angeles', 'LA')`
+- ## dropna
+  - `df.dropna(axis=0, how='any', inplace=False)`
+  - axis=0 -> drop row
+  - how='any' -> drop row if any value is null
+  - how='all' -> drop row if all values are null
+- ## fillna
+  - `df.fillna(value=None, method=None, inplace=False)`
+  - value -> value to replace NaN with
+    - it can be int, string or can be column wise like `{'Age': 30, 'City': 'Unknown'}`
+  - method='ffill' -> forward fill, fill it with last value
+  - method='ffill' -> forward fill, fill it with next value
+
+- ## sort_index
+  - Sort by indices like row label and column lables
+  - `df.sort_index(axis=0, ascending=True, inplace=False)`
+- ## sort_values
+  - Sort by values
+  - `df.sort_values(by, axis=0, ascending=True, inplace=False)`
+  - `df.sort_values(by=['Age', 'Name'])`
+  - `df.sort_values(by='Age')`
+
+
+- ## Data cleaning
+  - It is required beacaue there can be bad data like
+    - Empty cell
+    - Wrong format
+    - Wrong data
+    - Duplicate Data
+   
+  - Empty cell
+    - Print empty cell
