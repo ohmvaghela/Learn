@@ -69,6 +69,18 @@
 1. Single monolithic server
 2. Distributed cluser of nodes 
 
+## Apache Hadoop
+- Distributed computing environment
+- Hadoop is designed for write-once and read many times
+- It consisted of 3 main componenets to handle big data
+  1. Storage : HDFS (Hadoop Distributed File Storage System)
+       -   
+  2. MapReduce
+  3. YARN
+
+- Advantage of 3x replication schema in HDFS
+    - Ensures fault tolerance
+
 ---------------------------------------------------
 - Apache Hadoop theory
 - Core componenets of apache hadoop
