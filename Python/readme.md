@@ -550,8 +550,16 @@ C  3  6
   - `df.sort_values(by, axis=0, ascending=True, inplace=False)`
   - `df.sort_values(by=['Age', 'Name'])`
   - `df.sort_values(by='Age')`
-
-
+- ## Detecting Duplicated rows
+  - `df.duplicated(subset=None, keep='first')`
+  - Generates a column with same number of rows which marks false if not duplicate and true for duplicate 
+  - Subset -> If none compare entire row, else compare only the columns mentioned
+  - keep='First' (default) -> marks first duplicate as False and the subsiquent as true
+  - keep='Last' -> marks last duplicate as False and the subsiquent as true
+  - keep=None -> marks all duplicate true
+- ## Drop duplicates
+  - `df.drop_duplicates(subset=None, keep='first', inplace=False)`
+  
 - ## Data cleaning
   - It is required beacaue there can be bad data like
     - Empty cell
