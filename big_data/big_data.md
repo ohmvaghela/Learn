@@ -73,8 +73,37 @@
 - Distributed computing environment
 - Hadoop is designed for write-once and read many times
 - It consisted of 3 main componenets to handle big data
-  1. Storage : HDFS (Hadoop Distributed File Storage System)
-       -   
+  1. HDFS (Hadoop Distributed File Storage System)
+       - Data stored across machines
+       - It has two types of node
+           - One NameNode(Master Node)
+           - Multiple DataNode(Slave Node)
+       - NameNode is responsible for namespace operations like opening, closing and renaming files and dirs
+           - Stores meta data like file path, data nodes, replicas etc.
+       - DataNode actual worker node, jobs include reading, writing, processing etc.
+           - Also perfrom creation, deletion, and replication
+           - Actually stores data
+       - Whenever data comes to NameNode it is divided into chunks and then sent to DataNode
+       - Why?
+           - Ease of fetching data as multiple source of incoming data
+       - Replicas set:
+           - For each block replica sets are created to keep data fault tolerant
+           - And the number of copies of data is called `replication factor` which is generally 3
+           - replication factor can be modified and the info is stored in NameNode
+       - `HeartBeat`
+           - A signal that is continously sent from DataNode to NameNode
+           - If NameNode does not recieve this signal then that DataNode is considered dead
+       - `Balancing`
+           - If a DataNode is dead then NameNode will signal DataNodes containing data of dead DataNode to replicate
+       - Limitations
+           - Low Latency
+               - Application often require low latency
+               - But sometimes HDFS is not able to do that
+               - As it as high throughput so it can compromise on Latency sometimes
+           - Small File Problem
+               - Having multiple small files can create problem
+               - As for each file there will lots of movement in DataNodes
+               - Hence it makes it inefficient  
   2. MapReduce
   3. YARN
 
