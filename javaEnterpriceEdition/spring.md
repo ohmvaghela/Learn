@@ -1,51 +1,50 @@
 # Spring
-- Use the `spring initiailizr` (ctrl+shift+p)
-- Running project: Go to dir, build it and run it
-> - Dont forget to stop tomcat if running 
 
-```sh
-/opt/tomcat9/bin/shutdown.sh
-```
+## Setting Up and Running a Spring Boot Application
+- Use the `Spring Initializr` to generate a Spring Boot project (`Ctrl+Shift+P`).
+- To run the project:
+  1. Navigate to the project directory.
+  2. Build and run it using the following commands:
+     ```sh
+     mvn clean package
+     mvn spring-boot:run
+     ```
+  > **Note**: Stop any running instance of Tomcat to avoid port conflicts.
+  ```sh
+  /opt/tomcat9/bin/shutdown.sh
 
-```sh
-mvn clean package
-```
+- Changing the port:
+  - Modify `/src/main/resources/application.properties`:
+    ```properties
+    server.port=8081
+    ```
 
-```sh
-mvn spring-boot:run
-```
+> **Remember** to create all files in `java/com/.../spring/`.
 
-- Changing port 
-  - Go to `/src/main/resources/application.properties` and add
-  ```
-  server.port:8081
-  ```
+---
 
-> ## Remember to create all files in java/com/.../spring/
+## Entry Point in a Spring Boot Application
+### Key Terminologies
+- Spring IoC (Inversion of Control) Container:
+  - Injects dependencies into objects.
+  - Manages object creation and lifecycle.
+  - Includes ApplicationContext and BeanFactory.
+  - <img src="./images/image2.png" width=300/>
+- Beans:
+  - POJO (Plain Old Java Object) with getters and setters.
+  - Managed and configured by the Spring IoC Container.
+- BeanFactory:
+  - Lightweight implementation of the Spring IoC Container.
+  - Parent interface of ApplicationContext.
+- ApplicationContext:
+  - Subinterface of BeanFactory.
+  - Suitable for enterprise-level applications.
+  - Holds all beans and manages their lifecycle.
+- Dependency Injection:
+  - Objects define their own dependencies, and the container resolves them.
 
-## Entry point in spring Application
-- ### Terminologies
-  - `Spring IoC(Inversion Of Control) container`
-    - Injects dependencies into object 
-    - Manages object creation and lifecycle
-    - Both `ApplicationContent` and `BeanFactory` are part of `Spring IoC container`
-    - <img src="./images/image2.png" width=300/>
-  - `Beans`
-    - POJO(Plain Old Java Object)
-    - Must have getters and setters method
-    - `Spring IoC Container` is reponsible for configuring them at runtime
-  - `BeanFactory`
-    - Light weight implementation of `Spring IoC container`
-    - Parent interface of `ApplicationContext`
-  - `ApplicationContext`
-    - Subinterface of `BeanFactory`
-    - Used at enterprice level 
-    - It holds all the beans
-  - Dependency Injection
-    - Process where objects define their own dependency
-    - So if one class is depended on other, so on creation it wont give problem
 
-<img src="./images/image3.png">
+<img src="./images/image3.png" width=600>
 
 ```java
 package com.mechsimvault.spring;
@@ -62,72 +61,107 @@ public class Application {
 	}
 }
 ```
-- `@SpringBootApplication`
-  - Marks the main class of spring boot application
-  - Combination of 3 functionalitites
-    1. `@SpringBootConfiguration`
-        - Defines class is source of bean defination
-    2. `@EnableAutoConfiguration`
-        - Configure the project for `spring-boot-starter-web`
-    3. `@ComponentScan`
-        - Scans for the components
-  - If beans are location outside
-- `@ComponentScan(basePackages = {"com.mechsimvault.spring", "com.mechsimvault"})`
-  - If the packages are outside the spring or spring's subdirs we can mention the same using component scan to let it know where exactly to scan 
-- `@Component`
+
+## Key Annotations
+
+### - `@SpringBootApplication`:
+
+- Marks the main class of the Spring Boot application.  
+- Combines the following annotations:
+  - `@SpringBootConfiguration`: Indicates the class is a source of bean definitions.
+  - `@EnableAutoConfiguration`: Enables auto-configuration for dependencies like `spring-boot-starter-web`.
+  - `@ComponentScan`: Scans the package and its subpackages for Spring-managed components.
+
+### - Customizing Component Scan:
+
+- Use `@ComponentScan(basePackages = {"com.mechsimvault.spring", "com.mechsimvault"})` if beans are located outside the default package structure.
+
+### - `@Component`
   - Lets `IoC container` know that this is `bean object`
   - And hence will be managed by `IoC Container`    
-  - 
-  ```java
 
+    ```java
+
+      package com.mechsimvault.spring.model;
+
+      import org.springframework.stereotype.Component;
+
+      @Component
+      public class Student{
+        
+        public void compile(){
+          System.out.println("Student");
+        }
+      }
+    ```
+
+
+## - Managing Beans and Dependency Injection
+  > ### Here Spring auto detects components, DI and classes
+- ### `@Component`
+  - Marks a class as a Spring-managed bean.
+
+    ```java
     package com.mechsimvault.spring.model;
 
     import org.springframework.stereotype.Component;
 
     @Component
-    public class Student{
-      
-      public void compile(){
-        System.out.println("Student");
+    public class Student {
+        public void compile() {
+            System.out.println("Student");
+        }
+    }
+
+    ```
+
+- ### `@Autowired` 
+  - Injects dependencies into fields, constructors, or setters.
+  - But when using field injection on variable we use `@Value("abc")` annotation
+    ```java
+    // Field injection
+    public class Student {
+        @Autowired
+        private AnyClass anyClass;
+        
+        @Value(23)
+        private int marks;
+        
+        @Value("Not Found")
+        private String name;
+    }
+    ```
+    ```java
+    // Setter injection
+    public class School { 
+      private final Student student;
+      @Autowired
+      public void setStudent(@Value("${Student.name}") Student student) {  
+          this.student = student;
       }
     }
-  ```
+    ```
+    ```java
+    // Constructor injection
+    public class School{
+      @Autowired
+      public School(Student student) {  
+          this.student = student;
+      }
+    }
+    ```
+  - To avoid dependency or make dependency opyional
+    ```java
+    public class Student{
+      @Autowired(required = false)
+      private String name;// optional to provide
+    } 
+    ```
 
-- `ApplicationContext`
-  - Holds all beans and manages their lifecycle
-- Dependency injection
-  - `@Autowired` annotation is used for dependence injection
-  ```java
-  // Field injection
-  public class Student{
-    @Autowired
-    private int marks;
-  }
-  // Setter injection
-  public class School { 
-    private final Student student;
-    @Autowired
-    public void setStudent(Student student) {  
-        this.student = student;
-    }
-  }
-  // Constructor injection
-  public class School{
-    @Autowired
-    public School(Student student) {  
-        this.student = student;
-    }
-  }
-  ```
-- To avoid dependency or make dependency opyional
-  ```java
-  public class Student{
-    @Autowired(required = false)
-    private String name;// optional to provide
-  } 
-  ```
-- `ClassPathXmlAppliationContext`
-  - Used to load xml files, can load multiple files at once 
+## Self managing Appliction Context using `ClassPathXmlAppliationContext`
+
+- If we dont want to use annottions we can define an xml file for the same
+- The `applicationContext.xml` file takes care of all defining classes, component, DI  
   
   ```java
   ApplicationContext context = new ClassPathXmlApplicationContext("beanConfig1.xml","beanConfig2.xml",...);
@@ -144,6 +178,7 @@ public class Application {
   
   </beans>
   ```
+
 - Singleton and Prototype scope
   - The bean config file use `scope="singleton"` by default 
     - This means object is created regardless the object is called or not
@@ -218,32 +253,45 @@ public class Application {
     ```
 
   - Autowire : Fill the value of bean is available
-  ```xml
-    <bean id="student" class="com.mechsimvault.model.Student" autowired="default">
-    </bean>
 
-    <bean id="course" class="com.mechsimvault.model.Course"></bean>
-  ```
+    ```xml
+      <bean id="student" class="com.mechsimvault.model.Student" autowired="default">
+      </bean>
+
+      <bean id="course" class="com.mechsimvault.model.Course"></bean>
+    ```
   
   - Here it will fill value of course
   - Say there are two cousre then it will give error so we have to set `autowired` type
-  ```xml
-    <bean 
-      id="student" 
-      class="com.mechsimvault.model.Student" 
-      autowired="byName" 
-      >
-      <!--autowired can also be byValue : So will select data type instead of name -->
-      <!--when used by name so will match with the name of variable or object in class -->
-    </bean>
 
-    <bean id="math_course" class="com.mechsimvault.model.MathCourse"></bean>
-    <bean id="sci_course" class="com.mechsimvault.model.SciCourse"></bean>
+    ```xml
+      <bean 
+        id="student" 
+        class="com.mechsimvault.model.Student" 
+        autowired="byName" 
+        >
+        <!--autowired can also be byValue : So will select data type instead of name -->
+        <!--when used by name so will match with the name of variable or object in class -->
+      </bean>
 
-  ``` 
+      <bean id="math_course" class="com.mechsimvault.model.MathCourse"></bean>
+      <bean id="sci_course" class="com.mechsimvault.model.SciCourse"></bean>
+
+    ``` 
+  - Constructor injection 
+
+    ```xml
+      <bean id="student" class="com.mechsimvault.spring.model.Student" scope="prototype">
+          <constructor-arg name="name" value="ohm"/>
+          <constructor-arg name="marks" value="10"/>
+      </bean>
+
+    ```
 
 
-
+---
+---
+---
 
 ## Creating model and returing
 - Say we have creating a POJO(Plain Old Java Object)
