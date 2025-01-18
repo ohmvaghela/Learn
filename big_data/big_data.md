@@ -105,6 +105,31 @@
                - As for each file there will lots of movement in DataNodes
                - Hence it makes it inefficient  
   2. MapReduce
+     - It comes into picture when file is fetched or a query or business logic is to be ran
+     - So nothing to do with write part, but is a responsible for read part
+     - Say on a word file, client requested the word count of each word
+     - So a `job tracker` will be created which will keep track of progress
+     - then it will request meta data from the NameNode
+     - the number of datanodes on which data is stored is equal to number of splits
+     - each datanode is called `split` here
+     - Then the `mappers` are created, which is same is number of splits
+     - All the operations on one datanode is managed by a `task tracker` slave process of job tracker
+     - And the logic applied to the each data node is called `map`
+     - Each task tracker sends a heartbeat at a fix interval of time, if it fails to send it then the job tracker considers it dead and the new task tracker is created and it is assigned to another replica of the datanode
+     - Once in the datanode the process of reading and creating a basic key value pair is done by `record reader`
+     - Where key is the byte offset and record is the data
+     - eg. a file has two lines
+     - "Hello I am GeeksforGeeks"
+     - "How can I help you"
+     - then record reader will return
+     - (0, Hello I am GeeksforGeeks) and (26, How can I help you).
+     - now this data will be passed to mapper which will apply business logic
+     - like if 2 files are there say they will be mapped as follows
+     - (Hello, 1), (I, 1), (am, 1) and (GeeksforGeeks, 1) for the first pair
+     - and (How, 1), (can, 1), (I, 1), (help, 1) and (you, 1) for the second pair.
+     - After that `reducer` will do `shuffling and sorting`
+     - shuffling: if there are 3 (Are, 1) then they will be combined to (Are, [1,1,1]).
+     - sorting will be like adding these and returning them in a format 
   3. YARN
 
 - Advantage of 3x replication schema in HDFS
