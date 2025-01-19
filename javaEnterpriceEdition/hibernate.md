@@ -17,38 +17,36 @@
     - Or else we need to mention `xml` location
 3. Create a session instance to interact with DB
   - 
-  
-  ```java
+    ```java
     SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
-  ```
+    ```
   
   - As we have configuration details we need to create a session variable which will interact with DB and perform CRUD operations
   - `ExceptionInInitializerError` is the error thrown if there is problem with initializetion
 
 4. Once we have a session we to start the connection
   - 
-  
-  ```java
-  Session session = sessionFactory.openSession()
-  ```
+    ```java
+    Session session = sessionFactory.openSession()
+    ```
 
 5. Operations in DB are in form of transactions 
   - So we first initiate transaction
-
+  - 
     ```java
     Transaction transaction = session.beginTransaction();
     ```
 
 6. Perform changes in DB
 
-  ```java 
-    Student student = new Student();
-    student.setName("John Doe");
-    student.setMarks(85);
+    ```java 
+      Student student = new Student();
+      student.setName("John Doe");
+      student.setMarks(85);
 
-    // Save the Student to the database
-    session.save(student);
-  ```
+      // Save the Student to the database
+      session.save(student);
+    ```
 
 7. Commit Changes in db
 
