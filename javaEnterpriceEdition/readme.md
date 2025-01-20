@@ -19,6 +19,7 @@
 - [JSTL](./JSP.md#jstl-jsp-standard-template-library)
 - [Filters](./servlet.md#filters)
 - [Hibernate](./hibernate.md)
+  - [Hibernate lifecycle (Persistance Lifecycle)](./hibernate_lifecycle.md)
 - [jersey](./rest.md)
 - [Spring](./spring.md)
   - [Spring-Annotations](./spring_annotations.md)

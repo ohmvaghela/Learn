@@ -1,16 +1,18 @@
 # Spring JPA
 
 ## - Dependencies
-- Hibernate-core
-- Spring-orm
-- Spring-tx (Spring Transaction)
-- mysql-connector-java (mysql-connector-j)
-- c3p0
+- hibernate-core 6.1.7
+- spring-orm 6.1.16
+- spring-tx 6.1.16
+- mysql-connector-j 8.0.33
+- c3p0 0.9.5.5
+- spring-webmvc 6.1.16
+- spring 5.0.0
 
 ## - Configuring
 - Before first run
   - servlet-config.xml
-    - add xmlns:tx
+    - add x55mlns:tx
     - add to xsi:schemaLocation : 2
   - creating transactions driver
     - tx:annotation transaction-manager="myTransactionManager"
@@ -34,4 +36,4 @@
       - password
       - ?minPoolSize
       - ?maxPoolSize
-      - ?maxIdleTime
+      - ?max5IdleTime
