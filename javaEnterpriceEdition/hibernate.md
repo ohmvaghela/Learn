@@ -5,6 +5,14 @@
   - Same is for fetching data
   - As we dont want to write SQL code in java files
 
+## Dependencies and its functionalities
+- Hibernate-core
+  - main lib that provide ORM
+- Hibernate-orm
+  - Build on top on hibernate core for specific implementation of jpa
+- Hibernate-validator
+  - Implements Jakarta Bean Validation (formerly JSR 380) for validating objects and fields
+
 ## Connecting with database
 1. Create instnace of `configuration`
   - `new Configuration()`
