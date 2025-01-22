@@ -27,5 +27,5 @@
   - [Spring-Boot-MVC](./spring_boot_mvc.md)
   - [Spring-Boot-MVC-Annotations](./spring_boot_mvc_annotations.md)
   - [Spring-MVC](./spring_mvc.md)
-  - [Spring-JPA](./spring_jpa.md)
   - [Spring-Config-File](./spring_config.md)
+  - [Spring-JPA](./spring_jpa.md)
