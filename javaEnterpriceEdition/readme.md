@@ -8,6 +8,7 @@
 <img src="./Java-Hierarchy.png" /> 
 
 ## Java Related
+- [Basics](./basic.md)
 - [Maven](./maven.md)
 - [Junit5](./junit5.md)
 - [tomcat](./tomcat.md)
@@ -29,3 +30,4 @@
   - [Spring-MVC](./spring_mvc.md)
   - [Spring-Config-File](./spring_config.md)
   - [Spring-JPA](./spring_jpa.md)
+  - [Sping-boot-JPA](./spring_boot_jpa.md)
