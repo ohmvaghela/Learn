@@ -9,6 +9,7 @@
 
 ## Java Related
 - [Basics](./basic.md)
+  - [MultiThreading](./multiThreading.md)
 - [Maven](./maven.md)
 - [Junit5](./junit5.md)
 - [tomcat](./tomcat.md)
