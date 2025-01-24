@@ -55,6 +55,12 @@
     }
     ```
 
+- To sync a resource we can use synchronized block
+
+  ```java
+  synchronized (Resource){}
+  ```
+
 ## Thread v/s runnable
 
 | Thread | Runnable |
@@ -261,23 +267,45 @@ Callable<String> task = () -> {
 
     </details>
 
+## Locks in Java
+- `ReentrantLock` object works as lock
+- It has 4 common methods
+  1. lock()
+  2. unlock()
+  3. tryLock()
+  4. tryLock(timeout, TimeUnit)
+- Creating lock
 
+  ```java
+  final ReentrantLock myLock = new ReentrantLock();
+  ```
 
----
+- These are unfair locks and resource are allocated randomly
+- If we want to create locks and allocate resource in the order of request we can use fair lock
+- For it we just need to pass a `true` boolean to ReentrantLock
 
+  ```java
+  final ReentrantLock myLock = new ReentrantLock(true);
+  ```
 
-- Sleep
-- Join
-- Interrupt
-- IsAlive
-- GetState
-- setName
-- Setpriority
-- Getpriority
-- setDaemon
-- isDaemon
-- getThreadGroup
-- currentThread
-- yield
-- notify
-- notifyall
+### `lock()` v/s `tryLock()` 
+- Lock will wait on the line till it gets resource and does not return anything
+- While tryLock will attempt to lock resource and if it fails to lock resource then it continues execution
+- tryLock returns boolean that wether they were able to lock the resource or not
+- tryLock another syntax
+
+  ```java
+  MyLock.tryLock(2, TimeUnit.SECONDS));// waits for lock for 2 sec 
+  ```
+
+## ReadWrite lock
+- These locks allow multiple read and single write
+```java
+// Declaring lock
+ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+lock.readLock().lock(); // Acquire the read lock
+lock.readLock().unlock(); // release the read lock
+lock.writeLock().lock(); // Acquire the write lock
+lock.writeLock().unlock(); // Release the write lock
+```
+
