@@ -68,18 +68,210 @@
 ## Spring filter security configuration
 - Spring used `SecurityFilterChain` bean for security config
 - We need to override it for custom security
+- ### HttpSecurity
+  - Defines which urls to be secured to what level
+  - how to authenticate and authorize users
+  - enable role based control
+  - other security customization like CSRF, CORS etc...
+  - Basic structure
 
+    ```java
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                // No authentication required for /public/**
+                .requestMatchers("/public/**").permitAll() 
+                // Only users with ADMIN role
+                .requestMatchers("/admin/**").hasRole("ADMIN") 
+                 // Only users with USER role
+                .requestMatchers("/user/**").hasRole("USER")
+                // All other requests require authentication
+                .anyRequest().authenticated() 
+            )
+            .formLogin(); // Enables form-based login
+        return http.build();
+    }
+    ```
+
+- ### Managing User 
+  - Spring Security provides a predefined User class that implements the UserDetails interface, which represents the core user information used by Spring Security
+  - Spring security provides a predefined `User` class 
+    - The UserBuilder allows you to set properties such as username, password, and roles.
+    - Once all properties are set, the build() method is used to create an `immutable User object`.
+
+  - Steps for Creating a User:
+    - Use the factory method User.builder() to obtain a UserBuilder object.
+    - Add user properties to the UserBuilder object, such as:
+      - `username(String username)`
+      - `password(String password)`
+      - `roles(String... roles)`
+    - Call the build() method to create a User object.
+    - Store the created user(s) in an instance of InMemoryUserDetailsManager for testing purposes:
+
+      ```java
+      return new InMemoryUserDetailsManager(admin, user1, user2, ..., usern);
+      ```
+
+    - We must provide PasswordEncoder bean to Spring Security.
+      - This bean ensures that passwords are encoded before storage and automatically decoded during authentication.
+  
+        ```java
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+            return new BCryptPasswordEncoder();
+        }
+        ```
+
+    ```java
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password(encoder.encode("admin123")) // Encode password
+                .roles("ADMIN")
+                .build();
+
+        UserDetails user = User.builder()
+                .username("user")
+                .password(encoder.encode("user123")) // Encode password
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user); // Store users in memory
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    ```
+
+  > After Spring 5.7 we dont explicitly need to annotate class with `@EnableWebSecurity`  
+  > But it is a good practice to annotate it 
+
+## Adding custom access deined page
+- HttpSecurity provides method to customize exception handling
+  
+  ```java
+  .exceptionHandling(exceptions -> exceptions
+        .accessDeniedPage("/access-denied") // Redirect on 403 errors
+    )
+  ```
+
+- Full method
+
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/public/**").permitAll()
+            .requestMatchers("/secure/admin/**").hasRole("ADMIN") // Only ADMIN role
+            .anyRequest().authenticated()
+        )
+        .exceptionHandling(exceptions -> exceptions
+            .accessDeniedPage("/access-denied") // Redirect on 403 errors
+        )
+        .formLogin();
+    return http.build();
+}
+```
+
+## UserDetailsService
+- Core component of spring security
+- Used for retreving user data during authentication and authorization
+- We can use `loadUserByUsername()` to load user
+- It returns `UserDetails` object
+
+## JWT utils
+- Before using JWT we need utilities to 
+  - Create Token
+  - Validate token
+  - Extract Username from token
+- ### Creating token
+  - Even here builder pattern is used
+  - First builder object is returned `Jwts.builder()`
+  - Then properties are added  
+    - `Jwts.builder().setSubject(userDetails.getUsername()).setIssuedAt(new Date())`
+  - At last it is converted to string to return as token
+
+    ```java
+    public String generateToken(UserDetails userDetails) {
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername()) // Subject (username)
+                .setIssuedAt(new Date()) // Current timestamp
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // Expiration time
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // Sign with HS256 and secret key
+                .compact(); // Build the token
+    }
+    ```
+
+- ### Validating Token and extract Username from token
+  - First the `UserDetails` object and token as string are provided
+
+    ```java
+    // Check if token is valid
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        // Extract username
+        final String username = extractUsername(token); 
+        // Match username and expiration
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token); 
+    }
+    ```
+
+  - To extract user name
+
+    ```java
+    // Extract username from token
+    public String extractUsername(String token) {
+        return extractClaims(token).getSubject();
+    }
+    ```
+
+  - Claims
+    - It is the info in the token
+    - Parts of claim 
+      - (iss) Issure : Who's sending token
+      - (sub) Subject : Main info that is required 
+      - iat (Issued At): The timestamp when the token was issued.
+      - exp (Expiration): The timestamp when the token expires.
+    - Payload example
+
+      ```json
+      {
+        "sub": "john.doe",
+        "role": "admin",
+        "iat": 1650838400,
+        "exp": 1650924800
+      }
+      ```
+
+    - To extract claims we can use jwt parser
+
+      ```java
+      private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
+      }
+      ```
+
+    - Also to check if the token is not expired
+
+      ```java
+      // Check if token is expired
+      private boolean isTokenExpired(String token) {
+          return extractClaims(token).getExpiration().before(new Date());
+      }
+      ```
 
 ## Using 
 `https://chatgpt.com/c/6794e958-c16c-800d-94a9-39543e08fb71`
 
-- CSRF 
-- Spring Security Filter Chain
-  - @EnableWebSecurity
-  - SecurityFilterChain object
-  - HttpSecurity
-    - CSRF with HttpSecurity
-  - httpform login
+---
+
 ```java
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -102,7 +294,6 @@ Customizer<CsrfConfigurer<HttpSecurity>> cust = new Customizer<CsrfConfigurer<Ht
 }; 
 http.csrf(custCsrf);
 ```
-- UserDetailService, InMemoryUserDetailManager, UserDetails, User
 - Creating Authentication provider and return authenticated object
   - DaoAuthenticationInterface provider
 - Creating a class for implementing userDetailService  
