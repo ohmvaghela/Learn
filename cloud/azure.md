@@ -90,54 +90,126 @@
     - Accessed via REST APIs, SDKs.
 
 
+## Cosmos DB structure  
+- Used to store NoSQL data
+- We can SQL queries on NoSQL data using the SQL APIs (Not on all)
+- The hierarchy
+  - Account
+  - Database : Has collection of containers
+  - Container : Physically data is stored here
+  - Items : The data
+- The data is pratitioned and stored
+- One partition key is defined and logical partitioning is done in container
+- Then while storing the data it is Physically pratitioned and stored in container
+
+## Consistancy spectrum in cosmos db
+1. Strong consistancy
+    - Client always read most recent commited state
+    - High latency, Reduced availability in multi region setup
+
+2. Bounded Staleness
+    - Client read data within specific time-lag or version lag which is pre-defined
+    - Lower latancy then Storng consistancy
+    - Less consistancy then Storng consistancy
+
+3. Session Consistancy (Default)
+    - Ensures read-your-own-writes
+    - Whatever changes are made by clients are visible to clients
+    - Like shopping cart at amazon
+    - Lower latancy then Bounded Staleness
+    - Less consistancy then Bounded Staleness
+
+4. Consistant Prefix Consistancy
+    - Read never see out-of-order writes (changes are made in batch)
+    - Like say 4 viewers are viewing a doc with one writer
+    - So if writer writes 3 batches say batch a,b,c
+    - Then batches are reflected one after another and in same order
+    - These are handled like transactions
+    - Lower latancy then Bounded Staleness
+    - Less consistancy then Bounded Staleness
+
+5. Eventual Consistancy
+    - No guarantees on order or freshness of reads
+    - writes eventually propagate to all replicas.
+    - Eg. Social media likes, shares, postes
+
+## Server Side programming and data management tools
+1. Item
+    - Single Record in a container
+    - Each record has PK
+    - Partitioning based on Partition key hence easily scalable
+2. Triggers
+    - JS code that runs before or after any CRUD operations
+    - Per-Triggers : Before operations, like varidation before saving data
+    - Post-Triggers : After operations, like notification and logs after saving data 
+3. UDF (User Defined Functions)
+    - A custom JS function that can be used in queries to perform complex operations
+    - Eg. 
+
+      ```JS
+      function formatName(name) {
+        return name.toUpperCase();
+      }
+      ```
+      ```sql
+      SELECT udf.formatName(c.name) FROM c
+      ```
+
+4. Stored Procedures
+    - JS code that runs atomically(as transaction) on server
+    - Used for perfroming custom operations on db that requires transactionality
+
+
+## Request units (RU)
+- Cost of a database operation in terms of computation, cpu memory, I/O resources
+- It is used as currency for dbs operations
+- 1 RU is required to read 1KB document container with default settings
+- Other operations like query, writes require more RU
+
+## Azure Table store v/s Cosmos DB table API
+- Cosmos DB table API is same as Azure table store 
+  - like both store key value pair
+- But Cosmos DB offers more advanced features
+  - Global distribution available
+  - In Azure Table store there is indexing on partition key and row key
+  - While in cosmos db it is auto indexing on all fields by default
+  - Azure Table store only offer strong consistancy while cosmos offer all 5 levels
+
+## Time to live 
+- Cosmos auto delete data after certain time, helping manage storage
+
+## Partitioning 
+- Logical Partitioning
+  - Logical grouping of data container
+- Physical Partitioning
+  - Storing data on different servers
+- Hot Partitioning
+  - happens when a few logical partition recieves relatively high amount of data compared to other partitions
+  - If not done then there will be imbalance in data stored 
+
+## Dedicated v/s Shared throughput
+- Dedicated
+  - A defined amount of RU/s is dedicated to a single container
+- Shared 
+  - A defined amount of RU/s is dedicated to multiple container
+   
+## Partitioning
+- Single Partitioning
+  - All the data is stored in single partition
+  - Fast read and write 
+  - Limit 50 GB data + 10,000 RU/s
+- Cross partition
+  - Data stored accross multiple partition
+  - Slower read-write when queries involve multiple partitions
+
+## Composite key Partitioning
+- Multiple fields combined for indexing
+
+
+
 ---
 
-Different Data source stories in cloud
-ACID properties
-types of nosql
-types of cloud computing service IaaS, PaaS, SaaS
-types of cloud like public, private, hybrid
-Azure Cloud basics
-Overview of azure service
-azure resource group
-azure storage
-blob storage and blob storage access tier
-types of blob : block, Append, Page
-Hot, Cold, Archive tier in blob
-File Storage
-- Storage Queue
-- Table Storage
-Storage Performance tier
-- Locally redundant storage (LRS)
-- Zone Redundant Storage (ZRS)
-- Geo-Redundant Storage (GRS)
-- Read Access GeoRedundant Storage (RA-GRS)
-Azure Storage Account types
 
-Cosmos DB and its feature
-Cosmos DB multimodel apis
-Table storage v/s Cosmos DB
-provision cosmos db account
-hierarchy azure cosmos db account
-azure cosmos containers
-azure cosmos items
-cosmos db sql api
-creating and managing data
-consistancy level in cosmos db
-consistany, availability and performance tradeoffs
-time to live feature
-mongodb with cosmosdb
-
-partitioning in cosmos db
-- Physical partitioning
-- Logical Partitioning
-- hot partitioning
-partitioning and horizontal scaling
-request units
-dedicated v/s shared throughput
-single partitioning v/s cross partitioning
-composite key / automatic indexing
-table api in cosmos db
 sql vs table api
 distribute data globally
 connecting to preferrd region
@@ -145,12 +217,3 @@ manual vs automatic failover
 cosmos db germlin api
 cosmos etcd api
   
-
-parag parkeh flexi cap fund : Groww 
-exit load : cost is related 
-SIP 
-small cap and mid cap : 
-nifty index
-
-
-legent and platinum rupay indusbank
