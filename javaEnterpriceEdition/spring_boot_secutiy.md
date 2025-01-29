@@ -1,5 +1,83 @@
 # Spring Boot Security
 
+## Spring Security Architecture
+- Request flow 
+	- Client makes request
+	- It goes through `security filter chain`
+		- One filter among them is JWTAuthentication filter
+		- The list of filters and order is mentioned below in [Filter chain order](./spring_boot_secutiy.md#security-filter-chain-order)
+
+## Security Filter Chain order
+- `ChannelProcessingFilter` : ensure protocal is HTTP and/or HTTPs 
+- `SecurityContextPersistenceFilter` : Ensure user's auth details are persisted during the session
+- `UsernamePasswordAuthenticationFilter` : Checks if credentials are valid and create an `Authentication Object`
+- `ConcurrentSessionFilter` : Limits number of sessions user can have. 
+	- Used only when session `Stateful`
+- `LogoutFilter` : Intercept logout request and terminate session and clear cache
+- `RememberMeAuthenticationFilter` : Remember session even after logout 
+	- Used only when session `Stateful`
+- `AnonymousAuthenticationFilter` : Created even if no credentials are provided 
+	- It is created so spring security can provide authorization rights which are limited to open pages
+- `SessionManagementFilter` : Handle session related tasks
+- `ExceptionTranslationFilter` : Translates exception to unauthenticated response
+- `FilterSecurityInterceptor` : Last filter in chain, and is responsible for authorization(access control) when requesting for resources
+
+- ### Order with JWT filter
+  - ChannelProcessingFilter
+  - SecurityContextPersistenceFilter
+  - ✅ JWT Filter 
+  - UsernamePasswordAuthenticationFilter
+  - ConcurrentSessionFilter
+  - LogoutFilter
+  - RememberMeAuthenticationFilter
+  - AnonymousAuthenticationFilter
+  - SessionManagementFilter
+  - ExceptionTranslationFilter
+  - FilterSecurityInterceptor
+
+## Components of Spring Security Arch
+- ### Security Context Holder
+  - Holds details of the currently authenticated user, including their authentication and authorization information.
+  - `SecurityContextHolder` provides access to `SecurityContext`, which contains the `Authentication object`.
+  - The `Authentication object` holds the `Principal` (authenticated user details) and their `GrantedAuthority` (permissions/roles).
+
+- ### Authentication Manager (Interface)
+	- Takes request and passes it on to `Authentication Providers`
+	- These `authentication Provider` are the actual place where these requests are authenticated
+	- There can be multiple `authentication provider` and `Provider Manager` loops through them 
+    - the first one that supports the authentication type handles it.
+    - If none of the providers authenticate the request, an exception is thrown.- 
+
+- ### Provider Manager
+	- Default Implemention of `Authentication Manager`
+  - It maintains a list of `AuthenticationProvider` instances and delegates authentication to them.
+  - If authentication fails in all configured providers, and a `parentAuthenticationManager` is set, it will attempt authentication using the parent
+
+- ### Authentication Provider
+	- AuthenticationProvider is responsible for performing the actual authentication logic.
+	- Different implementations exist to support various authentication mechanisms:
+    - DaoAuthenticationProvider (UserDetailsService).
+    - JwtAuthenticationProvider (custom) 
+    - LdapAuthenticationProvider 
+    - OAuth2AuthenticationProvider
+
+- ### UserDetailsService
+	- Interface used to load specific user details
+	- By default it is implemented but we can change it 
+  - Spring Security does not provide a default implementation; developers must implement `loadUserByUsername()`.
+  - The `UserDetailsService` implementation is used by `DaoAuthenticationProvider` to fetch user information from a database or other sources.
+
+
+- ### UserDetails
+	- Spring Security uses this object to store user details and access rights
+	- Can be modified by implementing UserDetails interface
+
+- ### GrantedAuthority
+  - GrantedAuthority represents a user's permissions or roles in the security context.
+  - It is used by Spring Security to determine access control.
+  - Authorities can be defined as roles (e.g., "ROLE_ADMIN") or specific permissions (e.g., "READ_PRIVILEGES").
+
+
 ## CSRF (Cross Site Resource Forgery)
 - When attacker tricks user to perform action without even knowing
 - How it works
@@ -189,6 +267,32 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
   - Create Token
   - Validate token
   - Extract Username from token
+
+- ## Configuring Security Config for JWT
+  - disabling csrf
+    - When working with jwt, they are recieved as a header and stored in inmemory object and not in browser storage
+  - make session management stateless
+    - As JWT are stateless 
+  - Create a jwtUtils to provide basic functionality like 
+    - Generate token
+    - Validate Token
+    - Extract Payload
+  - Add JWT Auth Filter
+    - To intercept requests, validate token, extract details
+    - Inside filter
+      - Validate token and extract user
+      - Get `userDetails` objects
+      - Get `UsernamePasswordAuthenticationToken` object
+        - Spring Security relies on `SecurityContextHolder` for all the auth purpose
+        - So we are not validating it again we are just providing it to spring security for authorization purposes
+  - use AddfilerBefore in SecurityFilterChain to use JWT filter 
+  
+      ```java
+      http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+      ```
+
+  - 
+
 - ### Creating token
   - Even here builder pattern is used
   - First builder object is returned `Jwts.builder()`
@@ -266,6 +370,10 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
           return extractClaims(token).getExpiration().before(new Date());
       }
       ```
+
+
+
+
 
 ## Using 
 `https://chatgpt.com/c/6794e958-c16c-800d-94a9-39543e08fb71`
