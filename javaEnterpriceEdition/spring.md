@@ -25,26 +25,103 @@
 
 ## Entry Point in a Spring Boot Application
 ### Key Terminologies
-- Spring IoC (Inversion of Control) Container:
-  - Injects dependencies into objects.
-  - Manages object creation and lifecycle.
-  - Includes ApplicationContext and BeanFactory.
-  - <img src="./images/image2.png" width=300/>
-- Beans:
+- `Beans` :
   - POJO (Plain Old Java Object) with getters and setters.
   - Managed and configured by the Spring IoC Container.
-- BeanFactory:
+- `Spring IoC (Inversion of Control) Container` :
+  - Framework responsible for 
+    - Injects dependencies into objects.
+    - Manages object creation and lifecycle.
+- `BeanFactory` (Interface) :
   - Lightweight implementation of the Spring IoC Container.
-  - Parent interface of ApplicationContext.
-- ApplicationContext:
-  - Subinterface of BeanFactory.
+- `ApplicationContext` (Interface) :
+  - Extension of `BeanFactory` inteface.
   - Suitable for enterprise-level applications.
-  - Holds all beans and manages their lifecycle.
-- Dependency Injection:
-  - Objects define their own dependencies, and the container resolves them.
+- `AnnotationConfigServletWebServerApplicationContext`
+  - One of many implementation of `ApplicationContext` 
+- `DI (Dependency Injection)` :
+  - Process of injecting objects/values into beans 
+
+![image3](./images/image3.png)
 
 
-<img src="./images/image3.png" width=600>
+<h3>
+<details>
+   <summary>uml code for image </summary> 
+
+    ```
+    @startuml
+    ' Define the classes and interfaces involved
+
+    interface IoCContainer {
+        +manageBeans()
+        +injectDependencies()
+        +manageLifecycle()
+    }
+
+    interface BeanFactory {
+        +getBean(name: String)
+        +getBeanDefinition(name: String)
+    }
+
+    interface ApplicationContext{
+        +getBean(name: String)
+        +refresh()
+        +getEnvironment()
+        +publishEvent(event: Event)
+    }
+
+    class AnnotationConfigServletWebServerApplicationContext {
+        +createBean(name: String)
+        +manageWebContext()
+        +handleAnnotations()
+        +startWebServer()
+    }
+
+    class Bean {
+        +name: String
+        +properties: Map<String, Object>
+        +init()
+        +destroy()
+    }
+
+    class AOP {
+        +applyAdvice(bean: Bean)
+        +definePointcut()
+    }
+
+    class BusinessLogic {
+        +performOperation()
+    }
+
+    class Aspect {
+        +before()
+        +after()
+        +around()
+    }
+
+    ' Define the relationships between the components
+
+    IoCContainer <|-- BeanFactory : "Implements"
+    BeanFactory <|-- ApplicationContext : "Implements"
+    ApplicationContext <|-left- AnnotationConfigServletWebServerApplicationContext : "extends"
+
+    ' ApplicationContext o-- Bean : "Manages"
+    ' ApplicationContext o-- AOP : "Applies"
+    AOP o-up- Aspect : "Uses"
+    Bean o-up- BusinessLogic : "Contains"
+
+    ' Define the direction of the relationship
+    AnnotationConfigServletWebServerApplicationContext -up-> Bean : "Manages Beans"
+    AnnotationConfigServletWebServerApplicationContext -up-> AOP : "Applies AOP"
+
+    @enduml
+
+
+    ```
+
+</details>
+</h3>
 
 ```java
 package com.mechsimvault.spring;

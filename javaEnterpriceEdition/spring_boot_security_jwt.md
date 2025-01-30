@@ -1,5 +1,50 @@
 # Spring Boot Security JWT and Custom user
 
+> ### Reference : springbootjwt
+
+## AuthenticationProvider and AuthenticationManager creation and registeration flow
+- First Bean is created and registered in IoC container
+   
+    ```java
+    @Bean 
+    public AuthenticationProvider authenticationProvider(){
+      DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+      authProvider.setUserDetailsService(userDetailsService());
+      authProvider.setPasswordEncoder(passwordEncoder());
+      return authProvider;
+    }
+    ```
+
+- And then we instruct `http.authenticationProvider(authenticationProvider)` explicitly registers a custom `AuthenticationProvider`, overriding any default ones.
+
+    ```java
+    import org.springframework.security.authentication.AuthenticationProvider;
+    @Configuration
+    @RequiredArgsConstructor
+    public class SecurityConfigs{
+
+      // This is not custom authenticationProvider it is spring provided
+      @Autowired
+      private AuthenticationProvider authenticationProvider;
+
+      @Bean
+      public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        ...
+        http.authenticationProvider(authenticationProvider);
+        ...
+      }
+    }
+    ```
+  
+- Now when AuthenticationManager is created list of AuthenticationProvider is supplied
+    
+    ```java
+    @Bean 
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)throws Exception{
+      return config.getAuthenticationManager();
+    }
+    ```
+
 
 ## Working of Authentication when a request comes with and without token
 
@@ -57,22 +102,3 @@
     - Make these endpoint as public endpoints
 9. Create a demo class to test token and add authority check 
 
-
-
-
-
-
-> # Explain this "usernamePasswordAuthenticationToken" its role and function and creating
-> # If we dont write following then default authenticationmanager will be creating and will not go through authenticationProvider that I created 
-  @Bean 
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration config)throws Exception{
-    return config.getAuthenticationManager();
-  }
-  
-  @Bean 
-  public AuthenticationProvider authenticationProvider(){
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(userDetailsService());
-    authProvider.setPasswordEncoder(passwordEncoder());
-    return authProvider;
-  }

@@ -96,6 +96,7 @@
   - Authorities can be defined as roles (e.g., "ROLE_ADMIN") or specific permissions (e.g., "READ_PRIVILEGES").
 
 
+
 ## CSRF (Cross Site Resource Forgery)
 - When attacker tricks user to perform action without even knowing
 - How it works
