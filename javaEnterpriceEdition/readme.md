@@ -35,3 +35,4 @@
   - [Spring-boot-REST](./spring_boot_rest.md)
 - [AOP(Aspect Oriented Programming) in Spring](./spring_AOP.md)
 - [Spring Boot Security](./spring_boot_secutiy.md)
+  - [Spring Boot Security JWT + Custom User](./spring_boot_security_jwt.md)
