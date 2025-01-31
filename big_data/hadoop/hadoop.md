@@ -1,5 +1,3 @@
-
-
 ## Apache Hadoop
 - Distributed computing environment
 - Hadoop is designed for write-once and read many times
@@ -11,27 +9,27 @@
 ## 1. HDFS (Hadoop Distributed File Storage System)
   - Data stored across machines
   - It has two types of node
-      - One NameNode(Master Node)
-      - Multiple DataNode(Slave Node)
-  - NameNode is responsible for namespace operations like opening, closing and renaming files and dirs
+      - One `NameNode(Master Node)`
+      - Multiple `DataNode(Slave Node)`
+  - `NameNode` is responsible for namespace operations like opening, closing and renaming files and dirs
       - Stores meta data like file path, data nodes, replicas etc.
-  - DataNode actual worker node, jobs include reading, writing, processing etc.
+  - `DataNode` actual worker node, jobs include reading, writing, processing etc.
       - Also perfrom creation, deletion, and replication
       - Actually stores data
-  - Whenever data comes to NameNode it is divided into chunks and then sent to DataNode
+  - Whenever data comes to `NameNode` it is divided into chunks and then sent to `DataNode`
   - Why?
       - Ease of fetching data as multiple source of incoming data
-  - Replicas set:
+  - `Replicas set`:
       - For each block replica sets are created to keep data fault tolerant
       - And the number of copies of data is called `replication factor` which is generally 3
-      - replication factor can be modified and the info is stored in NameNode
+      - replication factor can be modified and the info is stored in `NameNode`
   - `HeartBeat`
-      - A signal that is continously sent from DataNode to NameNode
-      - If NameNode does not recieve this signal then that DataNode is considered dead
+      - A signal that is continously sent from `DataNode` to `NameNode`
+      - If `NameNode` does not recieve this signal then that `DataNode` is considered dead
   - `Balancing`
-      - If a DataNode is dead then NameNode will signal DataNodes containing data of dead DataNode to replicate
+      - If a `DataNode` is dead then `NameNode` will signal `DataNodes` containing data of dead `DataNode` to replicate
   - Limitations
-      - Low Latency
+      - High Latency
           - Application often require low latency
           - But sometimes HDFS is not able to do that
           - As it as high throughput so it can compromise on Latency sometimes
@@ -39,6 +37,36 @@
           - Having multiple small files can create problem
           - As for each file there will lots of movement in DataNodes
           - Hence it makes it inefficient  
+  - ## `NameNode`
+    - It maintains metadata in two files `FsImage` and `EditLogs`
+    - **Fsimage (File System Image)**
+      - A snapshot of HDFS at a give point in time
+      - It contains
+        - Files and Dir structure
+        - Permissions
+        - Block Locations
+        - Replicaion details
+    - **EditLogs**
+      - Log record of all the changes since last FsImage checkpoint
+  - ## `Secoundary NameNode` 
+    - Merges `FsImage` and `EditLogs` at a fixed interval of time
+    - This helps in preventing Editlogs to become very larger
+    - > No longer used (discarded after hadoop 2.x)
+  - ## `Checkpoint Node`
+    - Same as `secoundary NameNode` 
+    - Used for Non-HA(high Availability) Setup
+  - ## Standby NameNode
+    - Part of `HDFS HA setup`
+    - Maintains copy of NameNode's metadata and takes over immediately if active namenode fails
+    - Uses shared storage system (like NFS or QJM - Quorum Journal Manager) to stay in sync
+  - ## Backup NameNode
+    - A more advanced version of CheckpointNode.
+    - Maintains an in-memory copy of the FsImage, reducing recovery time.
+  - ## Block size
+    - In HDFS files are divided into blocks and stored
+    - default block size is 128MB, but can be altered
+     
+
 ## 2. MapReduce in Hadoop
     
   **Overview:**  
