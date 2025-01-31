@@ -65,7 +65,20 @@
   - ## Block size
     - In HDFS files are divided into blocks and stored
     - default block size is 128MB, but can be altered
-     
+  - ## Rack
+    - It is physical collection of DataNodes
+    - A large cluster consist of multiple racks
+  - ## Rack awareness
+    - It is data placemenet stratergy
+    - It improves `fault tolerance`, `data locality`, `network traffic optimisation` 
+  - ## Rack awareness policies
+    - There should not be more then 1 replica in same datanode
+    - There should not be more then 2 replica in same rack
+    - Number of racks should be less then number of DataNode
+      - Number of racks should be significantly smaller then number of dataNode, but not necessary smaller then replicaiton factor
+  - ## Operations
+    - Block operations : Operation between NameNode and DataNode
+    - Metadata operations : Operation between FS client and NameNode
 
 ## 2. MapReduce in Hadoop
     
@@ -118,13 +131,64 @@
         Input: (26, "How can I help you")  
         Output: (How, 1), (can, 1), (I, 1), (help, 1), (you, 1)
         ```
-  
+  7.1 Once the above is done we perform `combiner` operations
+        - Example: `(are, 1), (are, 1), (are, 1)` → `(are, [1, 1, 1])`  → `(are, 3)`
+        - Next this data from multiple combiner is passed to reducer and the same is done 
   8. **Reducer Phase:**  
       After the mapping phase, the Reducer performs the following:
       - **Shuffling:** Groups identical keys.  
         - Example: `(are, 1), (are, 1), (are, 1)` → `(are, [1, 1, 1])`  
       - **Sorting:** Aggregates the values and formats the output.  
         - Example: `(are, [1, 1, 1])` → `(are, 3)`
+  - ## Overall flow
+    - Say these are files to be used
+      ```sh
+      File 1: "apple banana apple orange"
+      File 2: "banana apple banana"
+      ```
+    - Two mapper maps the files
+
+      | Mapper 1 Output (File 1) | Mapper 2 Output (File 2) |
+      |----------------|----------------|
+      | (apple, 1) | (banana, 1) |
+      | (banana, 1) | (apple, 1) |
+      | (apple, 1) | (banana, 1) |
+      | (orange, 1) | (banana, 1) |
+
+    - Combiner aggregates the files locally
+   
+      | Combiner 1 Output (Mapper 1) | Combiner 2 Output (Mapper 2) |
+      |----------------|----------------|
+      | (apple, 2) | (banana, 2) |
+      | (banana, 1) | (apple, 1) |
+      | (orange, 1) | (banana, 1) |
+
+    - Partitioner : Assigns keys to each reducer
+
+      | Key | Hash Function (`hash(key) % numReducers`) | Reducer Assigned |
+      |------|----------------|----------------|
+      | (apple, 2) | `hash(apple) % 2 = 0` | Reducer 1 |
+      | (banana, 1) | `hash(banana) % 2 = 1` | Reducer 2 |
+      | (banana, 2) | `hash(banana) % 2 = 1` | Reducer 2 |
+      | (orange, 1) | `hash(orange) % 2 = 1` | Reducer 2 |
+
+    - Reducer perfromes reduce
+   
+      | Reducer 1 Input | Reducer 2 Input |
+      |-----------------|-----------------|
+      | (apple, 2) | (banana, 1) |
+      | (apple, 1) | (banana, 2) |
+      | | (orange, 1) |
+
+  - Final output
+
+      | Key | Final Count |
+      |------|------------|
+      | apple | 3 |
+      | banana | 3 |
+      | orange | 1 |
+
+
 
 # 3. YARN (Yet Another Resource Negotiator)
     
