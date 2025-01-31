@@ -10,8 +10,8 @@
   - Configure fundamentals like file system type and default hdfs location
   - key configs :
     - fs.defaultFS : defines file system URI(Unique Resource Identifier)
-      - default it is file:// : local file system
-      - We have used hdfs : hdfs://namenode:9000
+      - default it is `file://` : local file system
+      - We have used hdfs : `hdfs://namenode:9000`
     - hadoop.tmp.dir : dir to store temperory files
       - Files like intermediate data processing files
       - Metadata and local caching
@@ -50,9 +50,14 @@
     - 23919 NodeManager
    
 ## To check the NameNode, DataNode, Resource Manager
-- NameNode : http://localhost:9870
-- DataNode : http://localhost:9864
-- ApplicationMaster : http://localhost:8088
+- NameNode : [`http://localhost:9870`](http://localhost:9870)
+- Secoundary NameNode : [`http://localhost:9868`](http://localhost:9868)
+- DataNode : [`http://localhost:9864`](http://localhost:9864)
+- ApplicationMaster : [`http://localhost:8088`](http://localhost:8088)
+- NodeManager :  [`http://<nodemanager-host>:8042`](http://<nodemanager-host>:8042)
+- MapReduce JobHistory : [`http://localhost:19888`](http://localhost:19888)
+- HDFS balancer : [`http://localhost:50070/balancer`](http://localhost:50070/balancer)
+
 
 ## Interacting with hadoop file system
 - use `hdfs dfs` as base and enter command
@@ -92,3 +97,101 @@
 - To find corrupt files
   - `hdfs fsck /path/to/dir -list-corruptfileblocks`
 
+## Getting config details
+- IP of NameNode 
+  - `hdfs getconf -namenodes` -> `localhost`
+- IP address with port 
+  - `hdfs getconf -confKey fs.defaultFS` -> `localhost:9000`
+- IP address of other nodes
+
+|||
+|-|-|
+|  [-namenodes] | gets list of namenodes in the cluster. |
+|  [-secondaryNameNodes] | gets list of secondary namenodes in the cluster. |
+|  [-backupNodes] | gets list of backup nodes in the cluster. |
+|  [-journalNodes] | gets list of journal nodes in the cluster. |
+|  [-includeFile] | gets the include file path that defines the datanodes  that can join the cluster.|
+|  [-excludeFile] | gets the exclude file path that defines the datanodes  that need to decommissioned.|
+|  [-nnRpcAddresses] | gets the namenode rpc addresses |
+|  [-confKey [key]] | gets a specific key from the configuration |
+
+- To get report of blocks, datanode and number of datanodes
+  - `hdfs dfsadmin -report`
+  - Alternately check port 9870 for datanodes
+
+
+## YARN config files (yarn-site.xml)
+
+- NodeManger reports heart beat at this port
+
+  ```xml
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>localhost:8025</value>
+  </property>
+  ```
+
+- Main communication endpoint for job submission from client, ApplicationManager, container, node, nodemanager ...
+
+  ```xml
+  <property>
+    <name>yarn.resourcemanager.address</name>
+    <value>localhost:8050</value>
+  </property>
+  ```
+
+- Call to schedular for allocating resource
+
+  ```xml
+  <property>
+      <name>yarn.resourcemanager.scheduler.address</name>
+      <value>localhost:8035</value>
+  </property>
+  ```
+
+- First configures the shuffle service and second instructs nodemanager to use it
+
+  ```xml
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+      <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+      <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+  </property>
+  ```
+
+## YARN Request Flow
+
+- Client Submits a Job to ResourceManager  
+  - Client sends a request to **`yarn.resourcemanager.address`** (`8050`).  
+  - RM validates the request and assigns an **ApplicationMaster (AM) container** on a NodeManager.  
+
+- ResourceManager Uses the Scheduler for Resource Allocation  
+  - RM **calls** `yarn.resourcemanager.scheduler.address` (`8035`) to determine how much resource should be allocated.  
+  - **Scheduler does NOT allocate resources directly**—it only decides based on policies (FIFO, Fair, Capacity).  
+
+- Scheduler Passes Instructions to ResourceTrackerService  
+  - Scheduler **informs** ResourceTrackerService (`8025`) about which NodeManager should allocate resources.  
+  - **ResourceTrackerService is responsible for updating NodeManagers**.  
+
+- NodeManagers Report to ResourceTrackerService  
+  - NodeManagers **continuously send heartbeats** to RM at `yarn.resourcemanager.resource-tracker.address` (`8025`) to report available resources.  
+  - RM selects an appropriate NodeManager for allocation.  
+
+- ApplicationMaster Negotiates Resources with RM  
+  - Once the first container is allocated, AM starts running on a NodeManager.  
+  - AM **requests more resources** from RM by contacting `yarn.resourcemanager.address` (`8050`).  
+
+- Scheduler Decides Further Allocations  
+  - Scheduler **again** processes the request and instructs the ResourceTrackerService (`8025`) to allocate additional resources.  
+
+- Containers Are Launched, Start Reporting to NM & AM  
+  - NodeManagers start containers, which:  
+    - **Report health to their respective NodeManager**.  
+    - **Send progress updates to their respective ApplicationMaster**.  
+
+- ApplicationMaster Reports Completion to RM  
+  - Once the job is finished, AM **informs ResourceManager at `yarn.resourcemanager.address` (`8050`)**.  
+  - RM **notifies the client** about the job status.  

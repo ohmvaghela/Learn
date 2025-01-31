@@ -52,31 +52,32 @@
     - Merges `FsImage` and `EditLogs` at a fixed interval of time
     - This helps in preventing Editlogs to become very larger
     - > No longer used (discarded after hadoop 2.x)
-  - ## `Checkpoint Node`
-    - Same as `secoundary NameNode` 
-    - Used for Non-HA(high Availability) Setup
-  - ## Standby NameNode
+    >  - ## `Checkpoint Node`
+    >    - Same as `secoundary NameNode` 
+    >    - Used for Non-HA(high Availability) Setup
+    >    - Not widely used
+    >  - ## `Backup NameNode`
+    >    - A more advanced version of CheckpointNode but depricated.
+    >    - Maintains an in-memory copy of the FsImage, reducing recovery time.
+  - ## `Standby NameNode`
     - Part of `HDFS HA setup`
     - Maintains copy of NameNode's metadata and takes over immediately if active namenode fails
     - Uses shared storage system (like NFS or QJM - Quorum Journal Manager) to stay in sync
-  - ## Backup NameNode
-    - A more advanced version of CheckpointNode.
-    - Maintains an in-memory copy of the FsImage, reducing recovery time.
-  - ## Block size
+  - ## `Block size`
     - In HDFS files are divided into blocks and stored
     - default block size is 128MB, but can be altered
-  - ## Rack
+  - ## `Rack`
     - It is physical collection of DataNodes
     - A large cluster consist of multiple racks
-  - ## Rack awareness
+  - ## `Rack awareness`
     - It is data placemenet stratergy
     - It improves `fault tolerance`, `data locality`, `network traffic optimisation` 
-  - ## Rack awareness policies
+  - ## `Rack awareness policies`
     - There should not be more then 1 replica in same datanode
     - There should not be more then 2 replica in same rack
     - Number of racks should be less then number of DataNode
       - Number of racks should be significantly smaller then number of dataNode, but not necessary smaller then replicaiton factor
-  - ## Operations
+  - ## `Operations`
     - Block operations : Operation between NameNode and DataNode
     - Metadata operations : Operation between FS client and NameNode
 
@@ -252,3 +253,11 @@
       2. **Is Node Manager Responsible for Scheduling the Application Master?**
           - No, **the Resource Manager schedules the Application Master** and selects the Node Manager to host it. The Node Manager simply launches the Application Master on its node after receiving instructions from the Resource Manager.
 
+
+## Managing huge load of small files in hadoop
+1. Combining small files and making zip or tar out of it before storing
+    - Overhead for layer abstraction
+2. Using HAR(Hadoop Archine) : structure made for storing archine
+    - Overhead for layer abstraction (but efficient)
+3. External Metadata store
+    - Using external database storage like HBase 
