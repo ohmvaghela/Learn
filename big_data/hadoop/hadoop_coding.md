@@ -261,11 +261,45 @@
     </queue>
     ``` 
 
+## Running Job
 
+- We example job which is present at `$HADOOP_HOME/share/hadoop/mapreduce/hadoop...exmaple...jar`
+- Example 1 : counting value pi
+  - ` yarn jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop...exmaple...jar pi 4 1000`
+  - 4 is number of mappers
+  - 1000 sample size
+- Word count
+  - say a file named input.xyz exist at /someplace/
+  - `yarn jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop...exmaple...jar wordcount /someplace/input.xyz /someplace/output_dir`
+  - To check the job output
+    - `hdfs dfs -cat /someplace/output_dir/part-r-00000`
+- Running job with custom parameters with are different from default params
+  - Changing number of reducers
+    
+    ```
+    hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.4.jar \
+      wordcount \
+      -D mapreduce.job.reduces=3 \
+      /user/hadoop/input /user/hadoop/output
+    ```
 
-- submit a job for wordcount with mapreduce.job.reduces, and different block size
+  - Other config properties
+
+  | Propery | Description | Default |
+  |-|-|-|
+  | `mapreduce.job.name=<name>`  | Set job name | `job_xxx` | 
+  | `mapreduce.job.priority=<LOW/NORMAL/HIGH>`  | set job priority  | NORMAL  |
+  | `mapreduce.output.basename=<name>`  | change the output name  | `part`  |
+  | `mapreduce.job.reduces=<num>`  | number of reducers  | autocalculated  |
+  | `mapreduce.map.memory.mb=<MB>`  | memory per mapper container | 1GB  |
+  | `mapreduce.reduce.memory.mb=<MB>`  | memory per reducer container | 1GB  |
+  | `mapreduce.map.vcore=<number>`  | CPU per mapper | 1  |
+  | `mapreduce.reduce.vcore=<number>`  | CPU per reducer | 1  |
+  | `dfs.blocksize=<bytes>`  | HDFS block size | 128 MB  |
+  | `dfs.replications=<number>`  | number of replicas  | 3  |
+  | `mapreduce.output.fileoutputformat.compress=<true/false>`  | compress the output file  | false  |
+  | `mapreduce.job.queuename=<queue>`  | submit job to perticular queue  | default  |
+
+---
 - Lean how to use sort, head, tail, tr command in Unix
-- Change the replication factor for a perticular file and for whole system
 - Use of stat command with %n name, %o block size, %r with replication factor, %b with file size in block, %F with file type and %u with owner
-- Get the free space available in HDFS
-- use of du, df command Unix and hdfs as well 
