@@ -299,7 +299,3 @@
   | `dfs.replications=<number>`  | number of replicas  | 3  |
   | `mapreduce.output.fileoutputformat.compress=<true/false>`  | compress the output file  | false  |
   | `mapreduce.job.queuename=<queue>`  | submit job to perticular queue  | default  |
-
----
-- Lean how to use sort, head, tail, tr command in Unix
-- Use of stat command with %n name, %o block size, %r with replication factor, %b with file size in block, %F with file type and %u with owner

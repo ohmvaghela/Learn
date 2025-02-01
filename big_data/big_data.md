@@ -1,5 +1,8 @@
 # Big Data
 
+- [hadoop thoery](./hadoop/hadoop.md)
+- [hadoop implementation](./hadoop/hadoop_coding.md)
+- [Hive](./hive/hive.md)
 ## Types of data 
 1. Structured data
     - Organized data with predefined format
