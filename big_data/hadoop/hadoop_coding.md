@@ -195,3 +195,77 @@
 - ApplicationMaster Reports Completion to RM  
   - Once the job is finished, AM **informs ResourceManager at `yarn.resourcemanager.address` (`8050`)**.  
   - RM **notifies the client** about the job status.  
+
+## YARN application management commands
+| Action | Command |
+|-|-|
+| To monitor using UI                   | [http://localhost:8088/cluster](http://localhost:8088/cluster)           |
+| List applications running             | `yarn application -list`                                                |
+| List applications (all states)        | - `yarn application -list -appStates ALL`<br>- `yarn application -list -appStates RUNNING`<br>- `yarn application -list -appStates FINISHED`<br>- `yarn application -list -appStates FAILED` |
+| List nodes                            | `yarn node -list`                                                       |
+| Get status of an application          | `yarn application status <application-id>`                              |
+| Kill an application                   | `yarn application kill <application-id>`                                |
+| Get logs of an application            | `yarn logs -applicationId <application-id>`                             |
+
+## Different Schedualars in yarn
+- There are three types of schedular
+  - FIFO (default)
+  - Capacity schedular : different queues can have different capacity
+  - Fair Schedular : priority bases, dynamic allocation
+- ### FIFO (Default Schedular)
+
+    ```xml 
+    <property>
+        <name>yarn.resourcemanager.scheduler.class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler</value>
+    </property>
+    ``` 
+  ---
+- ### Capacity Schedular
+  - Queue1 gets 60% share of resource 
+  - Queue2 gets 40% share of resource 
+  - Change `yarn.scheduler.capacity.root.queues` in capacity-schedular.xml
+
+    ```xml
+    <property>
+        <name>yarn.scheduler.capacity.root.queues</name>
+        <value>queue1,queue2</value>
+    </property>
+    ```
+
+  - Add following
+
+    ```xml
+    <property>
+        <name>yarn.scheduler.capacity.root.queue1.capacity</name>
+        <value>60</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.capacity.root.queue2.capacity</name>
+        <value>40</value>
+    </property>
+
+    <queue name="root">
+        <capacity>100</capacity> 
+        <weight>1</weight> 
+        <queue name="queue1">
+            <capacity>60</capacity> 
+            <maximum-capacity>70</maximum-capacity> 
+            <minResources>4GB,4vcores</minResources> 
+        </queue>
+        <queue name="queue2">
+            <capacity>40</capacity> 
+            <maximum-capacity>50</maximum-capacity>
+            <minResources>2GB,2vcores</minResources>
+        </queue>
+    </queue>
+    ``` 
+
+
+
+- submit a job for wordcount with mapreduce.job.reduces, and different block size
+- Lean how to use sort, head, tail, tr command in Unix
+- Change the replication factor for a perticular file and for whole system
+- Use of stat command with %n name, %o block size, %r with replication factor, %b with file size in block, %F with file type and %u with owner
+- Get the free space available in HDFS
+- use of du, df command Unix and hdfs as well 
