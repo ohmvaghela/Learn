@@ -164,12 +164,30 @@
   - Defining the keys explicitly on which partitioning should be done while loading data   
 
     ```sql
+    --- Method 1 ---
     LOAD DATA INPATH '/data/sales_2024_01.csv' 
     INTO TABLE sales PARTITION (year=2024, month=1);
-    ---
+    --- Method 2 ---
     INSERT INTO sales1 PARTITION (year=2024, month=1) 
     SELECT id, amount, year, month FROM sales;
+    --- Method 3 ---
+    INSERT INTO TABLE sales PARTITION (year=2025, month=3) 
+    VALUES (something, 2025, 3);
     ```
+
+  - Validation wont happen in method 1 and method 2
+  - Validation will happen in method 3
+    - Following will throw error
+
+    ```sql
+    --- Method 3 ---
+    INSERT INTO TABLE sales PARTITION (year=2025, month=3) 
+    VALUES (something, 2023, 3);
+    ```
+
+  - But if tries to retirve data with method 1,2 using where clause it wont retrieve all values
+    - As few values recide in different partiton 
+
 
 - ### Dynamic Partitioning
   - If the keys are not defined then hive takes care of partitioning dynamically
