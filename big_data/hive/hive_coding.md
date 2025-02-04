@@ -152,6 +152,15 @@ TBLPROPERTIES (
   load data inpath '/path/to/file' into table <db-name>.<table-name>
   ```
 
+- Inserting array and structs
+  - Use `array()` to add array
+  - Use `named_struct()` to create struct
+
+    ```
+    INSERT INTO employee_data VALUES (101, "John", ARRAY("Java", "SQL", "Python"));
+    INSERT INTO student_marks VALUES (1, ARRAY(NAMED_STRUCT("subject", "Math", "score", 90), NAMED_STRUCT("subject", "Science", "score", 85)));
+    ```
+
 ## Exporting data
 
 - Exporting data from hive to local storage
