@@ -65,6 +65,29 @@
   stored as textfile; -- optional line by default 'textfile'
   ```
 
+- ### Table properties
+
+```sql
+CREATE TABLE employees (id INT,name STRING,salary FLOAT)
+STORED AS ORC
+TBLPROPERTIES (
+    'orc.compress'='ZLIB',
+    'transactional'='TRUE',
+    'skip.header.line.count'='1'
+);
+```
+| command | description |
+|-|-|
+| comment		 | Stores a description of the table. |
+| EXTERNAL		 | If TRUE, marks the table as an external table. |
+| STORED AS		 | Specifies the file format (TEXTFILE, ORC, PARQUET, etc.). |
+| transient_lastDdlTime	 | Stores the last modified time of the table in epoch format. |
+| skip.header.line.count | Skips a specified number of header lines while reading. |
+| skip.footer.line.count | Skips a specified number of footer lines while reading. |
+| transactional		 | If TRUE, enables ACID properties. |
+
+
+
   ---
 
 - ### Options
