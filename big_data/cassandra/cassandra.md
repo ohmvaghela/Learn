@@ -111,7 +111,8 @@
     - (Mandatory) Partition Keys (Including composite key)
     - (Optional) Clustering column
   - While creating a table the first set defines Partition key and rest defines clustering columns
-  
+  - Clustering Key : responsible for data sorting within the partition.
+
     ```sql
     CREATE TABLE learn_cassandra.users_by_country (
       country text,
