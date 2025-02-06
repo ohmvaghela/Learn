@@ -10,8 +10,6 @@
 ## Content
 
 
-- [Cassandra Overview](./cassandra.md#cassandra-overview)
-- [Why Cassandra](./cassandra.md#why-cassandra)
 - [Cassandra Architecture](./cassandra.md#cassandra-architecture)
 - [Cassandra Data Model](./cassandra.md#cassandra-data-model)
 - [Cassandra vs RDBMS](./cassandra.md#cassandra-vs-rdbms)
@@ -41,6 +39,36 @@
 | Denormalized | Normalized + Joins and Indices |
 | Referential Integrity `not` Enforced | Referential Integrity Enforced |
 
+## Data Flow into cassandra
+- Cassandra Flows `log-Structured Storage Engine`, hence the data first goes to logs then to memeory
+- ### Commit Logs
+  - It is a write-Ahead Log (WAL) used by cassandra to ensure data functionality
+  - If disk is flused then using data on log it can be recored
+- ### MemTable
+  - These are inmemory storage like RAM
+  - Comment logs send the data to memtable
+  - Once it is full, it flushes data to SSTable(Storad String Table)
+- ### SSTable
+  - Data ends up here
+  - When the MemTable is full it flushes the data to SSTable
+  - These tables are immutable
+  - When new data comes it replaces old data if conflict occurs
+  - Each of SSTable has `Bloom Filter` and `partition index` for efficient access
+- ### Flow
+  - Data comes to comment logs
+  - Then it is passed to MemTable
+  - Comment logs are not deleted as MemTable are not presistant storage
+  - Hence when the MemTable are full they are flused to SStable
+  - As MemTable empties comment logs deletes that section of data, as it is now persistant
+- ### Durable Table
+  - If durability is set to true then the data goes through comment logs to memtable
+  - If it is set to false then data directly goes to Memtable
+    
+    ```sql
+    CREATE KEYSPACE store 
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'} 
+    AND durable_writes = false;
+    ```
 
 ## CAP
 - ### Cassendra works on AP (Availability + Partition Tolerance)
