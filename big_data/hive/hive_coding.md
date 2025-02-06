@@ -86,8 +86,6 @@ TBLPROPERTIES (
 | skip.footer.line.count | Skips a specified number of footer lines while reading. |
 | transactional		 | If TRUE, enables ACID properties. |
 
-
-
   ---
 
 - ### Options
@@ -268,6 +266,4 @@ TBLPROPERTIES (
   ```sql
   SELECT *, INPUT__FILE__NAME FROM <table_name>;
   ```
-
-
 
