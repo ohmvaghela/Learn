@@ -3,6 +3,11 @@
 ## Context
 - [Base](./mongo.md#base)
 - [Storage Engine](./mongo.md#storage-engine)
+- [BSON vs JSON](./mongo.md#bson-vs-json)
+- [Indexing](./mongo.md#indexing)
+- [Replication](./mongo.md#replication-in-mongodb)
+- [Partitioning v/s Sharding](./mongo.md#partitioning-vs-sharding)
+- [Sharded Cluster](./mongo.md#sharded-cluster)
 
 ## BASE 
 - BASE
@@ -59,3 +64,69 @@
     /   \      /   \
   [10]  [30] [50]  [70]
   ```
+
+## Replication in MongoDB
+- Helps in 
+  - FaultTolerace
+  - Redundancy
+  - High Availabilty
+- Architecture
+  - Primary Node : Accept read and write
+  - Secondary Node : Syncs with primary and Only support read
+  - Arbiter Node : Elects Secondary Node to primary when primary fails
+- How MongoDB Replication Works
+  - Writes go to the Primary node.
+  - Secondary nodes replicate data asynchronously.
+  - If the Primary fails, an election occurs to promote a new Primary.
+  - When the original Primary recovers, it becomes a Secondary.
+- Starting up replicas
+
+  ```sh
+  mongod --port 27017 --dbpath /data/node1 --replSet "myReplicaSet"
+  mongod --port 27018 --dbpath /data/node2 --replSet "myReplicaSet"
+  mongod --port 27019 --dbpath /data/node3 --replSet "myReplicaSet"
+  ```
+
+- Connecting to replica set
+  
+  ```js
+  rs.initiate({
+    _id: "myReplicaSet",
+    members: [
+      { _id: 0, host: "localhost:27017" },
+      { _id: 1, host: "localhost:27018" },
+      { _id: 2, host: "localhost:27019" }
+    ]
+  });
+  ```
+
+- Check status
+
+  ```js
+  rs.status();
+  ```
+
+## Partitioning v/s Sharding
+- Data is divided into small subsets 
+- Like for a collections id 1-1000 is one subset, 1000-2000 is another and so on
+- Now when the subsets are stored in single server it is called Partitioning
+- When the subsets are stored in seperate server it is called Sharding
+
+## Sharded Cluster
+- Sharded Cluster has many componenets
+  - `Shards` : Actual data store
+  - `Config Server` : Metadata and config details of cluster
+  - `Query Router(Mongos)` : Direct client query to correct `shard`
+
+- Implementing sharding
+  - Enable sharding
+    - `sh.enableSharding("myDatabase")`
+  - Create index on shardkey
+    - `db.users.createIndex({ user_id: 1 }) `
+  - Shard collection
+    - `sh.shardCollection("myDatabase.users", { user_id: "hashed" })`
+  - Here `user_id` is `shard key`
+- Types of sharding
+  1. Rangle based : Like age, salary `{ age: 1 }`
+  2. Hash Based : `{ user_id: "hashed" }`
+  3. Zone Based : `{ region : 1}`

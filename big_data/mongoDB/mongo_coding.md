@@ -1,5 +1,26 @@
 # MongDB practice 
 
+## Context
+- [Creating DB](./mongo_coding.md#creating-db)
+- [Creating Collection](./mongo_coding.md#creating-collection)
+- [Creating Collection with Fix schema](./mongo_coding.md#creating-collection-with-fix-schema)
+- [Inserting data into collection](./mongo_coding.md#inserting-data-into-collection)
+- [Find Document](./mongo_coding.md#find-document)
+- [Unusual DataTypes in MongoDB](./mongo_coding.md#unusual-datatypes-in-mongodb)
+- [Running startup script](./mongo_coding.md#running-startup-script)
+- [Creating default startup script](./mongo_coding.md#creating-default-startup-script)
+- [Changing mongosh interface](./mongo_coding.md#changing-mongosh-interface)
+- [To write code in another editor](./mongo_coding.md#to-write-code-in-another-editor)
+- [Limiting the size of collection](./mongo_coding.md#limiting-the-size-of-collection)
+- [Indexing](./mongo_coding.md#indexing)
+- [TTL](./mongo_coding.md#ttl)
+- [Search on Index](./mongo_coding.md#search-on-index)
+- [Find with condition (where/order by)](./mongo_coding.md#find-with-condition-whereorder-by)
+- [Find in array](./mongo_coding.md#find-in-array)
+- [Aggregate, Group and Match](./mongo_coding.md#aggregate-group-and-match)
+- [Counting total number of documents](./mongo_coding.md#counting-total-number-of-documents)
+
+
 ## Creating DB
 - When we use `use <database-name>` it creates database 
 - But only stores it when first data is added
@@ -327,7 +348,7 @@ prompt = function() {
 print("Custom prompt set! Host:", getHostName(), "| Database:", db.getName());
 ```
 
-## To wirte code in another editor 
+## To write code in another editor 
 - use `EDITOR="vim" mongosh` to open mongo bash
 - Or add `EDITOR="vim"` in `.bashrc` 
 
@@ -412,7 +433,7 @@ db.createCollection("cl2", {
   db.collection1.createIndex({ createdAt: 1 }, { expireAfterSeconds: 10 }); // TTL for 10 sec
   ```
 
-## Seach on Index
+## Search on Index
 - To enable text search on a field use following
 
   ```js
@@ -551,3 +572,72 @@ db.createCollection("cl2", {
     orders: { $elemMatch: { orderId: 101, total: { $gt: 60 } } }
   });
   ```
+
+## Aggregate, Group and Match
+- Match : Used for filtering
+- Group : Used for grouping 
+- Aggregate functions group offer
+  - sum
+  - avg
+  - min
+  - max
+  - push
+  - first
+  - last
+
+- Using group and match together
+
+  ```js
+  db.<collecction-name>.aggregate([
+    { $match : { <field-name>: { <match-options> } } }
+    { $group: { _id: "$<field-name>", <output-field name>: {$<aggregate_fn>: "$<field to be aggregated"} }}
+  ]);
+  
+  db.orders.aggregate([
+  { $match: { amount: { $gt: 200 } } },
+  { $group: {
+    _id: "$customerId", 
+    totalSpent: { $sum: "$amount" }, 
+    avgSpent: { $avg: "$amount" }, 
+    maxSpent: { $max: "$amount" }} 
+    }
+  ]);
+  // total spent will be the name of field that will be shown as output
+  // these will be grouped by customerId
+  // sum of amount field will be done
+  ```
+
+- To count number of docs, use any arbitanry value with sum
+
+  ```js
+  db.user.aggregate([
+    { $group: {
+      _id: "$customerId",
+      count: { $sum : 1 }
+    }}
+  ])
+  ```
+
+## Counting total number of documents
+
+1. Using estimatedDoumentCount()
+    
+    ```js
+    db.<collection-name>.estimatedDoumentCount();
+    ```
+
+2. Using count
+
+    ```js
+    db.<collection-name>.count(query);
+    db.user.count({
+      age: { $gt: 30 }
+    });
+    ```
+
+3. Distinct
+
+    ```js
+    db.<collection-name>.distinct( field, query );
+    db.user.distinct( "category", { price : { $gt: 4000 } } );
+    ```
