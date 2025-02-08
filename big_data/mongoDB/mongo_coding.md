@@ -368,3 +368,186 @@ db.createCollection("cl2", {
     }
 });
 ```
+
+## Indexing
+- To create index
+
+  ```js
+  db.<collection-name>.createIndex({<field-name>:1/-1});// 1 : ASC | -1 DESC
+  db.collection1.createIndex({income:1});
+  ```
+
+- To create compound index
+
+  ```js
+  db.<collection-name>.createIndex({<field-name>:1/-1,<field-name>:1/-1, ...});
+  db.collection1.createIndex({salary:-1,name:1});
+  ```
+
+- Prevent duplicate values into collection
+  - If the collection already has same values for the field provided
+    - Index wont be created
+  - Once index is created with `unqiue`, we cannot add duplicate values
+  
+  ```js
+  db.<collection-name>.createIndex({<field-name>:1/-1}, {unique: true});
+  db.collection1.createIndex({salary:1}, {unique: true});
+  ```
+
+- To skip null values while indexing use `sparse indexing` 
+  - Does not index null values
+
+  ```js
+  db.<collection-name>.createIndex({<field-name>: 1/-1}, {sparse: true});
+  db.collection1.createIndex({phone1: 1}, {sparse: true});
+  ```
+
+## TTL 
+- To add TTL(Time To Live) you can create an index on a field on which you want to apply TTL
+- The field must be a date, timestamp field
+- You have to explicitly mention the field on which you are applying TTL
+
+  ```js
+  db.<collection-name>.createIndex({ <field-name>: 1 }, { expireAfterSeconds: <expiry-time-in-seconds/> }); // TTL for 10 sec
+  db.collection1.createIndex({ createdAt: 1 }, { expireAfterSeconds: 10 }); // TTL for 10 sec
+  ```
+
+## Seach on Index
+- To enable text search on a field use following
+
+  ```js
+  db.<collection-name>.createIndex({<field-name>:"text"});
+  db.collection1.createIndex({context:"text"});
+  ```
+
+  - For searching use following syntax
+
+    ```js
+    db.<collection-name>.find({$text: { $search: "string to be seached"}});
+    db.articles.find({ $text: { $search: "mongodb tutorial" } });
+    ```
+
+- We can apply seach on multiple fields in document
+  
+  ```js
+  db.<collection-name>.createIndex({<field-name>:"text", <field-name>:"text"});
+  ```
+
+  - We cannot apply find on perticular field it will be applied on all field
+  
+    ```js
+    db.<collection-name>.find($text: {$search: "string to be searched"});
+    db.articles.find({ $text: { $search: "database tutorial" } });
+    ```
+
+
+## Find with condition (where/order by)
+- To apply where clause
+
+  ```js
+  db.<collection-name>.find({<field-name>: {<condition>}, <field-name>: {<condition>}, ...});
+  db.user.find({ age: {$gt: 25}}); // find for age greater then 25
+  db.user.find({ age: {$gt: 25}, city: "Surat"}); // find for age greater then 25
+  ```
+
+- Other operators
+
+  | SQL Operator            | MongoDB Equivalent                     |
+  |-------------------------|----------------------------------------|
+  | = (equal to)           | `{ field: value }` or `{ field: { $eq: value } }` |
+  | != (not equal to)      | `{ field: { $ne: value } }`            |
+  | > (greater than)       | `{ field: { $gt: value } }`            |
+  | < (less than)         | `{ field: { $lt: value } }`            |
+  | >= (greater than or equal) | `{ field: { $gte: value } }`       |
+  | <= (less than or equal) | `{ field: { $lte: value } }`         |
+
+- Sort the output
+
+  ```js
+  db.<collection-name>.find().sort({<field-name>: 1/-1});
+  db.user.find().sort({age: 1});
+  ```
+
+- Using regex on find
+
+  ```js
+  db.<collection-name>.find({<field-name>: <pattern/>})
+  db.users.find({ name: /John/ });
+  ```
+
+- Using `in` and `not in` clause
+
+  ```js
+  // in clause
+  db.<collection-name>.find({<field-name>: { $in : ["something","something", ...]}})
+  db.user.find({city: {$in : ["surat", "blr", "pune"]}})
+  
+  // not in clause
+  db.<collection-name>.find({<field-name>: { $nin : ["something","something", ...]}})
+  db.users.find({ city: { $nin: ["New York", "Los Angeles"] } });
+  ```
+
+- Finding in nested document
+  - Just use `.` for nested docs
+
+  ```js
+  db.users.find({ "address.city": "New York" });
+  ```
+
+  - Another way is 
+
+  ```js
+  // may return even if one condition matches
+  db.users.find({ orders: { orderId: 101, total: 50 } });
+  ```
+
+  - Another way
+
+  ```js
+  // only all the condition exist
+  db.users.find({
+    orders: { $elemMatch: { orderId: 101, total: { $gt: 60 } } }
+  });
+  
+  // more
+  db.users.find({ "address.state": { $exists: true } });
+  db.users.find({ orders: { $size: 2 } });
+  ```
+
+## Find in array
+- Exact match
+
+  ```js
+  db.users.find({ tags: ["mongodb", "database"] });
+  // ✅ { "_id": 1, "tags": ["mongodb", "database"] }
+  // ❌ { "_id": 2, "tags": ["database", "mongodb", "NoSQL"] }
+  ```
+
+- Document can contain extra
+
+  ```js
+  db.users.find({ tags: "mongodb" });
+  db.users.find({ tags: { $all: ["mongodb", "database"] } });
+  // ✅ { "_id": 1, "tags": ["mongodb", "database"] }
+  // ✅ { "_id": 2, "tags": ["database", "mongodb", "NoSQL"] }
+  ```
+
+- Document matches the number fo elements
+
+  ```js
+  db.users.find({ tags: { $size: 3 } });
+  ```
+
+- For nested array
+
+  ```js
+  // Does not enforce all conditions
+  db.users.find({
+    orders: { orderId: 101, total: { $gt: 60 } }
+  });
+
+  // Enforces all conditions
+  db.users.find({
+    orders: { $elemMatch: { orderId: 101, total: { $gt: 60 } } }
+  });
+  ```

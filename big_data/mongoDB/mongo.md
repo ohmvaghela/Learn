@@ -40,3 +40,22 @@
 - BSON adds more data types and optimizing storage and retrieval speed
 
 
+## Indexing
+- When we create index on a field mongodb creates a B-Tree (Binary tree) for efficient search
+- To create index on a field use 
+
+  ```js
+  db.users.createIndex({ income: 1 });
+  // Say there were the incomes in the collection
+  // [{ income: 10 }, { income: 20 }, { income: 30 }, { income: 40 }, { income: 50 }, { income: 60 }, { income: 70 }]
+  ```
+
+- So B-Tree will look like
+
+  ```
+          [40]
+        /    \
+    [20]       [60]
+    /   \      /   \
+  [10]  [30] [50]  [70]
+  ```
