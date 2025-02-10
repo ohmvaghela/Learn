@@ -48,6 +48,9 @@
   show collections;
   ```
 
+- Getting collection info
+  - `db.getCollectionInfos({ name: "temp" });`
+
 ## Creating Collection with Fix schema
   - Required : defines which fields are mandatory
     - Extra fields can also be added
