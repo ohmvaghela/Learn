@@ -800,3 +800,26 @@ db.createCollection("cl2", {
     }
   );
   ```
+
+
+## Bulk write
+- Syntax
+
+```js
+db.collection.bulkWrite([
+    { operation1 },
+    { operation2 },
+    { operation3 },
+    ...
+]);
+```
+
+- Example
+
+```js
+db.students.bulkWrite([
+    { insertOne: { document: { name: "Charlie", age: 22 } } },
+    { updateOne: { filter: { name: "Alice" }, update: { $set: { age: 26 } } } },
+    { deleteOne: { filter: { name: "Bob" } } }
+], { ordered: false });
+```
