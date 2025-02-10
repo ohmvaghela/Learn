@@ -643,6 +643,7 @@ db.createCollection("cl2", {
     ```
 
 ## Import Data
+### JSON
 - To import json file like
 
   ```json
@@ -674,3 +675,18 @@ db.createCollection("cl2", {
   ```
   mongoimport --db <db-name> --collection <collection-name> --file <file-path> --jsonArray
   ```
+
+### CSV
+- If csv file does not have header
+
+  ```
+  mongoimport --db <db-name> --collection <collection-name> --type csv --file <file-path> 
+  ```
+
+- If csv file does has header
+
+  ```
+  mongoimport --db <db-name> --collection <collection-name> --type csv --file <file-path> --headerline
+  ```
+
+
