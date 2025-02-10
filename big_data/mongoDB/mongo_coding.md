@@ -19,7 +19,7 @@
 - [Find in array](./mongo_coding.md#find-in-array)
 - [Aggregate, Group and Match](./mongo_coding.md#aggregate-group-and-match)
 - [Counting total number of documents](./mongo_coding.md#counting-total-number-of-documents)
-
+- [Importing data](./mongo_coding.md#import-data)
 
 ## Creating DB
 - When we use `use <database-name>` it creates database 
@@ -641,3 +641,36 @@ db.createCollection("cl2", {
     db.<collection-name>.distinct( field, query );
     db.user.distinct( "category", { price : { $gt: 4000 } } );
     ```
+
+## Import Data
+- To import json file like
+
+  ```json
+  { "_id" : { "$oid" : "50b59cd75bed76f46522c34e" }}
+  { "_id" : { "$oid" : "50b59cd75bed76f46522c34f" }}
+  { "_id" : { "$oid" : "50b59cd75bed76f46522c34e" }}
+  { "_id" : { "$oid" : "50b59cd75bed76f46522c34f" }}
+  ```
+
+- Use
+
+  ```
+  mongoimport --db <db-name> --collection <collection-name> --file <file-path> 
+  ```
+
+- If the json file is in array format like following 
+
+  ```json
+  [
+    { "_id" : { "$oid" : "50b59cd75bed76f46522c34e" }},
+    { "_id" : { "$oid" : "50b59cd75bed76f46522c34f" }},
+    { "_id" : { "$oid" : "50b59cd75bed76f46522c34e" }},
+    { "_id" : { "$oid" : "50b59cd75bed76f46522c34f" }}
+  ]
+  ```
+
+- Then we need to mention it is in array format
+
+  ```
+  mongoimport --db <db-name> --collection <collection-name> --file <file-path> --jsonArray
+  ```
