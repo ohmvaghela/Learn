@@ -754,3 +754,40 @@ db.createCollection("cl2", {
   );
   ```
 
+- updating field in array
+  - Data
+  ```json
+  {
+  	"_id" : ObjectId("67a99d84de54f64d89232c89"),
+  	"name" : "ohm",
+  	"marks" : [
+  		{
+  			"subject" : "math",
+  			"marks" : 100
+  		},
+  		{
+  			"subject" : "english",
+  			"marks" : 100
+  		},
+  		{
+  			"subject" : "hindi",
+  			"marks" : 100
+  		}
+  	]
+  }
+
+  ```
+
+  ```js
+   db.temp2.updateOne(
+    {name:"ohm"},
+    {$set:
+      {"marks.$[elem].marks":10}
+    },
+    {arrayFilters:
+      [
+        {"elem.subject":"english"}
+      ]
+    }
+  );
+  ```
