@@ -70,7 +70,9 @@
                   name: {bsonType:"string"},
                   age: {bsonType: "int", minimum:18, maximum:60},
                   email: { bsonType: "string", pattern: "^.+@.+\\..+$", description: "Must be a valid email format" },
-                  items: {bsonType: "array", minItems: 1, item: {bsonType: "string"}},
+                  items: {bsonType: "array", minItems: 1, items: {bsonType: "string"}},
+                  CreatedAt : {bsonType : "timestamp"},
+						      CreateDate : {bsonType : "date"},
                   address: {
                       bsonType: "object",
                       required: ["city", "zip"],
@@ -78,7 +80,11 @@
                           city: { bsonType: "string" },
                           zip: { bsonType: "string", pattern: "^[0-9]{6}$" } // Enforcing 6-digit ZIP
                       }
-                  }
+                  },
+                  role: {
+                    bsonType: "string",
+                    enum: ["admin", "user", "guest"],
+                 }
               }
           }
       }
