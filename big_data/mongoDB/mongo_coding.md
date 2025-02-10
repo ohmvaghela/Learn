@@ -20,6 +20,7 @@
 - [Aggregate, Group and Match](./mongo_coding.md#aggregate-group-and-match)
 - [Counting total number of documents](./mongo_coding.md#counting-total-number-of-documents)
 - [Importing data](./mongo_coding.md#import-data)
+- [Update Operation](./mongo_coding.md#update)
 
 ## Creating DB
 - When we use `use <database-name>` it creates database 
@@ -689,4 +690,67 @@ db.createCollection("cl2", {
   mongoimport --db <db-name> --collection <collection-name> --type csv --file <file-path> --headerline
   ```
 
+## Update
+
+- Use updateOne, UpdateMany to do so
+- When using upsert keyword, so if data doesnot exist then it will create new field
+
+  ```js
+  // without upsert
+  db.<collection>.updateOne({<filter-criteria>},{<update-operations>});
+  db.<collection>.updateMany({<filter-criteria>},{<update-operations>});
+  // with upsert
+  db.<collection>.updateOne({<filter-criteria>},{<update-operations>}, {upsert:true});
+  db.<collection>.updateMany({<filter-criteria>},{<update-operations>}, {upsert:true});
+  
+  db.temp.updateOne({name:"ohm"}, {$set : {age:30}} );
+  db.temp.updateMany({name:"ohm"}, {$set : {age:30}} );
+  db.temp.updateOne({name:"ohm"}, {$set : {age:30}} , {upsert:true});
+  db.temp.updateMany({name:"ohm"}, {$set : {age:30}} , {upsert:true});
+  ```
+
+- To remove field use unset
+
+  ```js
+  db.<collection>.updateOne( {<filter-criteria>}, [{$unset: {<field>,<field>}}] );
+  db.temp.updateOne({name:"ohm"}, [{$unset : "age"}] );
+  ```
+
+- To add value to integer
+
+  ```js
+  db.temp.updateOne({name:"ohm"}, [ {$set: { age: {$add: ["$age",12]} }} ])
+  ```
+
+- Using condition
+
+  ```js
+  db.collection.updateOne(
+      { name: "Alice" },
+      [
+          {
+              $set: {
+                  status: {
+                      $cond: {
+                          if: { $gt: ["$age", 30] },
+                          then: "Senior",
+                          else: "Junior"
+                      }
+                  }
+              }
+          }
+      ]
+  );
+  ```
+
+- Concating string
+
+  ```js
+  db.collection.updateOne(
+      { name: "Alice" },
+      [
+          { $set: { name: { $concat: ["$name", " (Updated)"] } } }
+      ]
+  );
+  ```
 
