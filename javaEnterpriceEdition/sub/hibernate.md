@@ -15,32 +15,32 @@
 
 ## Connecting with database
 1. Create instnace of `configuration`
-  - `new Configuration()`
-  - This stored all the detials for the connectivity of db 
-  - But currently it is empty
+    - `new Configuration()`
+    - This stored all the detials for the connectivity of db 
+    - But currently it is empty
 2. Fill it with details
-  - `new Configuration().configure()`
-  - Populate it with data
-  - If nothing is mentioned in `configure` then takes defualt location and name of `src/main/hibernate.cfg.xml` 
-    - Or else we need to mention `xml` location
+    - `new Configuration().configure()`
+    - Populate it with data
+    - If nothing is mentioned in `configure` then takes defualt location and name of `src/main/hibernate.cfg.xml` 
+      - Or else we need to mention `xml` location
 3. Create a session instance to interact with DB
-  - 
+     
     ```java
     SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
     ```
-  
-  - As we have configuration details we need to create a session variable which will interact with DB and perform CRUD operations
-  - `ExceptionInInitializerError` is the error thrown if there is problem with initializetion
+    
+    - As we have configuration details we need to create a session variable which will interact with DB and perform CRUD operations
+    - `ExceptionInInitializerError` is the error thrown if there is problem with initializetion
 
 4. Once we have a session we to start the connection
-  - 
+    
     ```java
     Session session = sessionFactory.openSession()
     ```
 
 5. Operations in DB are in form of transactions 
-  - So we first initiate transaction
-  - 
+    - So we first initiate transaction
+     
     ```java
     Transaction transaction = session.beginTransaction();
     ```
@@ -58,23 +58,23 @@
 
 7. Commit Changes in db
 
-  ```java
-    transaction.commit();
-  ```
+    ```java
+      transaction.commit();
+    ```
 
-  - Perform rollback if transaction fails
+    - Perform rollback if transaction fails
 
-  ```java
-    transaction.rollback();
-  ```
+    ```java
+      transaction.rollback();
+    ```
 
 8. After transaction is complete 
-  - Close session and sessionFactory object
-  
-  ```java
-  session.close();
-  sessionFactory.close();
-  ```
+    - Close session and sessionFactory object
+    
+    ```java
+    session.close();
+    sessionFactory.close();
+    ```
 
 ## - Key points to note
 - In studentUtil `sessionFactory` is static object 
@@ -188,7 +188,7 @@ public class HelloServlet extends HttpServlet {
     - If set to true then it will show the sql query in logs
   - `<mapping class="com.mechsimvault.model.Student"/>` 
     - This is used to add enities that needs to be mapped 
-    - Another way is the tell the sessionfactory before creating the session 
+    - Another way is the tell the sessionfactory before creating the session withou using config xml file 
     - From this 
       
       ```java

@@ -170,9 +170,10 @@ Callable<String> task = () -> {
 - Provides a high-level interface for managing thread execution, replacing manual thread management.
 - Key Methods:
   - `submit()`: Submits a `Runnable` or `Callable` task for execution, returning a `Future` that represents the result or handles exceptions.
-  - `invokeAll()`: Submits a collection of tasks for execution and returns a list of `Future` objects. It blocks until all tasks complete.
+  - `invokeAll()`: Submits a collection of `Callable` only for execution and returns a list of `Future` objects. It blocks until all tasks complete.
   - `shutdown()`: Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted.
   - `shutdownNow()`: Attempts to stop executing tasks and returns a list of the tasks waiting to be executed.
+> - When `submit` is provided with `Runnable` it also returns `Future` but it returns `null` so no useful info.
 - Creating Thread Pools: (These are all static methods under `Executors` class and returns `ExecutorService` object)
   - `newFixedThreadPool(int nThreads)`: Creates a thread pool with a fixed number of threads. Additional tasks wait in the queue until a thread becomes available.
   - `newCachedThreadPool()`: Creates a thread pool that can grow as needed, reusing previously created threads when possible.

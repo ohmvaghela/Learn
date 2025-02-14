@@ -8,7 +8,7 @@
   - Model never intracts with view 
 
 
-<img src="./images/image.png" height=300>
+<img src="../images/image.png" height=300>
 
 
 # JSTL (JSP Standard Template Library)

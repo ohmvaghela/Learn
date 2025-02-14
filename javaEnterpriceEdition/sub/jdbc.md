@@ -1,5 +1,14 @@
 ## JDBC (Java Database Connectivity)
 
+## 7 Steps in JDBC
+- Import packages
+- Register Driver
+- Establish Connection 
+- Create Query
+- Execute Query
+- Get results
+- Close Connection
+
 ## Database driver
 - Library that is implementation of `java.sql.Driver` interface
 - Translate high level java code to database specific protocal

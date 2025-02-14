@@ -240,4 +240,4 @@ public class Add extends HttpServlet {
   - If it the last filter it will call servlet
 
 
-<img src="./images/image1.png" height=400/>
+<img src="../images/image1.png" height=400/>
