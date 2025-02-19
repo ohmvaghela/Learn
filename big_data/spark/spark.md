@@ -76,7 +76,7 @@
 
 
 ## RDD (Resilient Distributed Dataset)
-- Fundamental Data Structure of Spark
+- It is Fundamental Data Structure of Spark
 - Before Spark, Hadoop MapReduce required manual handling of distributed data using disk-based storage
 - Properties
     - Resilient : Fault tolerant, if RDD fails it recomputes from lineage
@@ -85,11 +85,80 @@
     - Lazy execution : Only computed when action is triggered
 - 3 primary ways of creating RDD
     - Parallelizing an existing collection
-      - `rdd = spark.sparkContext.parallelize([1, 2, 3, 4, 5])`
-  - Reading from external like HDFS, S3, file
-      - `rdd = spark.sparkContext.textFile("hdfs://path/to/file.txt")`
-  - Transforming existing RDD
-      - `rdd2 = rdd.map(lambda x: x * 2)`
 
- # Last chat is left 
+      ```java
+      rdd = spark.sparkContext.parallelize([1, 2, 3, 4, 5])
+      ```
+      
+    - Reading from external like HDFS, S3, file
+  
+      ```java
+      rdd = spark.sparkContext.textFile("hdfs://path/to/file.txt")
+      ```
+      
+    - Transforming existing RDD
 
+      ```java
+      rdd2 = rdd.map(lambda x: x * 2)
+      ```
+
+- RDD Partition
+    - RDD by default divides data into partitions, which can be processed parallely
+    - Number of partitions is decided based on size of data and resources available
+    - To manually change them
+
+      ```java
+      rdd = spark.sparkContext.parallelize(data, numPartitions=4)
+      ```   
+
+    - If using HDFS, the partitions is divided based on hdfs partition
+
+- RDD Storage and Permission
+    - We can manually change the storage and persistance type
+    
+      ```java
+      rdd.persist(StorageLevel.MEMORY_AND_DISK)
+      ```
+
+    - Persistance Levels
+        - `MEMORY_ONLY`: Store RDDs in memory only.
+        - `MEMORY_AND_DISK`: Store in memory, but spill to disk if there's not enough memory.
+        - `DISK_ONLY`: Store RDDs on disk.
+        - `MEMORY_ONLY_SER`: Store RDDs in memory in a serialized format.
+        - `MEMORY_AND_DISK_SER`: Store serialized RDDs in memory or disk.
+
+    - Data processing location
+        - If data is located on entire differet server then I/O opertaions would consume most time
+        - So we can decide where data will be processed
+        - Locality level
+            - `PROCESS_LOCAL`: Data is available on the local CPU cache.
+            - `NODE_LOCAL`: Data is available on the local node's disk.
+            - `RACK_LOCAL`: Data is available within the same rack.
+            - `ANY`: Data can be fetched from any node.
+     - Fault tolerance
+         - It provides Fault tolerance by lineage
+      
+    - Transformations (Lazy Operations)
+        - `map()`, `filter()`, `flatMap()`, `groupBy()`, `reduceByKey()`
+    - Action (Trigger Execution)
+        - `collect()`, `count()`, `take()`, `reduce()`, `foreach()`
+    - Limitations
+        - Lacks in query optitmization
+            - `DataFrame` and `DataSet` uses `Catalyst Optimizer` and `Tungsten Execution Engine` hence are fast then RDD
+        - High memeory and inefficent storage method
+            - RDD stores data in raw java/python object and dont support compression
+            - While DataFrame and DataSet store data in Columnar form hence support compression
+        - RDD doesn't perfrom auto partition while `DataFrame` and `DataSet` support auto partition
+        - RDD dosen't have rigid schema, hence prone to error while `DataFrame` and `DataSet` can have fixed schema
+## DataFrame (Optimized API)
+- Distributed collection of structured data
+- Built on top of RDDs but optimized using Catalyst Optimizer
+- Uses Tungsten Execution Engine for better performance
+- Limitation
+    - Not Type Safe : Columns are refered as strings
+    - Limited to Row based opertaions : Custom logic can be complicated
+
+## DataSet (Type-Safe API)
+- A Dataset is strongly typed, like an RDD, but optimized like a DataFrame.
+- Available in Scala and Java (not Python).
+- Uses Catalyst Optimizer and Tungsten Execution Engine for speed.
