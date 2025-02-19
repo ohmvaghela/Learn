@@ -42,9 +42,54 @@
 ![image](https://github.com/user-attachments/assets/51e00a97-c148-4b03-8c67-15937ef1ab73)
 ![image](https://github.com/user-attachments/assets/cd2e0115-a383-421f-abb4-9263f70fa2c3)
 
+- Parts of Spark Architecture
+    - Driver Program (In the master node) : Coordinates execution
+    - WorkerNode (Executor) : Performs computation
+    - Cluster Manager : Manages resources allocation
+- Driver Program
+    - Entry point in spark
+    - Converts user defined logic like RRD transforamtions and actions into DAG
+    - Schedules tasks for execution for executor node
+    - Responsibilities
+        - Job Submission
+        - DAG construction
+        - Task scheduling : Breaks DAG into stages and tasks
+        - Monitering Execution
+        - Communication with executor
+- Executors
+    - Runs on worker node
+    - Stores RRD cache for reuse
+    - Returns output to driver
+- Cluster manager
+    - Responsibe for allocating resources (CPU and Memory)
+    - Not responsible for running task
+    - Launches worker node, and moniter for its health
+ 
+## Spark execution process
+- User submits spark application
+- `Driver manager` initializes itself and connects with `cluster manager`
+- DAG is created out of transformation and activities
+- DAG is divided into to stages and tasks
+- `Task executor` executes the tasks parallely and stores intermediate results
+- Result is sorted and shuffeled if necessary
+- Result is collected and returned to `Driver manager` 
+
 
 ## RDD (Resilient Distributed Dataset)
 - Fundamental Data Structure of Spark
 - Before Spark, Hadoop MapReduce required manual handling of distributed data using disk-based storage
-- RDDs simplified distributed computing by providing an immutable, fault-tolerant, and parallel data structure.
+- Properties
+    - Resilient : Fault tolerant, if RDD fails it recomputes from lineage
+    - Partitioned/ Distributed : RDDs are splited into multiple partitions and processed parallely
+    - Immutable : Once created cannot be changed. Instead transformations are applied and new RDDs are created
+    - Lazy execution : Only computed when action is triggered
+- 3 primary ways of creating RDD
+    - Parallelizing an existing collection
+      - `rdd = spark.sparkContext.parallelize([1, 2, 3, 4, 5])`
+  - Reading from external like HDFS, S3, file
+      - `rdd = spark.sparkContext.textFile("hdfs://path/to/file.txt")`
+  - Transforming existing RDD
+      - `rdd2 = rdd.map(lambda x: x * 2)`
+
+ # Last chat is left 
 
