@@ -143,29 +143,143 @@ pyspark --master spark://master:7077
   print(filtered_rdd.take(1))  # Output: [2, 4]
   ```
 
-- collect v/s take
-
-  | Feature | `take(n)` | `collect()` |
-  |---|---|---|
-  | Purpose | Get first n elements | Get all elements |
-  | Use Case | Sampling or quick checks | When full dataset is needed |
-  | Memory Usage | Lower, only n elements | High, can crash driver |
-  | Performance | Faster with large RDDs | Slower if RDD is large |
-  | Internal Behavior | Stops after collecting n | Gathers all partitions |
-
-- Working with text file in SparkContext
-    - Say we have a rdd of text file named textFileRdd
+- More advanced transformation
+    - Assuming this is data
 
     ```py
-    word_counts = (textFileRdd
-               .flatMap(lambda line: line.split(" "))
-               .map(lambda word: (word, 1))
-               .reduceByKey(lambda a, b: a + b))
+    data = [
+        ("apple", 2),
+        ("banana", 5),
+        ("orange", 3),
+        ("apple", 4),
+        ("banana", 1),
+        ("apple", 1)
+    ]
     
-    # Collect and print results
-    for word, count in word_counts.collect():
-        print(f"{word}: {count}")
+    rdd = sc.parallelize(data)
     ```
+
+    - Transformations
+ 
+    ```py
+
+    mapped_rdd = rdd.map(lambda x: (x[0], x[1] * 10))
+    filtered_rdd = rdd.filter(lambda x: x[1] >= 3)
+
+    # flatMap : It iterates over twice like in this case x[0] is first element of every tuple
+    flatmapped_rdd = rdd.flatMap(lambda x: list(x[0]))
+    
+    # ReduceByKey : Group each key and perform aggregation on values
+        # By default if it is tuple first value is treated as key and second as pair
+    ## 1. Sum of all values in group
+    reduced_rdd = rdd.reduceByKey(lambda a, b: a + b)
+    ## Output : The above will become Reduced RDD: [('apple', 7), ('banana', 6), ('orange', 3)]
+    ## 2. Max value group by key
+    max_rdd = rdd.reduceByKey(lambda x, y: max(x, y))
+    print("Max by Key:", max_rdd.collect())
+    ## Output : [('apple', 3), ('banana', 4), ('orange', 5)]
+    
+    # GroupByKey groups by key and perform operations on values
+    ## 1. combine values to list
+    grouped_rdd = rdd.groupByKey().mapValues(list)
+    print("Grouped RDD:", [(k, v) for k, v in grouped_rdd.collect()])
+    ### Grouped RDD: [('apple', [2, 4, 1]), ('banana', [5, 1]), ('orange', [3])]
+    ## 2. combines values as set
+    grouped_rdd = rdd.groupByKey().mapValues(set)
+    print("Grouped as Sets:", [(k, v) for k, v in grouped_rdd.collect()])
+    ### Grouped as Sets: [('apple', {1, 2, 4}), ('banana', {1, 5}), ('orange', {3})]
+    ## 3. Counting elements in each list
+    group_count_rdd = rdd.groupByKey().mapValues(lambda v: len(list(v)))
+    print("Group Count RDD:", group_count_rdd.collect())
+    ### Group Count RDD: [('apple', 3), ('banana', 2), ('orange', 1)]
+
+    # AggregateByKey
+    data = [("a", 1), ("a", 2), ("b", 3), ("a", 4), ("b", 5)]
+    rdd = sc.parallelize(data)
+    ## 1. Find count and sum 
+    sum_and_count_rdd = rdd.aggregateByKey((0, 0),  # Initial value (sum, count)
+                             lambda acc, value: (acc[0] + value, acc[1] + 1),  # Local combiner -> acc : (sum,count), value : second element of input tuple
+                             lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1])  # Global combiner
+                            )
+    print("[sum,count]:", sum_and_count_rdd.collect())
+    ## Output : [sum,count] : [("a",7,3),("b",8,2)]
+    ## 2. Counting min and max for each
+    min_max_rdd = rdd.aggregateByKey((float('inf'), float('-inf')),
+                                 lambda acc, value: (min(acc[0], value), max(acc[1], value)),
+                                 lambda acc1, acc2: (min(acc1[0], acc2[0]), max(acc1[1], acc2[1]))
+                                )
+
+    print("Min and Max by Key:", min_max_rdd.collect())
+    ## Output : [('a', (1, 4)), ('b', (3, 5))]
+
+    # CountByKey
+    data = [("a", 1), ("b", 2), ("a", 3), ("b", 4), ("a", 5)]
+    rdd = sc.parallelize(data)
+    ## 1. Calculate sum and count by key
+    sum_count_rdd = rdd.combineByKey(lambda value: (value, 1),  # (sum, count)
+                                     lambda acc, value: (acc[0] + value, acc[1] + 1), # acc : (sum,count), value : second element of input tuple
+                                     lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1]))
+    
+    print("Sum and Count by Key:", sum_count_rdd.collect())
+    ## Output : [('a', (9, 3)), ('b', (6, 2))]
+
+    ```
+
+    | Method        | Initialization | Suitable for                      | Avoid When                               |
+    | ------------- | -------------- | ----------------------------------- | ---------------------------------------- |
+    | `reduceByKey` | No custom init | Simple commutative/associative ops     | Complex types/operations               |
+    | `aggregateByKey` | Custom init  | Different combine and merge ops      | Simple aggregations                      |
+    | `combineByKey` | Custom init  | Different init and merge logic        | Basic sum, max, min                     |
+
+    - Actions
+
+    ```py
+    line_count = rdd.count()
+    all_lines = rdd.collect()
+    first_3_lines = rdd.take(3)
+
+    ```
+
+    - collect v/s take
+    
+      | Feature | `take(n)` | `collect()` |
+      |---|---|---|
+      | Purpose | Get first n elements | Get all elements |
+      | Use Case | Sampling or quick checks | When full dataset is needed |
+      | Memory Usage | Lower, only n elements | High, can crash driver |
+      | Performance | Faster with large RDDs | Slower if RDD is large |
+      | Internal Behavior | Stops after collecting n | Gathers all partitions |
+    
+    - Working with text file in SparkContext
+        - Say we have a rdd of text file named textFileRdd
+    
+        ```py
+        word_counts = (textFileRdd
+                   .flatMap(lambda line: line.split(" "))
+                   .map(lambda word: (word, 1))
+                   .reduceByKey(lambda a, b: a + b))
+        
+        # Collect and print results
+        for word, count in word_counts.collect():
+            print(f"{word}: {count}")
+        ```
+
+## Cache and Persistance in SparkContext
+
+```py
+rdd.cache() # cache() is a shorthand for persist(StorageLevel.MEMORY_ONLY).
+upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
+```
+
+| Storage Level        | Description                                                                     |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `MEMORY_ONLY`         | Stores RDD as deserialized objects in memory. Recomputes if data doesn't fit.       |
+| `MEMORY_AND_DISK`    | Stores in memory, spills to disk if memory is insufficient.                     |
+| `MEMORY_ONLY_SER`     | Stores RDD as serialized objects (Java serialization). Saves space, slower access. |
+| `MEMORY_AND_DISK_SER` | Combination of memory and disk with serialization.                             |
+| `DISK_ONLY`          | Stores RDD only on disk. Good for extremely large datasets.                     |
+| `MEMORY_ONLY_2`       | Same as `MEMORY_ONLY` but with 2x replication for fault tolerance.                |
+| `MEMORY_AND_DISK_2`  | Same as `MEMORY_AND_DISK` but with 2x replication for fault tolerance.           |
 
 ## SprakSession
 - Serve as entrypoint to interact with spark functionalities and create DataFrame and DataSet
@@ -230,6 +344,7 @@ pyspark --master spark://master:7077
   ## Create a temperory view and run sql query on it
   df.createOrReplaceTempView("people")
   spark.sql("SELECT Name, Age FROM people WHERE Age > 30").show()
+  ## Cannot use subquery 
 
   ## Schema handling
   ### Creating schema
@@ -265,6 +380,8 @@ pyspark --master spark://master:7077
     ## Filter, Sort, and Show
     df.filter(df["Age"] > 30).orderBy(df["Age"]).show()
     ```
+
+
 
 - Reading Text file word count
 
@@ -387,4 +504,32 @@ df.write \
 
 print("✅ Data written successfully to MySQL")
 ```
+
+## Working with JSON
+- Read json file
+- Types
+    - multple json in one
+
+        ```
+        {"id":1, "name":"ohm"}
+        {"id":2, "name":"ohm1"}
+        ``` 
+
+        ```py
+        df = spark.read.json("file:///path/to/jsonfile.json")
+        ```
+
+    - Reading json array
+
+        ```
+        [
+        {"id":1, "name":"ohm"},
+        {"id":2, "name":"ohm1"}
+        ]
+        ```
+
+        ```py
+        df = spark.read.json("file:///path/to/jsonfile.json", multiLine=True)
+        ```
+
 
