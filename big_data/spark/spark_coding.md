@@ -381,6 +381,35 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
     df.filter(df["Age"] > 30).orderBy(df["Age"]).show()
     ```
 
+- Aggregations
+
+```py
+data = [("A", 1), ("A", 2), ("A", 3), ("B", 4), ("B", 5), ("C", 6)]
+columns = ["key", "value"]
+df = spark.createDataFrame(data, columns)
+
+# Group by 'key' and collect values in a list
+result = df.groupBy("key").agg(collect_list("value").alias("value_list"))
+result.show()
+# +---+----------+
+# |key|value_list|
+# +---+----------+
+# |  A| [1, 2, 3]|
+# |  B|    [4, 5]|
+# |  C|       [6]|
+# +---+----------+
+
+result = df.groupBy("key").agg(sum("value").alias("total_value"))
+result.show()
+# +---+-----------+
+# |key|total_value|
+# +---+-----------+
+# |  A|          6|
+# |  B|          9|
+# |  C|          6|
+# +---+-----------+
+
+```
 
 
 - Reading Text file word count
