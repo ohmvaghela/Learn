@@ -32,6 +32,35 @@ pyspark --master spark://master:7077
     --driver-memory 1G
 ```
 
+## Running sprak application in different modes
+- Say we have a spark application mySparkApp.py
+1. Local Mode (--master local[*])
+    - `spark-submit --master local[*] mySparkApp.py`
+    - local[*] : Run with a many theads available
+2. Standalone mode
+    - start the master and slaves
+        - `start-master.sh && start-slaves.sh spark://master:7077`
+    - Now to run it in standalone
+        - `spark-submit --master spark://localhost:7077 word_count_sparksession.py`
+3. Yarn
+    - Before this we need to add spark config files in hdfs and change few spark configs
+        - Spark-defaults.conf
+           - ` spark.yarn.jars hdfs://localhost:9000/spark-jars/*`
+        - Add jars to hdfs
+            - `hdfs dfs -mkdir -p /spark-jars && hdfs dfs -put $HOME/bigdata/spark/jars/*.jar /spark-jars/`
+        - Create spark event
+            - `hdfs dfs -mkdir -p /spark-events && hdfs dfs -chmod 1777 /spark-events`
+      
+    - start yarn
+        - `start-dfs.sh && start-yarn.sh`
+    - submit application
+        - `spark-submit --master yarn --deploy-mode cluster word_count_sparksession.py`
+    - deploy mode : cluster, client
+        - cluster
+            - Driver runs on the cluster
+            - Recommended for production
+        - client
+            - Driver runs locally
 ## SparkContext 
 - SparkContext(sc) : Used to be primary entrypoint to spark earlier
 - Role
@@ -94,6 +123,7 @@ pyspark --master spark://master:7077
   hadoop_rdd = sc.sequenceFile("/path/to/sequencefile")
   ```
 
+
 - RDD transformation and action operations
 
   ```py
@@ -123,6 +153,20 @@ pyspark --master spark://master:7077
   | Performance | Faster with large RDDs | Slower if RDD is large |
   | Internal Behavior | Stops after collecting n | Gathers all partitions |
 
+- Working with text file in SparkContext
+    - Say we have a rdd of text file named textFileRdd
+
+    ```py
+    word_counts = (textFileRdd
+               .flatMap(lambda line: line.split(" "))
+               .map(lambda word: (word, 1))
+               .reduceByKey(lambda a, b: a + b))
+    
+    # Collect and print results
+    for word, count in word_counts.collect():
+        print(f"{word}: {count}")
+    ```
+
 ## SprakSession
 - Serve as entrypoint to interact with spark functionalities and create DataFrame and DataSet
 - It also serves as unified interface for `SparkContext`, `SQLContext`, `StreamingContext`, `HiveContext`, etc...
@@ -139,12 +183,27 @@ pyspark --master spark://master:7077
 
   ```py
   from pyspark.sql import SparkSession
-  spark = SparkSession.builder.master("local").appName("MyApp").getOrCreate()
+  spark = SparkSession.builder
+          .master("local")
+          .config("spark.sql.shuffle.partitions", "50") 
+          .appName("MyApp")
+          .getOrCreate()
 
   # Exections
 
   spark.stop()
   ```
+
+- More configs (`.config("spark.sql.shuffle.partitions", "50")`)
+
+    | Parameter | Description | Example |
+    |---|---|---|
+    | `spark.sql.shuffle.partitions` | Number of partitions for shuffle operations (default: 200) | 50 |
+    | `spark.executor.memory` | Memory allocated to each executor | 4g |
+    | `spark.driver.memory` | Memory allocated to the driver | 2g |
+    | `spark.executor.cores` | Number of cores per executor | 4 |
+    | `spark.sql.autoBroadcastJoinThreshold` | Max size for broadcast joins | 10MB |
+    | `spark.serializer` | Serializer for performance optimization | `org.apache.spark.serializer.KryoSerializer` |
 
 - Other methods
 
@@ -154,14 +213,178 @@ pyspark --master spark://master:7077
   df = spark.read.csv("file:///path/to/local/file.csv", header=True, inferSchema=True)
   df = spark.read.csv("/path/to/hadoop/file.csv", header=True, inferSchema=True)
   
-  ## Write DataFrame to Parquet
-  df.write.mode("overwrite").parquet("output/path")
-  df.write.csv("file:///home/ubuntu/Desktop/temp/spark/output_csv", header=True, mode="overwrite")
-  df.write.csv("hdfs://namenode_host:9000/user/ubuntu/output_csv", header=True, mode="overwrite")
+  ## Write DataFrame 
+  df.write.mode("overwrite").parquet("file:///output/dir/path") ## Store as parquet file
+  df.write.csv("file:///path/to/dir", header=True, mode="overwrite")
+  df.write.csv("hdfs://namenode_host:9000/path/to/dir", header=True, mode="overwrite")
   ### Other modes : Other options: "append", "ignore", "error".
   ### part-00000-*.csv  # The actual data (partitioned output)
-  ### _SUCCESS           # An empty file indicating successful completion
+  ### _SUCCESS          # An empty file indicating successful completion
 
+  ## Basic Transformation
+  df = df.filter(df["Age"] > 30).select("Name", "Age")
+
+  ## Basic aggragation
+  df.groupBy("Age").count().show()
+
+  ## Create a temperory view and run sql query on it
+  df.createOrReplaceTempView("people")
+  spark.sql("SELECT Name, Age FROM people WHERE Age > 30").show()
+
+  ## Schema handling
+  ### Creating schema
+  from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+  schema = StructType([
+      StructField("Name", StringType(), True),
+      StructField("Age", IntegerType(), True)
+  ])
+  df = spark.read.schema(schema).csv("path/to/file.csv", header=True)
+  ### Now if cvs file has more then 2 columns they will be ignored
   ```
 
+- More transformations and actions
+
+    ```py
+    # Transformation Examples
+    df_filtered = df.filter(df["Age"] > 30)  # Filter rows
+    df_selected = df_filtered.select("Name")  # Select specific column
+    df_with_column = df.withColumn("AgePlus10", df["Age"] + 10)  # Add a new column
+    df_sorted = df.orderBy(df["Age"].desc())  # Sort the DataFrame
+    df_dropped = df.drop("Age")  # Drop a column
+    
+    # Action Examples
+    df_filtered.show()          # Display data on the console
+    print(df.count())           # Count the number of rows
+    print(df.collect())         # Collect all data as a list of rows
+    print(df.first())           # Return the first row
+    print(df.take(2))           # Return the first 2 rows as a list
+
+    # Transforamtion + Aggragation
+    ## GroupBy and Aggregation
+    df.groupBy("Age").count().show()
+    ## Filter, Sort, and Show
+    df.filter(df["Age"] > 30).orderBy(df["Age"]).show()
+    ```
+
+- Reading Text file word count
+
+    ```py
+    
+    text_df = spark.read.text("file:///path/to/file")
+    from pyspark.sql.functions import explode, split
+    word_counts = (text_df
+               .select(explode(split(text_df.value, " ")).alias("word"))
+               .groupBy("word")
+               .count())
+    word_counts.show()
+    ```
+
+## Partitions
+### SparkContext
+- Defining partitions while creating rdd
+
+    ```py
+    rdd = sc.textFile("sample.txt", minPartitions=10)
+    ```
+
+- Changing number of partitions
+
+    ```py
+    rdd = rdd.repartition(5)  # Increase partitions
+    rdd = rdd.coalesce(2)     # Decrease partitions (more efficient for downscaling)
+    ```
+
+- Changing number of cores for an pyspark app
+
+    ```py
+    spark-submit --master local[2] word_count.py  # 2 cores
+    spark-submit --master local[4] word_count.py  # 4 cores
+    ```
+
+### SparkSession
+- Creating session with specific cores
+
+    ```py
+    spark = SparkSession.builder \
+        .appName("PartitionAndCoreExample") \
+        .master("local[4]") \  # Use 4 CPU cores
+        .getOrCreate()
+    ```
+
+- Setting default partitions while creating SparkSession
+
+    ```py
+    spark = SparkSession.builder \
+        .appName("PartitionAndCoreExample") \
+        .config("spark.default.parallelism", "8") \  # Default partitions for RDD operations
+        .config("spark.sql.shuffle.partitions", "8") \  # Default partitions for DataFrame shuffles
+        .getOrCreate()
+    ```
+
+- Creating dataFrame with specific partitions
+
+    ```py
+    df = spark.read.csv("large_dataset.csv", header=True, inferSchema=True, minPartitions=20)
+    df = spark.read \
+        .option("header", "true") \
+        .option("inferSchema", "true") \
+        .csv("large_dataset.csv") \
+        .repartition(20)
+    ```
+
+- Saving file with partitions
+
+    ```py
+    df.write.partitionBy('year', 'month').parquet('file:///path/to/dir')
+    df.write.partitionBy('year', 'month').parquet('file:///path/to/dir').filter("day = monday")
+    df.write.option('compression', 'snappy').parquet('file:///path/to/dir')
+    ```
+## Database with spark
+- Connecting to db and loading data
+ 
+```py
+df = spark.read \
+    .format("jdbc") \
+    .option("url", "jdbc:mysql://localhost:3306/temp") \
+    .option("dbtable", "student") \
+    .option("user", "root") \
+    .option("password", "root") \
+    .option("numPartitions", 10) \
+    .option("partitionColumn", "id") \
+    .option("lowerBound", "1") \
+    .option("upperBound", "1000") \
+    .load()
+```
+
+- Adding data to db
+
+```py
+from pyspark.sql import SparkSession
+
+# Create Spark Session
+spark = SparkSession.builder \
+    .appName("MySQL Write") \
+    .config("spark.jars", "/home/ubuntu/bigdata/spark/jars/mysql-connector-java-8.0.33.jar") \
+    .getOrCreate()
+
+# Sample DataFrame
+data = [("John", 28), ("Alice", 24), ("Bob", 30)]
+columns = ["name", "age"]
+df = spark.createDataFrame(data, columns)
+
+# MySQL Connection Properties
+mysql_url = "jdbc:mysql://localhost:3306/mydatabase"
+mysql_properties = {
+    "user": "root",
+    "password": "password",
+    "driver": "com.mysql.cj.jdbc.Driver"
+}
+
+# Write DataFrame to MySQL Table
+df.write \
+    .mode("append") \  # Modes: "append", "overwrite", "ignore", "error"
+    .jdbc(url=mysql_url, table="people", properties=mysql_properties)
+
+print("✅ Data written successfully to MySQL")
+```
 
