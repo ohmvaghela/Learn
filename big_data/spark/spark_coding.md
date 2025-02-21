@@ -1,6 +1,40 @@
 # Spark Practical
 
----
+## Content
+- [1. Starting Standalone Spark](./spark_coding.md#1-starting-standalone-spark)
+    - [Spark Master and Slave Setup](./spark_coding.md#spark-master-and-slave-setup)
+- [2. Pyspark](./spark_coding.md#2-pyspark)
+    - [Overview](./spark_coding.md#overview)
+    - [Running PySpark](./spark_coding.md#running-it)
+- [3. Running sprak application in different modes](./spark_coding.md#3-Running-sprak-application-in-different-modes)
+- [4. Spark Context](./spark_coding.md#4-sparkcontext)
+    - [Overview](./spark_coding.md#overview)
+    - [Data Sources](./spark_coding.md#data-sources)
+    - [Running SQL Queries](./spark_coding.md#running-sql-queries)
+- [5. Crreating RDD](./spark_coding.md#5-creating-rdds-resilient-distributed-datasets)
+- [6. RDD Transformations and Actions](./spark_coding.md#6-RDD-Transformations-and-Actions)
+- [7. Advanced RDD Transformations](./spark_coding.md#7-Advanced-RDD-Transformations)
+    - [Sample data](./spark_coding.md#sample-data)
+    - [Key Transformation](./spark_coding.md#Key-Transformations)
+    - [Advanced Transformations](./spark_coding.md#Advanced-Transformations)
+    - [Common Actions](./spark_coding.md#Common-Actions)
+    - [collect` v/s `take(n)](./spark_coding.md#collect-vs-taken)
+    - [Working with text file in SparkContext](./spark_coding.md#Working-with-text-file-in-SparkContext)
+- [8. Cache and Persistance in SparkContext](./spark_coding.md#8-Cache-and-Persistance-in-SparkContext)
+- [9. SparkSession](./spark_coding.md#9-SparkSession)
+    - [Creating SparkSession in python script](./spark_coding.md#Creating-SparkSession-in-python-script)
+    - [Common Configurations (.config())](./spark_coding.md#Common-Configurations-config)
+    - [Reading and Writing Data](./spark_coding.md#Reading-and-Writing-Data)
+    - [Aggregations](./spark_coding.md#Aggregations)
+    - [Schema Handling](./spark_coding.md#Schema-Handling)
+    - [Temperary Views and SQL Queries](./spark_coding.md#Temperary-Views-and-SQL-Queries)
+    - [Reading Text files and Word count example](./spark_coding.md#Reading-Text-files-and-Word-count-example)
+- [10. Partitions](./spark_coding.md#10-Partitions)
+    - [SparkContext](./spark_coding.md#SparkContext)
+    - [SparkSession](./spark_coding.md#SparkSession)
+- [11. Database with spark](./spark_coding.md#11-Database-with-spark)
+- [12. Working with JSON](./spark_coding.md#12-Working-with-JSON)
+
 
 ## 1. Starting Standalone Spark 
 
@@ -103,7 +137,7 @@ pyspark --master spark://master:7077 \
             - **Cluster**: Driver runs on the cluster (Recommended for production).
             - **Client**: Driver runs locally.
 
-## SparkContext(sc) 
+## 4. SparkContext
 - **SparkContext(sc)** : Used to be primary entrypoint to spark earlier
 - Role
     - Connect to Spark cluster.
@@ -323,7 +357,7 @@ for word, count in word_counts.collect():
     print(f"{word}: {count}")
 ```
 
-## Cache and Persistance in SparkContext
+## 8. Cache and Persistance in SparkContext
 
 ```py
 rdd.cache() # cache() is a shorthand for persist(StorageLevel.MEMORY_ONLY).
@@ -340,7 +374,8 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
 | `MEMORY_ONLY_2`       | Same as `MEMORY_ONLY` but with 2x replication for fault tolerance.                |
 | `MEMORY_AND_DISK_2`  | Same as `MEMORY_AND_DISK` but with 2x replication for fault tolerance.           |
 
-## SprakSession
+## 9. SprakSession
+
 - **SparkSession as Entry Point:** SparkSession serves as the primary gateway for utilizing Spark's capabilities.
 - **Core Functionality:** Its main uses include:
     - Creating DataFrames.
@@ -589,7 +624,7 @@ word_counts.show()
 
 
 
-## Partitions
+## 10. Partitions
 ### SparkContext
 - Defining Partitions While Creating an RDD:
     - You can define the number of partitions when creating an RDD by specifying the minPartitions parameter
@@ -670,7 +705,7 @@ word_counts.show()
     df.write.option('compression', 'snappy').parquet('file:///path/to/dir')
     ```
 
-## Database with spark
+## 11. Database with spark
 - Connecting to db and loading data
  
 ```py
@@ -719,7 +754,7 @@ df.write
 print("✅ Data written successfully to MySQL")
 ```
 
-## Working with JSON
+## 12. Working with JSON
 - Read json file
 - Types
     1. Multiple JSON Records in a Single Line:
