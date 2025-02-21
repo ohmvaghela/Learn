@@ -22,9 +22,11 @@
     - [Working with text file in SparkContext](./spark_coding.md#Working-with-text-file-in-SparkContext)
 - [8. Cache and Persistance in SparkContext](./spark_coding.md#8-Cache-and-Persistance-in-SparkContext)
 - [9. SparkSession](./spark_coding.md#9-SparkSession)
+    - [Creating DataFrame](./spark_coding.md#Creating-DataFrame)
     - [Creating SparkSession in python script](./spark_coding.md#Creating-SparkSession-in-python-script)
     - [Common Configurations (.config())](./spark_coding.md#Common-Configurations-config)
     - [Reading and Writing Data](./spark_coding.md#Reading-and-Writing-Data)
+    - [DataFrame Transformation and Actions](./spark_coding.md#DataFrame-Transformation-and-Actions)
     - [Aggregations](./spark_coding.md#Aggregations)
     - [Schema Handling](./spark_coding.md#Schema-Handling)
     - [Temperary Views and SQL Queries](./spark_coding.md#Temperary-Views-and-SQL-Queries)
@@ -32,8 +34,12 @@
 - [10. Partitions](./spark_coding.md#10-Partitions)
     - [SparkContext](./spark_coding.md#SparkContext)
     - [SparkSession](./spark_coding.md#SparkSession)
-- [11. Database with spark](./spark_coding.md#11-Database-with-spark)
-- [12. Working with JSON](./spark_coding.md#12-Working-with-JSON)
+- [11. Narrow and wide transformation](./spark_coding.md#11-Narrow-and-wide-transformation)
+    - [Shuffling](./spark_coding.md#Shuffling)
+    - [Narrow Transformation](./spark_coding.md#Narrow-Transformation)
+    - [Wide Transformation](./spark_coding.md#Wide-Transformation)
+- [12. Database with spark](./spark_coding.md#12-Database-with-spark)
+- [13. Working with JSON](./spark_coding.md#13-Working-with-JSON)
 
 
 ## 1. Starting Standalone Spark 
@@ -242,16 +248,6 @@ print(filtered_rdd.take(1))  # Output: [2]
 ### Key Transformations
  
 ```py
-# Sample RDD
-rdd = sc.parallelize([
-    ("apple", 2), 
-    ("banana", 5), 
-    ("apple", 4), 
-    ("orange", 3), 
-    ("banana", 1), 
-    ("apple", 1)
-    ])
-
 # 1. map() : Apply a function to each element
 mapped_rdd = rdd.map(lambda x: (x[0], x[1] * 10))
 
@@ -314,11 +310,11 @@ sum_count_rdd = rdd.combineByKey(lambda value: (value, 1),
 # Output: [('a', (7, 3)), ('b', (8, 2))]
 ```
 
-| Method        | Initialization | Suitable for                      | Avoid When                               |
-| ------------- | -------------- | ----------------------------------- | ---------------------------------------- |
-| `reduceByKey` | No custom init | Simple commutative/associative ops     | Complex types/operations               |
-| `aggregateByKey` | Custom init  | Different combine and merge ops      | Simple aggregations                      |
-| `combineByKey` | Custom init  | Different init and merge logic        | Basic sum, max, min                     |
+| Method        | Initialization | Suitable for                      | Avoid When                               | Control Over Aggregation method |
+| ------------- | -------------- | ----------------------------------- | ---------------------------------------- |-|
+| `reduceByKey` | No custom init | Simple commutative/associative ops   | Complex types/operations               | Least to none |
+| `aggregateByKey` | Custom init  | Different combine and merge ops      | Simple aggregations                      | High control on aggregation |
+| `combineByKey` | Custom init  | Different init and merge logic        | Basic sum, max, min                     | Full control on aggregation | 
 
 ### Common Actions
 
@@ -374,7 +370,7 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
 | `MEMORY_ONLY_2`       | Same as `MEMORY_ONLY` but with 2x replication for fault tolerance.                |
 | `MEMORY_AND_DISK_2`  | Same as `MEMORY_AND_DISK` but with 2x replication for fault tolerance.           |
 
-## 9. SprakSession
+## 9. SparkSession
 
 - **SparkSession as Entry Point:** SparkSession serves as the primary gateway for utilizing Spark's capabilities.
 - **Core Functionality:** Its main uses include:
@@ -391,13 +387,49 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
     - DataSet API
     - SQL API
 
-- Sample use of SparkSession
+### Creating DataFrame
+1.  Using array
 
-  ```py
-  data = [("Alice", 34), ("Bob", 45)]
-  df = spark.createDataFrame(data, ["Name", "Age"])
-  df.show()
-  ```
+    ```py
+    data = [("Alice", 34), ("Bob", 45)]
+    df = spark.createDataFrame(data, ["Name", "Age"])
+    df.show()
+    ```
+
+2. Using RDD (With createDataFrame)
+
+    ```py
+    rdd = spark.sparkContext.parallelize([("Alice", 34), ("Bob", 45), ("Cathy", 29)])
+
+    schema = StructType([
+        StructField("name", StringType(), True),
+        StructField("age", IntegerType(), True)
+    ])
+
+    df = spark.createDataFrame(rdd, schema)
+    df.show()
+    ```
+
+3. Using RDD (With toDF)
+
+    ```py
+    rdd = spark.sparkContext.parallelize([("Alice", 34), ("Bob", 45), ("Cathy", 29)])
+
+    df = rdd.toDF(["name", "age"])
+    df.show()
+    ```
+
+4. Using read json (When rdd data is in dict format)
+
+    ```py
+    rdd = spark.sparkContext.parallelize([{"name": "Alice", "age": 34}, {"name": "Bob", "age": 45}, {"name": "Cathy", "age": 29}])
+
+    df = spark.read.json(rdd)
+    df.show()
+    ```
+
+5. **[Using read](./spark_coding.md#Reading-and-Writing-Data)**
+
 
 ### Creating SparkSession in python script
 
@@ -456,7 +488,7 @@ df.write.csv("hdfs://namenode_host:9000/path/to/dir", header=True, mode="overwri
 # Other modes: "append", "ignore", "error"
 ```
 
-3. DataFrame Transformation and Actions
+### DataFrame Transformation and Actions
 - Transformations
 
 ```py
@@ -705,7 +737,27 @@ word_counts.show()
     df.write.option('compression', 'snappy').parquet('file:///path/to/dir')
     ```
 
-## 11. Database with spark
+## 11. Narrow and wide transformation
+
+### Shuffling
+1. If the data is to be compared accross partitions then we need shuffling
+2. Like for a key,value pair array we need to sum of values, grouped by values
+3. Then first we will perfrom this operation in a single partitions
+4. Then request the data from all the partitions and repartition the data
+5. Then perfrom transformation on each partitions again then aggregate the data
+- This process of gathering data, grouping and repartitioning (4th step) is called shuffling 
+
+### Narrow Transformation
+- When the transformation happens entirely in one transformation
+- And no shuffling is required 
+- Eg. `map`, `filter`, `flatmap`, `union`, `sample`
+
+### Wide Transformation
+- Here for perfroming transformation we need to break it in seperate steps
+- Or say shuffling is required at an intermediate step to complete transformation
+- Eg. `groupByKey`, `reduceByKey`, `join`, `distinct`, `sortByKey` etc.
+
+## 12. Database with spark
 - Connecting to db and loading data
  
 ```py
@@ -754,7 +806,7 @@ df.write
 print("✅ Data written successfully to MySQL")
 ```
 
-## 12. Working with JSON
+## 13. Working with JSON
 - Read json file
 - Types
     1. Multiple JSON Records in a Single Line:
