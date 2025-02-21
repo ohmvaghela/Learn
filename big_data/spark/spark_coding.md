@@ -40,7 +40,8 @@
     - [Wide Transformation](./spark_coding.md#Wide-Transformation)
 - [12. Database with spark](./spark_coding.md#12-Database-with-spark)
 - [13. Working with JSON](./spark_coding.md#13-Working-with-JSON)
-
+- [14. Broadcast variable](./spark_coding.md#14-broadcast-variable)
+- [15. Accumulator](./spark_coding.md#15-accumulator)
 
 ## 1. Starting Standalone Spark 
 
@@ -833,4 +834,78 @@ print("✅ Data written successfully to MySQL")
         df = spark.read.json("file:///path/to/jsonfile.json", multiLine=True)
         ```
 
+## 14. Broadcast variable
 
+```py
+from pyspark import SparkContext
+
+sc = SparkContext.getOrCreate()
+
+# Broadcast a dictionary
+lookup = {"A": 1, "B": 2, "C": 3}
+broadcastVar = sc.broadcast(lookup)
+
+# Accessing the value of the broadcast variable
+print(broadcastVar.value)  # Output: {'A': 1, 'B': 2, 'C': 3}
+
+# Unpersisting the broadcast variable
+broadcastVar.unpersist(blocking=True)
+
+# Checking if the broadcast variable is destroyed
+print(broadcastVar.isDestroyed())  # Output: False
+
+# Destroying the broadcast variable
+broadcastVar.destroy()
+
+# Verifying the destruction
+print(broadcastVar.isDestroyed())  # Output: True
+```
+
+## 15. Accumulator
+
+```py
+from pyspark import SparkContext
+
+# Initialize SparkContext
+sc = SparkContext("local", "Accumulator Example")
+
+# Create an accumulator with initial value 0
+acc = sc.accumulator(0)
+
+# Add values to the accumulator
+acc.add(5)
+acc.add(10)
+
+# Check the current value of the accumulator
+print(f"Accumulator Value: {acc.value}")  # Output: 15
+
+# Check if the accumulator has been modified (isSet)
+print(f"Accumulator is set: {acc.isSet}")  # Output: True
+
+# Define a function to use in foreach
+def add_to_accumulator(x):
+    global acc
+    acc.add(x)
+
+# Create an RDD to use with the accumulator
+rdd = sc.parallelize([1, 2, 3, 4])
+
+# Use accumulator in an action (foreach) with the defined function
+rdd.foreach(add_to_accumulator)  # Adds each element to the accumulator
+
+# Print the final value of the accumulator after the operation
+print(f"Final Accumulator Value after foreach: {acc.value}")  # Output: 25 (15 + 1 + 2 + 3 + 4)
+
+# Check if the accumulator has been modified after the foreach operation
+print(f"Accumulator is set after foreach: {acc.isSet}")  # Output: True
+
+# Reset the accumulator (for custom types, if needed)
+# Note: PySpark doesn't have a built-in `reset` for primitive accumulators, but you can manually reset it:
+acc = sc.accumulator(0)  # Reset by reinitializing
+
+# Print the reset value
+print(f"Accumulator Value after reset: {acc.value}")  # Output: 0
+
+# Stop the SparkContext
+sc.stop()
+```
