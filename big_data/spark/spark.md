@@ -162,3 +162,31 @@
 - A Dataset is strongly typed, like an RDD, but optimized like a DataFrame.
 - Available in Scala and Java (not Python).
 - Uses Catalyst Optimizer and Tungsten Execution Engine for speed.
+
+
+## BroadCast Variables
+- Helps in sharing data accross all worker nodes in efficient way
+- Instead of sending data to single node/task it sends data to all executors
+- These are **read-only**
+- Now data will be serialized only one time.
+- In future if anyother node requires it then it will be there with its executor
+- Useful with small data files like lookup tables, configuration data, or small reference datasets
+- It can be created using sparkContext
+    - So when using sparkSession we need to use the sparkContext attached
+    - As sparkSession is a wrapper of sparkContext
+      
+    ```py
+    spark = SparkSession.builder.appName("ExampleApp").getOrCreate()
+    sc = spark.sparkContext  # Access SparkContext from SparkSession
+    ```
+
+- They are tied to a specific sparkContext so cannot be accessed by different sparkContext
+
+## Accumulator
+- Use to aggregate values accross multiple tasks
+- We can perform side effects on this, like updating a local variable
+- Types of accumulators:
+    - Numeric Accumulators : `sc.longAccumulator()`, `sc.doubleAccumulator()`
+    - Array Accumulators : `sc.collectionAccumulator()`
+    - Custom Accumulator using `AccumulatorParam`
+ 
