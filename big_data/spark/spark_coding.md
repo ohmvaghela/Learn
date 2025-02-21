@@ -1,150 +1,197 @@
 # Spark Practical
 
-## Starting standalone spark 
-- To see executor details : localhost:4040
+---
+
+## 1. Starting Standalone Spark 
+
+### Spark Master and Slave Setup
+- **To see executor details:** [localhost:4040](http://localhost:4040)
+- **Master UI:** [localhost:8080](http://localhost:8080)
+
 ```bash
-# Start standalone spark master 
-# UI : localhost:8080
+# Start standalone spark master
 start-master.sh
 
-# Start slaves and connects them with masters
+# Start slaves and connect them with the master
 start-slaves.sh spark://master:7077 
 
+# Check running processes
 jps
 
-# To stop them
+# Stop the master and slaves
 stop-master.sh
 stop-slaves.sh 
 ```
 
-## Pyspark
-- Similar to python REPL but with `SparkContext(sc)` and `SparkSession(spark)`
-- Running it
+
+## 2. Pyspark
+
+### Overview
+- PySpark is similar to the Python REPL but includes:
+    - `SparkContext(sc)`: For RDD-based operations.
+    - `SparkSession(spark)`: Preferred for DataFrame and SQL-based operations.
+
+### Running it
 
 ```bash
-# With default options
+# Start PySpark with default options
 pyspark
 
-# defining options
-pyspark --master spark://master:7077
-    --num-executors 4
-    --executor-memory 2G
+# Define options for PySpark
+pyspark --master spark://master:7077 \
+    --num-executors 4 \
+    --executor-memory 2G \
     --driver-memory 1G
 ```
 
-## Running sprak application in different modes
-- Say we have a spark application mySparkApp.py
-1. Local Mode (--master local[*])
-    - `spark-submit --master local[*] mySparkApp.py`
+## 3. Running sprak application in different modes
+### Example Application
+- Assume we have a Spark application mySparkApp.py
+
+1. **Local Mode** (`--master local[*]`)
     - local[*] : Run with a many theads available
-2. Standalone mode
-    - start the master and slaves
-        - `start-master.sh && start-slaves.sh spark://master:7077`
-    - Now to run it in standalone
-        - `spark-submit --master spark://localhost:7077 word_count_sparksession.py`
+    
+    ```bash
+    spark-submit --master local[*] mySparkApp.py`
+    ```
+    
+2. **Standalone mode**
+
+    ```bash
+    # Start the master and slaves
+    start-master.sh && start-slaves.sh spark://master:7077
+
+    # Submit the Spark application
+    spark-submit --master spark://localhost:7077 mySparkApp.py
+    ```
+
 3. Yarn
-    - Before this we need to add spark config files in hdfs and change few spark configs
-        - Spark-defaults.conf
-           - ` spark.yarn.jars hdfs://localhost:9000/spark-jars/*`
-        - Add jars to hdfs
-            - `hdfs dfs -mkdir -p /spark-jars && hdfs dfs -put $HOME/bigdata/spark/jars/*.jar /spark-jars/`
+    - **Pre-requisites**:
+        - update `spark-defaults.conf`
+
+            ```bash
+            spark.yarn.jars hdfs://localhost:9000/spark-jars/*
+            ```
+
+        - Add jars to HDFS
+        
+            ```bash
+            hdfs dfs -mkdir -p /spark-jars
+            hdfs dfs -put $HOME/bigdata/spark/jars/*.jar /spark-jars/
+            ```
+
         - Create spark event
-            - `hdfs dfs -mkdir -p /spark-events && hdfs dfs -chmod 1777 /spark-events`
+        
+            ```bash
+            hdfs dfs -mkdir -p /spark-events 
+            hdfs dfs -chmod 1777 /spark-events
+            ```
       
     - start yarn
-        - `start-dfs.sh && start-yarn.sh`
+        
+        ```bash
+        start-dfs.sh && start-yarn.sh
+        ```
+
     - submit application
-        - `spark-submit --master yarn --deploy-mode cluster word_count_sparksession.py`
-    - deploy mode : cluster, client
-        - cluster
-            - Driver runs on the cluster
-            - Recommended for production
-        - client
-            - Driver runs locally
-## SparkContext 
-- SparkContext(sc) : Used to be primary entrypoint to spark earlier
+        
+        ```bash
+        spark-submit --master yarn --deploy-mode cluster word_count_sparksession.py
+        ```
+        
+        - Deploy Modes :
+            - **Cluster**: Driver runs on the cluster (Recommended for production).
+            - **Client**: Driver runs locally.
+
+## SparkContext(sc) 
+- **SparkContext(sc)** : Used to be primary entrypoint to spark earlier
 - Role
-  - Connect to spark cluster
-  - Create RDD
-  - Manage job execution and task scheduling
-- Mainly used for low level opertaions like operations and configuration
-- Used for directly working in RDD
-- Using sprakContext with pyspark bash (sprakContext auto initialized in bash)
+    - Connect to Spark cluster.
+    - Create RDDs (Resilient Distributed Datasets).
+    - Manage job execution and task scheduling.
+    - Primarily used for low-level operations and configurations.
+- Using SparkContext with PySpark REPL
 
-  ```py
-  # See configurations
-  print(sc)
+    ```py
+    # See Spark configuration
+    print(sc)
 
-  # Creating RDD from sample data
-  data = [1,2,3,4]
-  rdd = sc.parallelize(data)
+    # Creating an RDD from sample data
+    data = [1, 2, 3, 4]
+    rdd = sc.parallelize(data)
 
-  ## Performing transformation
-  rdd1 = rdd.map(lambda x: x*2)
+    # Performing a transformation
+    rdd1 = rdd.map(lambda x: x * 2)
 
-  ## Performing actions
-  result = rdd1.collect()
-  pritn(result)
-  ```
+    # Performing an action
+    result = rdd1.collect()
+    print(result)  # Output: [2, 4, 6, 8]
+    ```
 
-- Using sprakContext with python script
-  - To run this application use `spark-submit my_spark_app.py`
-  ```py
-  # my_spark_app.py
-  from pyspark import SparkContext, SparkConf
+- Using SparkContext in a Python Script
 
-  # Create sprak config object
-  configs = SparkConf().setAppName("FirstSparkApp").setMaster("local[*]")
+    ```py
+    # my_spark_app.py
+    from pyspark import SparkContext, SparkConf
 
-  # Create sprakContext object
-  sc = SparkContext(conf = configs)
+    # Create Spark config object
+    configs = SparkConf().setAppName("FirstSparkApp").setMaster("local[*]")
 
-  # Operations
-  rdd = sc.parallelize([10, 20, 30, 40, 50])
-  result = rdd.filter(lambda x: x > 20).collect()
-  print(result)  # Output: [30, 40, 50]
-  
-  # Stop the SparkContext
-  sc.stop()
-  ```
+    # Create SparkContext object
+    sc = SparkContext(conf=configs)
 
-- Different ways of creating `rdd`
+    # RDD Operations
+    rdd = sc.parallelize([10, 20, 30, 40, 50])
+    result = rdd.filter(lambda x: x > 20).collect()
+    print(result)  # Output: [30, 40, 50]
 
-  ```py
-  # From existing data
-  rdd = sc.parallelize([1, 2, 3, 4])
+    # Stop the SparkContext
+    sc.stop()
+    ```
 
-  # From file
-  rdd = sc.testFile("/path/to/file.txt")
+## 5. Creating RDDs (Resilient Distributed Datasets)
 
-  # From whole dir
-  rdd = sc.wholeTextFiles("/path/to/dir")
-  # Read from Hadoop-compatible sources
-  hadoop_rdd = sc.sequenceFile("/path/to/sequencefile")
-  ```
+```py
+# From existing data
+rdd = sc.parallelize([1, 2, 3, 4])
+
+# From a file
+rdd = sc.textFile("/path/to/file.txt")
+
+# From a whole directory
+rdd = sc.wholeTextFiles("/path/to/dir")
+
+# From Hadoop-compatible sources
+hadoop_rdd = sc.sequenceFile("/path/to/sequencefile")
+```
 
 
-- RDD transformation and action operations
+## 6. RDD Transformations and Actions
+- Basic Transformations and Actions
 
-  ```py
-  # Transformation: map
-  mapped_rdd = rdd.map(lambda x: x * 2)
-  
-  # Transformation: filter
-  filtered_rdd = rdd.filter(lambda x: x % 2 == 0)
+```py
+# Sample RDD
+rdd = sc.parallelize([1, 2, 3, 4])
 
-  # Action: collect
-  print(filtered_rdd.collect())  # Output: [2, 4]
-  
-  # Action: count
-  print(rdd.count())  # Output: 4
+# Transformation: map
+mapped_rdd = rdd.map(lambda x: x * 2)
 
-  # Action: take
-  print(filtered_rdd.take(1))  # Output: [2, 4]
-  ```
+# Transformation: filter
+filtered_rdd = rdd.filter(lambda x: x % 2 == 0)
 
-- More advanced transformation
-    - Assuming this is data
+# Action: collect
+print(filtered_rdd.collect())  # Output: [2, 4]
+
+# Action: count
+print(rdd.count())  # Output: 4
+
+# Action: take
+print(filtered_rdd.take(1))  # Output: [2]
+```
+
+## 7. Advanced RDD Transformations
+
+### Sample Data
 
     ```py
     data = [
@@ -155,114 +202,126 @@ pyspark --master spark://master:7077
         ("banana", 1),
         ("apple", 1)
     ]
-    
     rdd = sc.parallelize(data)
     ```
 
-    - Transformations
+### Key Transformations
  
-    ```py
+```py
+# Sample RDD
+rdd = sc.parallelize([
+    ("apple", 2), 
+    ("banana", 5), 
+    ("apple", 4), 
+    ("orange", 3), 
+    ("banana", 1), 
+    ("apple", 1)
+    ])
 
-    mapped_rdd = rdd.map(lambda x: (x[0], x[1] * 10))
-    filtered_rdd = rdd.filter(lambda x: x[1] >= 3)
+# 1. map() : Apply a function to each element
+mapped_rdd = rdd.map(lambda x: (x[0], x[1] * 10))
 
-    # flatMap : It iterates over twice like in this case x[0] is first element of every tuple
-    flatmapped_rdd = rdd.flatMap(lambda x: list(x[0]))
-    
-    # ReduceByKey : Group each key and perform aggregation on values
-        # By default if it is tuple first value is treated as key and second as pair
-    ## 1. Sum of all values in group
-    reduced_rdd = rdd.reduceByKey(lambda a, b: a + b)
-    ## Output : The above will become Reduced RDD: [('apple', 7), ('banana', 6), ('orange', 3)]
-    ## 2. Max value group by key
-    max_rdd = rdd.reduceByKey(lambda x, y: max(x, y))
-    print("Max by Key:", max_rdd.collect())
-    ## Output : [('apple', 3), ('banana', 4), ('orange', 5)]
-    
-    # GroupByKey groups by key and perform operations on values
-    ## 1. combine values to list
-    grouped_rdd = rdd.groupByKey().mapValues(list)
-    print("Grouped RDD:", [(k, v) for k, v in grouped_rdd.collect()])
-    ### Grouped RDD: [('apple', [2, 4, 1]), ('banana', [5, 1]), ('orange', [3])]
-    ## 2. combines values as set
-    grouped_rdd = rdd.groupByKey().mapValues(set)
-    print("Grouped as Sets:", [(k, v) for k, v in grouped_rdd.collect()])
-    ### Grouped as Sets: [('apple', {1, 2, 4}), ('banana', {1, 5}), ('orange', {3})]
-    ## 3. Counting elements in each list
-    group_count_rdd = rdd.groupByKey().mapValues(lambda v: len(list(v)))
-    print("Group Count RDD:", group_count_rdd.collect())
-    ### Group Count RDD: [('apple', 3), ('banana', 2), ('orange', 1)]
+# 2. filter() : Retain elements meeting a condition
+filtered_rdd = rdd.filter(lambda x: x[1] >= 3)
 
-    # AggregateByKey
-    data = [("a", 1), ("a", 2), ("b", 3), ("a", 4), ("b", 5)]
-    rdd = sc.parallelize(data)
-    ## 1. Find count and sum 
-    sum_and_count_rdd = rdd.aggregateByKey((0, 0),  # Initial value (sum, count)
-                             lambda acc, value: (acc[0] + value, acc[1] + 1),  # Local combiner -> acc : (sum,count), value : second element of input tuple
-                             lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1])  # Global combiner
-                            )
-    print("[sum,count]:", sum_and_count_rdd.collect())
-    ## Output : [sum,count] : [("a",7,3),("b",8,2)]
-    ## 2. Counting min and max for each
-    min_max_rdd = rdd.aggregateByKey((float('inf'), float('-inf')),
+# 3. flatMap() : Apply function and flatten results
+# Example: Extracting characters from the first element of each tuple
+flatmapped_rdd = rdd.flatMap(lambda x: list(x[0]))
+
+# 4. reduceByKey() : Aggregate values by key
+# a. Sum of values by key
+reduced_rdd = rdd.reduceByKey(lambda a, b: a + b)
+# Output: [('apple', 7), ('banana', 6), ('orange', 3)]
+
+# b. Max value by key
+max_rdd = rdd.reduceByKey(lambda x, y: max(x, y))
+# Output: [('apple', 4), ('banana', 5), ('orange', 3)]
+
+# 5. groupByKey() : Group values by key
+# a. Convert grouped values to a list
+grouped_rdd = rdd.groupByKey().mapValues(list)
+# Output: [('apple', [2, 4, 1]), ('banana', [5, 1]), ('orange', [3])]
+
+# b. Convert grouped values to a set
+grouped_rdd = rdd.groupByKey().mapValues(set)
+# Output: [('apple', {1, 2, 4}), ('banana', {1, 5}), ('orange', {3})]
+
+# c. Count elements in each group
+group_count_rdd = rdd.groupByKey().mapValues(lambda v: len(list(v)))
+# Output: [('apple', 3), ('banana', 2), ('orange', 1)]
+```
+
+### Advanced Transformations
+
+```py
+data = [("a", 1), ("a", 2), ("b", 3), ("a", 4), ("b", 5)]
+rdd = sc.parallelize(data)
+
+# 1. aggregateByKey() : Custom aggregation with different local & global combiners
+# a. Sum and count for each key
+sum_and_count_rdd = rdd.aggregateByKey((0, 0), 
+                     lambda acc, value: (acc[0] + value, acc[1] + 1),  # Local combiner
+                     lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1])  # Global combiner
+                    )
+# Output: [('a', (7, 3)), ('b', (8, 2))]
+
+# b. Calculate min and max for each key
+min_max_rdd = rdd.aggregateByKey((float('inf'), float('-inf')),
                                  lambda acc, value: (min(acc[0], value), max(acc[1], value)),
                                  lambda acc1, acc2: (min(acc1[0], acc2[0]), max(acc1[1], acc2[1]))
                                 )
+# Output: [('a', (1, 4)), ('b', (3, 5))]
 
-    print("Min and Max by Key:", min_max_rdd.collect())
-    ## Output : [('a', (1, 4)), ('b', (3, 5))]
+# 2. combineByKey() : Initialize, merge locally, and merge globally
+# a. Sum and count by key
+sum_count_rdd = rdd.combineByKey(lambda value: (value, 1), 
+                                 lambda acc, value: (acc[0] + value, acc[1] + 1), 
+                                 lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1]))
+# Output: [('a', (7, 3)), ('b', (8, 2))]
+```
 
-    # CountByKey
-    data = [("a", 1), ("b", 2), ("a", 3), ("b", 4), ("a", 5)]
-    rdd = sc.parallelize(data)
-    ## 1. Calculate sum and count by key
-    sum_count_rdd = rdd.combineByKey(lambda value: (value, 1),  # (sum, count)
-                                     lambda acc, value: (acc[0] + value, acc[1] + 1), # acc : (sum,count), value : second element of input tuple
-                                     lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1]))
+| Method        | Initialization | Suitable for                      | Avoid When                               |
+| ------------- | -------------- | ----------------------------------- | ---------------------------------------- |
+| `reduceByKey` | No custom init | Simple commutative/associative ops     | Complex types/operations               |
+| `aggregateByKey` | Custom init  | Different combine and merge ops      | Simple aggregations                      |
+| `combineByKey` | Custom init  | Different init and merge logic        | Basic sum, max, min                     |
+
+### Common Actions
+
+```py
+# Count elements in the RDD
+line_count = rdd.count()
+
+# Collect all elements into a list
+all_lines = rdd.collect()
+
+# Take first n elements (useful for sampling)
+first_3_lines = rdd.take(3)
+```
+
+### `collect` v/s `take(n)`
     
-    print("Sum and Count by Key:", sum_count_rdd.collect())
-    ## Output : [('a', (9, 3)), ('b', (6, 2))]
+| Feature | `take(n)` | `collect()` |
+|---|---|---|
+| Purpose | Get first n elements | Get all elements |
+| Use Case | Sampling or quick checks | When full dataset is needed |
+| Memory Usage | Lower, only n elements | High, can crash driver |
+| Performance | Faster with large RDDs | Slower if RDD is large |
+| Internal Behavior | Stops after collecting n | Gathers all partitions |
 
-    ```
+### Working with text file in SparkContext
 
-    | Method        | Initialization | Suitable for                      | Avoid When                               |
-    | ------------- | -------------- | ----------------------------------- | ---------------------------------------- |
-    | `reduceByKey` | No custom init | Simple commutative/associative ops     | Complex types/operations               |
-    | `aggregateByKey` | Custom init  | Different combine and merge ops      | Simple aggregations                      |
-    | `combineByKey` | Custom init  | Different init and merge logic        | Basic sum, max, min                     |
+```py
+# Assuming textFileRdd is an RDD of lines from a text file
+word_counts = (textFileRdd
+               .flatMap(lambda line: line.split(" "))
+               .map(lambda word: (word, 1))
+               .reduceByKey(lambda a, b: a + b))
 
-    - Actions
-
-    ```py
-    line_count = rdd.count()
-    all_lines = rdd.collect()
-    first_3_lines = rdd.take(3)
-
-    ```
-
-    - collect v/s take
-    
-      | Feature | `take(n)` | `collect()` |
-      |---|---|---|
-      | Purpose | Get first n elements | Get all elements |
-      | Use Case | Sampling or quick checks | When full dataset is needed |
-      | Memory Usage | Lower, only n elements | High, can crash driver |
-      | Performance | Faster with large RDDs | Slower if RDD is large |
-      | Internal Behavior | Stops after collecting n | Gathers all partitions |
-    
-    - Working with text file in SparkContext
-        - Say we have a rdd of text file named textFileRdd
-    
-        ```py
-        word_counts = (textFileRdd
-                   .flatMap(lambda line: line.split(" "))
-                   .map(lambda word: (word, 1))
-                   .reduceByKey(lambda a, b: a + b))
-        
-        # Collect and print results
-        for word, count in word_counts.collect():
-            print(f"{word}: {count}")
-        ```
+# Display word counts
+for word, count in word_counts.collect():
+    print(f"{word}: {count}")
+```
 
 ## Cache and Persistance in SparkContext
 
@@ -282,9 +341,21 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
 | `MEMORY_AND_DISK_2`  | Same as `MEMORY_AND_DISK` but with 2x replication for fault tolerance.           |
 
 ## SprakSession
-- Serve as entrypoint to interact with spark functionalities and create DataFrame and DataSet
-- It also serves as unified interface for `SparkContext`, `SQLContext`, `StreamingContext`, `HiveContext`, etc...
-- Use SparkSession when working with higher level apis like DataFrame, DataSet, SQL etc..
+- **SparkSession as Entry Point:** SparkSession serves as the primary gateway for utilizing Spark's capabilities.
+- **Core Functionality:** Its main uses include:
+    - Creating DataFrames.
+    - Creating DataSets.
+    - Executing SQL queries.
+- **Unified Interface:** SparkSession consolidates the functionalities of several older contexts, including:
+    - SparkContext
+    - SQLContext
+    - StreamingContext
+    - HiveContext
+- **Recommended Usage:**  SparkSession is the preferred method for working with higher-level Spark APIs like:
+    - DataFrame API
+    - DataSet API
+    - SQL API
+
 - Sample use of SparkSession
 
   ```py
@@ -293,97 +364,98 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
   df.show()
   ```
 
-- If creating app using python script use following to initialize it
-
-  ```py
-  from pyspark.sql import SparkSession
-  spark = SparkSession.builder
-          .master("local")
-          .config("spark.sql.shuffle.partitions", "50") 
-          .appName("MyApp")
-          .getOrCreate()
-
-  # Exections
-
-  spark.stop()
-  ```
-
-- More configs (`.config("spark.sql.shuffle.partitions", "50")`)
-
-    | Parameter | Description | Example |
-    |---|---|---|
-    | `spark.sql.shuffle.partitions` | Number of partitions for shuffle operations (default: 200) | 50 |
-    | `spark.executor.memory` | Memory allocated to each executor | 4g |
-    | `spark.driver.memory` | Memory allocated to the driver | 2g |
-    | `spark.executor.cores` | Number of cores per executor | 4 |
-    | `spark.sql.autoBroadcastJoinThreshold` | Max size for broadcast joins | 10MB |
-    | `spark.serializer` | Serializer for performance optimization | `org.apache.spark.serializer.KryoSerializer` |
-
-- Other methods
-
-  ```py
-  # Loading and creating/updating csv file
-  ## Read
-  df = spark.read.csv("file:///path/to/local/file.csv", header=True, inferSchema=True)
-  df = spark.read.csv("/path/to/hadoop/file.csv", header=True, inferSchema=True)
-  
-  ## Write DataFrame 
-  df.write.mode("overwrite").parquet("file:///output/dir/path") ## Store as parquet file
-  df.write.csv("file:///path/to/dir", header=True, mode="overwrite")
-  df.write.csv("hdfs://namenode_host:9000/path/to/dir", header=True, mode="overwrite")
-  ### Other modes : Other options: "append", "ignore", "error".
-  ### part-00000-*.csv  # The actual data (partitioned output)
-  ### _SUCCESS          # An empty file indicating successful completion
-
-  ## Basic Transformation
-  df = df.filter(df["Age"] > 30).select("Name", "Age")
-
-  ## Basic aggragation
-  df.groupBy("Age").count().show()
-
-  ## Create a temperory view and run sql query on it
-  df.createOrReplaceTempView("people")
-  spark.sql("SELECT Name, Age FROM people WHERE Age > 30").show()
-  ## Cannot use subquery 
-
-  ## Schema handling
-  ### Creating schema
-  from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-  schema = StructType([
-      StructField("Name", StringType(), True),
-      StructField("Age", IntegerType(), True)
-  ])
-  df = spark.read.schema(schema).csv("path/to/file.csv", header=True)
-  ### Now if cvs file has more then 2 columns they will be ignored
-  ```
-
-- More transformations and actions
-
-    ```py
-    # Transformation Examples
-    df_filtered = df.filter(df["Age"] > 30)  # Filter rows
-    df_selected = df_filtered.select("Name")  # Select specific column
-    df_with_column = df.withColumn("AgePlus10", df["Age"] + 10)  # Add a new column
-    df_sorted = df.orderBy(df["Age"].desc())  # Sort the DataFrame
-    df_dropped = df.drop("Age")  # Drop a column
-    
-    # Action Examples
-    df_filtered.show()          # Display data on the console
-    print(df.count())           # Count the number of rows
-    print(df.collect())         # Collect all data as a list of rows
-    print(df.first())           # Return the first row
-    print(df.take(2))           # Return the first 2 rows as a list
-
-    # Transforamtion + Aggragation
-    ## GroupBy and Aggregation
-    df.groupBy("Age").count().show()
-    ## Filter, Sort, and Show
-    df.filter(df["Age"] > 30).orderBy(df["Age"]).show()
-    ```
-
-- Aggregations
+### Creating SparkSession in python script
 
 ```py
+from pyspark.sql import SparkSession
+
+# Initialize SparkSession
+spark = SparkSession.builder \
+    .master("local") \
+    .appName("MyApp") \
+    .config("spark.sql.shuffle.partitions", "50") \
+    .getOrCreate()
+
+# Example: Creating a DataFrame
+data = [("Alice", 34), ("Bob", 45)]
+df = spark.createDataFrame(data, ["Name", "Age"])
+df.show()
+
+# Stop the SparkSession
+spark.stop()
+```
+
+### Common Configurations (.config())
+
+
+| Parameter | Description | Example |
+|---|---|---|
+| `spark.sql.shuffle.partitions` | Number of partitions for shuffle operations (default: 200) | 50 |
+| `spark.executor.memory` | Memory allocated to each executor | 4g |
+| `spark.driver.memory` | Memory allocated to the driver | 2g |
+| `spark.executor.cores` | Number of cores per executor | 4 |
+| `spark.sql.autoBroadcastJoinThreshold` | Max size for broadcast joins | 10MB |
+| `spark.serializer` | Serializer for performance optimization | `org.apache.spark.serializer.KryoSerializer` |
+
+### Reading and Writing Data
+
+1. Reading CSV file
+
+```py
+# From local filesystem
+df = spark.read.csv("file:///path/to/local/file.csv", header=True, inferSchema=True)
+
+# From HDFS
+df = spark.read.csv("hdfs://namenode_host:9000/path/to/file.csv", header=True, inferSchema=True)
+```
+
+2. Writing DataFrames to files
+
+```py
+# Write as Parquet file
+df.write.mode("overwrite").parquet("file:///output/dir/path")
+
+# Write as CSV file
+df.write.csv("file:///path/to/dir", header=True, mode="overwrite")
+df.write.csv("hdfs://namenode_host:9000/path/to/dir", header=True, mode="overwrite")
+# Other modes: "append", "ignore", "error"
+```
+
+3. DataFrame Transformation and Actions
+- Transformations
+
+```py
+# Filtering rows where Age > 30
+df_filtered = df.filter(df["Age"] > 30)
+
+# Selecting specific columns
+df_selected = df_filtered.select("Name")
+
+# Adding a new column
+df_with_column = df.withColumn("AgePlus10", df["Age"] + 10)
+
+# Sorting the DataFrame
+df_sorted = df.orderBy(df["Age"].desc())
+
+# Dropping a column
+df_dropped = df.drop("Age")
+```
+
+- Actions
+
+```py
+df_filtered.show()  # Display data on the console
+print(df.count())   # Count rows
+print(df.collect()) # Collect all data as a list of rows
+print(df.first())   # Return the first row
+print(df.take(2))   # Return the first 2 rows as a list
+```
+
+### Aggregations
+
+```py
+from pyspark.sql.functions import collect_list, sum
+
 data = [("A", 1), ("A", 2), ("A", 3), ("B", 4), ("B", 5), ("C", 6)]
 columns = ["key", "value"]
 df = spark.createDataFrame(data, columns)
@@ -391,100 +463,213 @@ df = spark.createDataFrame(data, columns)
 # Group by 'key' and collect values in a list
 result = df.groupBy("key").agg(collect_list("value").alias("value_list"))
 result.show()
-# +---+----------+
-# |key|value_list|
-# +---+----------+
-# |  A| [1, 2, 3]|
-# |  B|    [4, 5]|
-# |  C|       [6]|
-# +---+----------+
 
+# Group by 'key' and sum values
 result = df.groupBy("key").agg(sum("value").alias("total_value"))
 result.show()
-# +---+-----------+
-# |key|total_value|
-# +---+-----------+
-# |  A|          6|
-# |  B|          9|
-# |  C|          6|
-# +---+-----------+
+```
+
+- Output
+
+```
++---+----------+
+|key|value_list|
++---+----------+
+|  A| [1, 2, 3]|
+|  B|    [4, 5]|
+|  C|       [6]|
++---+----------+
+
++---+-----------+
+|key|total_value|
++---+-----------+
+|  A|          6|
+|  B|          9|
+|  C|          6|
++---+-----------+
+```
+
+### Schema Handling 
+
+1. Autohandling
+
+```py
+# CSV
+df = spark.read.csv("path/to/file.csv", header=True, inferSchema=True)
+df.printSchema()  # Displays the inferred schema
+
+# JSON
+df = spark.read.json("path/to/json_data")
+df.printSchema()  # Prints the inferred schema, useful for nested data
 
 ```
 
+2. Using StructType
 
-- Reading Text file word count
+```py
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
-    ```py
-    
-    text_df = spark.read.text("file:///path/to/file")
-    from pyspark.sql.functions import explode, split
-    word_counts = (text_df
+# Define a schema StructField("Name", Type, Nullable?)
+schema = StructType([
+    StructField("Name", StringType(), True),
+    StructField("Age", IntegerType(), True)
+])
+
+# Apply the schema while reading a CSV
+df = spark.read.schema(schema).csv("path/to/file.csv", header=True)
+df.printSchema()
+```
+
+3. Changing Schema of perticular column
+
+```py
+from pyspark.sql.functions import col
+
+# Cast columns to specific types
+df = df.withColumn("Age", col("Age").cast(IntegerType()))
+df.printSchema()
+```
+
+4. Renaming column name 
+
+```py
+df = df.toDF("NewName1", "NewName2")
+```
+
+5. Another way for creating schema
+
+```py
+# Example of creating a schema programmatically (e.g., based on column names from a list)
+column_names = ["Name", "Age", "Gender"]
+data_types = [StringType(), IntegerType(), StringType()]
+
+schema = StructType([StructField(name, dtype, True) for name, dtype in zip(column_names, data_types)])
+```
+
+6. Using rows to create df
+
+```py
+from pyspark.sql import Row
+
+# Create Row objects without predefined schema
+row1 = Row(Name="Alice", Age=34)
+row2 = Row(Name="Bob", Age=45)
+
+# Convert Row objects to DataFrame
+df = spark.createDataFrame([row1, row2])
+df.show()
+```
+
+### Temperary Views and SQL Queries
+
+```py
+# Create a temporary view from DataFrame
+df.createOrReplaceTempView("people")
+
+# Execute SQL queries on the temporary view
+spark.sql("SELECT Name, Age FROM people WHERE Age > 30").show()
+# Note: Cannot use subqueries in this approach
+```
+
+### Reading Text files and Word count example
+
+```py
+text_df = spark.read.text("file:///path/to/file")
+
+from pyspark.sql.functions import explode, split
+
+# Word count example
+word_counts = (text_df
                .select(explode(split(text_df.value, " ")).alias("word"))
                .groupBy("word")
                .count())
-    word_counts.show()
-    ```
+
+word_counts.show()
+```
+
+
 
 ## Partitions
 ### SparkContext
-- Defining partitions while creating rdd
+- Defining Partitions While Creating an RDD:
+    - You can define the number of partitions when creating an RDD by specifying the minPartitions parameter
 
     ```py
     rdd = sc.textFile("sample.txt", minPartitions=10)
     ```
 
-- Changing number of partitions
+- Changing the Number of Partitions:
+    - Spark provides methods to modify the number of partitions in an RDD:
+        - Increasing the number of partitions:
+        
+            ```py
+            rdd = rdd.repartition(5)  # Increase partitions
+            ```
+            
+        - Decreasing the number of partitions (more efficient for downscaling):
+        
+            ```py
+            rdd = rdd.coalesce(2)  # Decrease partitions
+            ```
 
-    ```py
-    rdd = rdd.repartition(5)  # Increase partitions
-    rdd = rdd.coalesce(2)     # Decrease partitions (more efficient for downscaling)
-    ```
+- Adjusting the Number of Cores for a PySpark Application:
+    - When running a PySpark application, you can specify the number of cores to use with the spark-submit command:
 
-- Changing number of cores for an pyspark app
-
-    ```py
+    ```bash
     spark-submit --master local[2] word_count.py  # 2 cores
     spark-submit --master local[4] word_count.py  # 4 cores
     ```
 
 ### SparkSession
-- Creating session with specific cores
+- Creating session with specific cores:
+    - You can create a SparkSession with a specific number of CPU cores by setting the master parameter:
 
     ```py
-    spark = SparkSession.builder \
-        .appName("PartitionAndCoreExample") \
-        .master("local[4]") \  # Use 4 CPU cores
+    spark = SparkSession.builder 
+        .appName("PartitionAndCoreExample") 
+        .master("local[4]")   # Use 4 CPU cores
         .getOrCreate()
     ```
 
-- Setting default partitions while creating SparkSession
+- Setting Default Partitions for RDD and DataFrame Operations:
+    - The SparkSession builder allows you to configure default partitioning for RDD operations and DataFrame shuffles:
 
     ```py
-    spark = SparkSession.builder \
-        .appName("PartitionAndCoreExample") \
-        .config("spark.default.parallelism", "8") \  # Default partitions for RDD operations
-        .config("spark.sql.shuffle.partitions", "8") \  # Default partitions for DataFrame shuffles
+    spark = SparkSession.builder 
+        .appName("PartitionAndCoreExample") 
+        .config("spark.default.parallelism", "8")   # Default partitions for RDD operations
+        .config("spark.sql.shuffle.partitions", "8")   # Default partitions for DataFrame shuffles
         .getOrCreate()
     ```
 
-- Creating dataFrame with specific partitions
+- Creating a DataFrame with Specific Partitions:
+    - When reading large datasets, you can define the number of partitions for a DataFrame using the minPartitions parameter:
 
     ```py
     df = spark.read.csv("large_dataset.csv", header=True, inferSchema=True, minPartitions=20)
-    df = spark.read \
-        .option("header", "true") \
-        .option("inferSchema", "true") \
-        .csv("large_dataset.csv") \
+    ```
+
+    - Alternatively, you can repartition the DataFrame after loading the data:
+
+    ```py
+    df = spark.read 
+        .option("header", "true") 
+        .option("inferSchema", "true") 
+        .csv("large_dataset.csv") 
         .repartition(20)
     ```
 
-- Saving file with partitions
+- Saving Data with Specific Partitions:
 
     ```py
+    # When saving a DataFrame, you can specify partitioning by columns:
     df.write.partitionBy('year', 'month').parquet('file:///path/to/dir')
+    # You can also apply filters when saving the partitioned data:
     df.write.partitionBy('year', 'month').parquet('file:///path/to/dir').filter("day = monday")
+    # Additionally, you can specify a compression format
     df.write.option('compression', 'snappy').parquet('file:///path/to/dir')
     ```
+
 ## Database with spark
 - Connecting to db and loading data
  
@@ -508,9 +693,9 @@ df = spark.read \
 from pyspark.sql import SparkSession
 
 # Create Spark Session
-spark = SparkSession.builder \
-    .appName("MySQL Write") \
-    .config("spark.jars", "/home/ubuntu/bigdata/spark/jars/mysql-connector-java-8.0.33.jar") \
+spark = SparkSession.builder 
+    .appName("MySQL Write") 
+    .config("spark.jars", "/home/ubuntu/bigdata/spark/jars/mysql-connector-java-8.0.33.jar") 
     .getOrCreate()
 
 # Sample DataFrame
@@ -527,8 +712,8 @@ mysql_properties = {
 }
 
 # Write DataFrame to MySQL Table
-df.write \
-    .mode("append") \  # Modes: "append", "overwrite", "ignore", "error"
+df.write 
+    .mode("append")   # Modes: "append", "overwrite", "ignore", "error"
     .jdbc(url=mysql_url, table="people", properties=mysql_properties)
 
 print("✅ Data written successfully to MySQL")
@@ -537,7 +722,7 @@ print("✅ Data written successfully to MySQL")
 ## Working with JSON
 - Read json file
 - Types
-    - multple json in one
+    1. Multiple JSON Records in a Single Line:
 
         ```
         {"id":1, "name":"ohm"}
