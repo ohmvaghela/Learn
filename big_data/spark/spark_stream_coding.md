@@ -147,3 +147,47 @@ def check_termination():
         ssc.stop(stopSparkContext=True, stopGracefully=True)
         sys.exit(0)
 ```
+
+## Using SparkSession to do the same
+- We will be using `readStream` to read stream
+
+1. Reading from port
+    - To publish to port : `nc -lk 9999`
+
+    ```py
+    # Read streaming data from TCP socket
+    socket_df = spark.readStream \
+        .format("socket") \
+        .option("host", "localhost") \
+        .option("port", 9999) \
+        .load()
+    ```
+
+2. Reading from file
+
+    ```py
+    file_df = spark.readStream \
+        .format("text") \
+        .option("path", "/path/to/directory") \
+        .option("maxFilesPerTrigger", 1) \
+        .load()
+    ```
+
+- Tranforming input stream (data frame)
+
+  ```py
+    socket_df = socket_df.selectExpr("CAST(value AS STRING)")
+  ```
+
+- Logging the output in console
+
+  ```py
+  query = socket_df.writeStream \
+      .outputMode("append") \
+      .format("console") \
+      .start()
+
+  query.awaitTermination()
+  ```
+
+
