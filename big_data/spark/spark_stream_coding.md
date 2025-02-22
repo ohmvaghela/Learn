@@ -172,6 +172,10 @@ def check_termination():
         .option("maxFilesPerTrigger", 1) \
         .load()
     ```
+- Output modes
+  - Append: Only new rows are added to the result table.
+  - Complete: The entire result table is outputted to the sink.
+  - Update: Only rows that were updated in the result table are outputted.
 
 - Tranforming input stream (data frame)
 
