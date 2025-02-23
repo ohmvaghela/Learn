@@ -194,4 +194,81 @@ def check_termination():
   query.awaitTermination()
   ```
 
+## Triggers in SparkSession 
+- Types :
+  - Unspecified : Default
+  - Fixed interval (MircoBatches)
 
+    ```py
+    query = wordCounts.writeStream.trigger(processingTime='10 seconds').start()
+    ```
+
+  - One-Time Trigger
+
+    ```py
+    query = wordCounts.writeStream.trigger(once=True).start()
+    ```
+
+## Watermarking and Window Opearations
+
+```py
+from pyspark.sql.functions import window, col, current_timestamp
+lines = spark.readStream.format("socket").option("host", "localhost").option("port", 9999).load()
+
+# 1. DataFrame with Watermarking Only:
+watermarked_stream = lines
+    .withWatermark("timestamp", "10 seconds")
+    .groupBy("value")
+    .count()
+
+# 2. DataFrame with Windowing Only (Window size and Step size same):
+windowed_stream = lines
+    .groupBy(window(col("timestamp"), "10 seconds"), col("value"))
+    .count()
+
+# 3. DataFrame with Windowing Only (Window size and Step size different):
+windowed_stream_diff_step = lines
+    .groupBy(window(col("timestamp"), "10 seconds", "5 seconds"), col("value"))
+    .count()
+
+# 4. DataFrame with Both Watermarking and Windowing:
+watermarked_windowed_stream = lines
+    .withWatermark("timestamp", "10 seconds")
+    .groupBy(window(col("timestamp"), "10 seconds"), col("value"))
+    .count()
+
+watermarked_query = watermarked_stream.writeStream.outputMode("complete").format("console").start()
+windowed_query = windowed_stream.writeStream.outputMode("complete").format("console").start()
+windowed_query_diff_step = windowed_stream_diff_step.writeStream.outputMode("complete").format("console").start()
+watermarked_windowed_query = watermarked_windowed_stream.writeStream.outputMode("complete").format("console").start()
+
+spark.streams.awaitAnyTermination()  
+```
+
+> ## Structured v/s Unstructured Stream
+> - Unstructured stream : Data is treated as stream of raw bytes or lines of text
+>   - Data is stored as DStream
+>   - Used with StreamingContext
+> - Structured Stream : Treats data as stream of rows, with defined schema
+>   - Similar to DataFrame and DataSet
+>   - Used with SessionContext
+> ## Structured Streaming : Triggers
+> - Defines how frequently a microbatch of data is processed
+> - Types :
+>   - Unspecified Trigger
+>     - By default
+>     - Processes data as fast as possible without any specific interval
+>   - Fixed interval (MicroBatches)
+>     - We can specify the interval after which batch is processed
+>     - `query = wordCounts.writeStream.trigger(processingTime='10 seconds').start()`
+>   - One-time trigger
+>     - Process data only once to complete the job 
+>     - `query = wordCounts.writeStream.trigger(once=True).start()`
+
+> ## Stateful v/s Stateless operations
+> - Stateless operations
+>   - Where each microbatch is processed independently, **without info of past batches**
+>   - Eg. `map()`, `filter()`, `select()`, `groupBy()`
+> - Stateful operations
+>   - Operations which require the track of past batches
+>   - Eg. `Windowing`, `Count-based aggregations`, `Join-based operations` 
