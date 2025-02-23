@@ -1,5 +1,9 @@
 # Spark Stream Practical
 
+## TODO
+- Stateful stream processing
+  - `mapGroupsWithState()`, `flatMapGroupsWithState()`
+
 ## StreamingContext initialization and stopping
 - `Batch interval`: is the time interval for the data is collected and batched together for processing
 
@@ -172,10 +176,6 @@ def check_termination():
         .option("maxFilesPerTrigger", 1) \
         .load()
     ```
-- Output modes
-  - Append: Only new rows are added to the result table.
-  - Complete: The entire result table is outputted to the sink.
-  - Update: Only rows that were updated in the result table are outputted.
 
 - Tranforming input stream (data frame)
 
@@ -194,6 +194,12 @@ def check_termination():
   query.awaitTermination()
   ```
 
+- Output modes
+  - Append: Only new rows are added to the result table.
+  - Complete: The entire result table is outputted to the sink.
+  - Update: Only rows that were updated in the result table are outputted.
+
+
 ## Triggers in SparkSession 
 - Types :
   - Unspecified : Default
@@ -207,6 +213,7 @@ def check_termination():
 
     ```py
     query = wordCounts.writeStream.trigger(once=True).start()
+    query = wordCounts.writeStream.trigger(Trigger.once()).start()
     ```
 
 ## Watermarking and Window Opearations
@@ -237,38 +244,38 @@ watermarked_windowed_stream = lines
     .groupBy(window(col("timestamp"), "10 seconds"), col("value"))
     .count()
 
-watermarked_query = watermarked_stream.writeStream.outputMode("complete").format("console").start()
-windowed_query = windowed_stream.writeStream.outputMode("complete").format("console").start()
-windowed_query_diff_step = windowed_stream_diff_step.writeStream.outputMode("complete").format("console").start()
-watermarked_windowed_query = watermarked_windowed_stream.writeStream.outputMode("complete").format("console").start()
+watermarked_query = watermarked_stream
+                      .writeStream
+                      .outputMode("complete")
+                      .format("console")
+                      .start()
+
+windowed_query = windowed_stream
+                  .writeStream
+                  .outputMode("complete")
+                  .format("console")
+                  .start()
+
+windowed_query_diff_step = windowed_stream_diff_step
+                            .writeStream.outputMode("complete")
+                            .format("console")
+                            .start()
+
+watermarked_windowed_query = watermarked_windowed_stream
+                              .writeStream
+                              .outputMode("complete")
+                              .format("console")
+                              .start()
 
 spark.streams.awaitAnyTermination()  
 ```
 
-> ## Structured v/s Unstructured Stream
-> - Unstructured stream : Data is treated as stream of raw bytes or lines of text
->   - Data is stored as DStream
->   - Used with StreamingContext
-> - Structured Stream : Treats data as stream of rows, with defined schema
->   - Similar to DataFrame and DataSet
->   - Used with SessionContext
-> ## Structured Streaming : Triggers
-> - Defines how frequently a microbatch of data is processed
-> - Types :
->   - Unspecified Trigger
->     - By default
->     - Processes data as fast as possible without any specific interval
->   - Fixed interval (MicroBatches)
->     - We can specify the interval after which batch is processed
->     - `query = wordCounts.writeStream.trigger(processingTime='10 seconds').start()`
->   - One-time trigger
->     - Process data only once to complete the job 
->     - `query = wordCounts.writeStream.trigger(once=True).start()`
+## Checkpointing location
+- It is applied on `DataStreamWriter` object, which is returned from `DF.writeStream`
+```py
+query = myStreamDF.writeStream
+          .format("console")
+          .option("checkpointLocation", "/path/to/custom/checkpoint")
+          .start()
+```
 
-> ## Stateful v/s Stateless operations
-> - Stateless operations
->   - Where each microbatch is processed independently, **without info of past batches**
->   - Eg. `map()`, `filter()`, `select()`, `groupBy()`
-> - Stateful operations
->   - Operations which require the track of past batches
->   - Eg. `Windowing`, `Count-based aggregations`, `Join-based operations` 
