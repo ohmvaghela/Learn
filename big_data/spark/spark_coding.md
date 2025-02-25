@@ -21,6 +21,7 @@
     - [collect` v/s `take(n)](./spark_coding.md#collect-vs-taken)
     - [Working with text file in SparkContext](./spark_coding.md#Working-with-text-file-in-SparkContext)
 - [8. Cache and Persistance in SparkContext](./spark_coding.md#8-Cache-and-Persistance-in-SparkContext)
+- [Saving RDD](./spark_coding.md#Saving-RDD)
 - [9. SparkSession](./spark_coding.md#9-SparkSession)
     - [Creating DataFrame](./spark_coding.md#Creating-DataFrame)
     - [Creating SparkSession in python script](./spark_coding.md#Creating-SparkSession-in-python-script)
@@ -371,6 +372,29 @@ upper_rdd.persist(StorageLevel.MEMORY_AND_DISK)
 | `MEMORY_ONLY_2`       | Same as `MEMORY_ONLY` but with 2x replication for fault tolerance.                |
 | `MEMORY_AND_DISK_2`  | Same as `MEMORY_AND_DISK` but with 2x replication for fault tolerance.           |
 
+## Saving RDD
+- Saving as text file
+```py
+rdd.saveAsTextFile("output/textFile")
+```
+- Saving as Sequence File
+```py
+rdd.saveAsTextFile("output/textFile")
+```
+- Saving as pickle file
+```py
+rdd.saveAsPickleFile("output/pickleFile")
+```
+- Saving as Hadoop file
+```py
+rdd.saveAsHadoopFile("output/hadoopFile", "org.apache.hadoop.mapred.TextOutputFormat")
+```
+- Saving as Compressed file
+```py
+rdd.saveAsTextFile("output/compressedFile", "org.apache.hadoop.io.compress.GzipCodec")
+```
+
+
 ## 9. SparkSession
 
 - **SparkSession as Entry Point:** SparkSession serves as the primary gateway for utilizing Spark's capabilities.
@@ -470,8 +494,10 @@ spark.stop()
 1. Reading CSV file
 
 ```py
-# From local filesystem
-df = spark.read.csv("file:///path/to/local/file.csv", header=True, inferSchema=True)
+# Read CSV with custom delimiters
+df = spark.read.option("delimiter", "#") \
+              .option("lineSep", "\n") \
+              .csv("path_to_your_file.csv", header=True, inferSchema=True)
 
 # From HDFS
 df = spark.read.csv("hdfs://namenode_host:9000/path/to/file.csv", header=True, inferSchema=True)
@@ -495,12 +521,17 @@ df.write.csv("hdfs://namenode_host:9000/path/to/dir", header=True, mode="overwri
 ```py
 # Filtering rows where Age > 30
 df_filtered = df.filter(df["Age"] > 30)
+df_filtered = player_df.filter((col("PRICE") < 7) & (col("YEAR\r") > 2016)).show()
+
 
 # Selecting specific columns
 df_selected = df_filtered.select("Name")
 
 # Adding a new column
 df_with_column = df.withColumn("AgePlus10", df["Age"] + 10)
+
+# Changing column type
+df_with_column = df.withColumn("age", col("age").cast("INT"))
 
 # Sorting the DataFrame
 df_sorted = df.orderBy(df["Age"].desc())
