@@ -177,6 +177,20 @@ def check_termination():
         .load()
     ```
 
+3. Streaming from kafka
+  ```
+  pyspark --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.2
+  ```
+  ```py
+  df = spark \
+    .readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("subscribe", "t1") \
+    .option("startingOffsets","earliest") \
+    .load()
+  ```
+   
 - Tranforming input stream (data frame)
 
   ```py
