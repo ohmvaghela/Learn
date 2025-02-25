@@ -1,5 +1,17 @@
 # Spark Stream Practical
 
+## Context
+- [StreamingContext initialization and stopping](./spark_stream_coding.md#StreamingContext-initialization-and-stopping)
+- [Creating DStream](./spark_stream_coding.md#creating-dstream)
+- [DStream Output operations](./spark_stream_coding.md#dstream-output-operations)
+- [Word Count Example](./spark_stream_coding.md#Example-word-count-code)
+- [Stopping Stream](./spark_stream_coding.md#stopping-stream)
+- [Using SparkSession to do the same](./spark_stream_coding.md#Using-SparkSession-to-do-the-same)
+- [Triggers in SparkSession](./spark_stream_coding.md#Triggers-in-SparkSession)
+- [Watermarking and Window Opearations](./spark_stream_coding.md#Watermarking-and-Window-Opearations)
+- [Checkpointing location](./spark_stream_coding.md#Checkpointing-location)
+
+
 ## TODO
 - Stateful stream processing
   - `mapGroupsWithState()`, `flatMapGroupsWithState()`
