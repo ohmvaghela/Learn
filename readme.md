@@ -12,7 +12,7 @@
 - [business_analytics](./business_analytics/)
 - [cloud](./cloud/)
 - [computer_networks_CN](./computer_networks_CN/)
-- [core_interview](./core_interview/)
+- [interview](./interview/)
 - [dbms](./dbms/)
 - [devops](./devops/)
 - [django](./django/)

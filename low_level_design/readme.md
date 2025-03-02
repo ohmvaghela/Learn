@@ -1,7 +1,5 @@
 # Low Level Design
 
-> # PlantTest UML
-
 ## Virtual Functions
 
 - If we create a base class and a child class like this
