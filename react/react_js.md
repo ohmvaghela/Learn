@@ -499,33 +499,3 @@ function App() {
     3. useContext
     4. useRef
 
-# JWT 
-
-## Authorisation v/s Authentication
-- `Authentication` :  is verifying the true identity of a user or entity
-- `Authorization` :  determines what a user can access and ensures that a user or entity receives the right access or permissions in a system.
-> - Authentication verifies the identity of a user or service, and authorization determines their access rights.
-> - After user logs in we need to make sure that the user is same who logged in
-
-- JWT is used for authorization, `not for authentication`
-
-- Authorization 
-    - We have a `session ID` and that is stored in `cookies` at client side
-    - Now when a client makes a request it sends this session ID to authorize
-    - This is traditional method
-    - <img src="./image.png">
-    - Here server needs to store `session ID`
-- But this JWT uses a token instead of session ID
-    - Here after authentication server creates a JWT with a secret key that only server has
-    - Now each time client makes a request the server verifies the token with its secret key 
-    - So here no extra memory is stored and no searching of id
-    - <img src="./image-1.png">
-- There are two types of tokens usually stored on client side
-    - Access Token
-    - Refresh Token
-- `Access token` 
-    - have relatively short lifespan (10-15min)
-    - Are stored in session storad
-- `Refresh Token`
-    - Have relatively long lifespan (from days to months)
-    - Are stored in HTTP-only cookies for enhanced security
