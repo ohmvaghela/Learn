@@ -14,6 +14,8 @@
 - event handler moves callback from the Callback Queue to Callstack 
   - This happens only when callstack is empty 
   - or else event handler will wait till callstack is empty then It will fill the callback from queue
+
+  ![alt text](image.png)
 #
 
 - NodeJs is on server side
@@ -1610,7 +1612,7 @@ module.exports = router;
 ## Scheduled Email sender
 - node-cron is used to send periodic mail
 - Upadtes in billschema
-```js
+```jsV
     reminder:{
         type: Number,
         require: true,
