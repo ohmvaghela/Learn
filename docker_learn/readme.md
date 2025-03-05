@@ -1,5 +1,19 @@
 # Docker learn 
 
+- [Virtual Machine v/s container](./readme.md#Virtual-Machine-v/s-container)
+- [Docker Architecture](./readme.md#Docker-Architecture)
+- [Docker Architecture inDepth](./readme.md#Docker-Architecture-inDepth)
+- [Docker Images](./readme.md#Docker-Images)
+- [Docker basic commands](./readme.md#Docker-basic-commands)
+- [Storages in docker](./readme.md#Storages-in-docker)
+- [Docker volumes v/s docker mounts](./readme.md#Docker-volumes-v/s-docker-mounts)
+- [Docker Network](./readme.md#Docker-Network)
+- [Few other options](./readme.md#Few-other-options)
+- [Docker compose](./readme.md#Docker-compose)
+- [Multi stage builds](./readme.md#Multi-stage-builds)
+- [Deploying mysql using docker](./readme.md#Deploying-mysql-using-docker)
+- [Best Security practice](./readme.md#Best-Security-practice)
+
 ## Virtual Machine v/s container
 | Virutal Machine|Container|
 |-|-|
@@ -427,6 +441,10 @@ CMD ["nginx", "-9", "daemon off;"]
 
 ```
 
+> ## `ADD` vs `COPY` in docker file
+> - both are used to copy files to image, the difference is `ADD` can do much more from `COPY`
+> - `ADD` can copy data from URL, or can unpack compressed file
+
 ## Deploying mysql using docker 
 - Say you have mysql image and are going to use it as database for django
 - To create a user at start use following script
@@ -489,3 +507,14 @@ CMD ["nginx", "-9", "daemon off;"]
   python manage.py runserver 0.0.0.0:8000
 
   ```
+
+## Best Security practice 
+- Use Minimal Base Images: Use small, official, or trusted images (like alpine or debian), and avoid unnecessary software in the image.
+- Run Containers as Non-Root Users: Always try to run containers with the least privilege, avoiding running them as the root user unless absolutely necessary.
+- Use Docker Content Trust (DCT): Enabling DCT ensures that only signed images can be pulled, reducing the risk of using compromised images.
+- Limit Container Capabilities: Use the --cap-drop flag to drop unnecessary Linux capabilities from containers and reduce the potential attack surface.
+- Use Read-Only File Systems: Mount the file system as read-only where possible to prevent malicious modification of files within the container.
+- Scan Images for Vulnerabilities: Regularly scan Docker images for vulnerabilities using tools like Clair or Anchore to ensure they don't contain known security -flaws.
+- Avoid Privileged Containers: Don’t use the --privileged flag unless absolutely necessary, as it grants containers elevated privileges.
+- Limit Network Access: Configure Docker networks to isolate containers and only expose necessary services. Use firewalls or other network security tools.
+- Update Images Regularly: Ensure your containers use up-to-date images to patch any security vulnerabilities.
