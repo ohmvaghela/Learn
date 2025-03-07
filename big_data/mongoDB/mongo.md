@@ -112,21 +112,38 @@
 - Now when the subsets are stored in single server it is called Partitioning
 - When the subsets are stored in seperate server it is called Sharding
 
-## Sharded Cluster
-- Sharded Cluster has many componenets
-  - `Shards` : Actual data store
-  - `Config Server` : Metadata and config details of cluster
-  - `Query Router(Mongos)` : Direct client query to correct `shard`
+## Two Types of architecture in mongodb
+1. Replica Set 
+    - One node is master others are slaves
+    - Only master serves read-write request
+    - Slaves serve only read requests
+2. Sharded Cluster
+    - Sharded Cluster has many componenets
+      - `Shards` : Actual data store
+      - `Config Server` : Metadata and config details of cluster
+      - `Query Router(Mongos)` : Direct client query to correct `shard`
 
-- Implementing sharding
-  - Enable sharding
-    - `sh.enableSharding("myDatabase")`
-  - Create index on shardkey
-    - `db.users.createIndex({ user_id: 1 }) `
-  - Shard collection
-    - `sh.shardCollection("myDatabase.users", { user_id: "hashed" })`
-  - Here `user_id` is `shard key`
-- Types of sharding
-  1. Rangle based : Like age, salary `{ age: 1 }`
-  2. Hash Based : `{ user_id: "hashed" }`
-  3. Zone Based : `{ region : 1}`
+    - Implementing sharding
+      - Enable sharding
+        - `sh.enableSharding("myDatabase")`
+      - Create index on shardkey
+        - `db.users.createIndex({ user_id: 1 }) `
+      - Shard collection
+        - `sh.shardCollection("myDatabase.users", { user_id: "hashed" })`
+      - Here `user_id` is `shard key`
+    - Types of sharding
+      1. Rangle based : Like age, salary `{ age: 1 }`
+      2. Hash Based : `{ user_id: "hashed" }`
+      3. Zone Based : `{ region : 1}`
+
+| Feature          | Replica Set                                     | Sharded Cluster                                   |
+|------------------|-------------------------------------------------|---------------------------------------------------|
+| **Purpose** | High availability, data redundancy             | Horizontal scalability, large datasets, high availability |
+| **Data Storage** | Full dataset on each member                     | Data partitioned and distributed across shards     |
+| **Scalability** | Read scalability, limited write scalability      | Read and write scalability                        |
+| **Architecture** | Primary-secondary replication                   | Shards, config servers, query routers (mongos)     |
+| **Consistency** | Relatively strong consistency, potential for temporary inconsistencies | More complex consistency, trade-offs to consider   |
+| **Availability** | High availability within a single dataset, brief failover downtime | Very high availability, individual shard failures less impactful |
+| **Complexity** | Simpler setup and management                  | More complex setup and management                 |
+| **Use Cases** | Data protection, read-heavy workloads           | Large datasets, high throughput, horizontal scaling |
+| **Data Distribution** | Duplicated data across all members | Partitioned data across multiple shards |

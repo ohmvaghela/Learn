@@ -2,18 +2,31 @@
 
 
 ## Gunicorn and WSGI (Web Server Gateway Interface)
-- It is a `specification` that defines how `webserver` interact with web applications like django
-- In this project WSGI acts a bridge between nginx and django application
-- `Gunicorn` is a `Python WSGI HTTP server` and is used to make python based web application accessible to internet
-- Basically whenever a request comes it is recieved by gunicorn and sent to django and the response is then sent back to server
-- And the webserver is most of the times NGINX
-- But these request are syncronus and sommetimes we may require async request so we can use `ASGI` with `Uvicorn`
-- Features of WSGI
-  - Multithreading
-  - Middleware Support
-> - WSGI is multi threading but not async fully
->   - Multi-threaded: Yes, but it processes each request in a blocking manner. Each request waits for the previous one to complete.
->   - Concurrency: Limited to handling simultaneous requests but not suitable for long-lived connections or asynchronous tasks.
+
+- **WSGI Specification:**
+    - WSGI is a specification that defines a standard interface between web servers and Python web applications like Django.
+- **Role of WSGI:**
+    - In a typical deployment, WSGI acts as a bridge between a web server (like Nginx) and a Django application.
+- **Gunicorn as a WSGI Server:**
+    - Gunicorn is a Python WSGI HTTP server. It's used to deploy Python-based web applications, making them accessible over the internet.
+- **Request Handling:**
+    - When a request comes in, it's received by Gunicorn, which then forwards it to the Django application. The response from Django is then sent back to the web server.
+- **Web Server (Nginx):**
+    - The web server in front of Gunicorn is most often Nginx, which acts as a reverse proxy.
+- **Synchronous Nature:**
+    - WSGI handles synchronous requests. For asynchronous requests, ASGI with Uvicorn is used.
+- **Features of WSGI:**
+    - Multithreading support.
+    - Middleware support.
+- **WSGI Concurrency:**
+    - WSGI is multi-threaded but not fully asynchronous.
+    - Multi-threaded: Yes, it can handle multiple requests concurrently, but each request is processed in a blocking manner.
+    - Concurrency: Limited to handling simultaneous requests and not suitable for long-lived connections or asynchronous tasks.
+
+> - While we can use gunicorn as server but in production we generally use it with other server
+> - As gunicron lacks in many features like serving static files, reverse proxy, load balancing etc.
+
+
 ### Setting up guincorn
 ```py
 # location of gunicorn executable
@@ -38,19 +51,28 @@ gunicorn -c gunicorn.py MechSimVault.wsgi
 
 <img src="./Gunicorn_nginx.webp" >
 
-## Uvicorn and ASGI
-- To make request async gunicron creates and manages Uvicorn workers
-- Uvicorn recieves request from Gunicorn and processes it
-- As it will be a long lived request so it can manage long-lived connections like WebSockets or background tasks.
-- Uvicorn communicates with your Django application via the ASGI interface
-- Process under the hood
+## Uvicorn and ASGI (Asynchronous Server Gateway Interface)
 
-<center>
-
-### Client → Gunicorn → Uvicorn → Django (ASGI) → Uvicorn → Gunicorn → Client
-
-</center>
-
+- **ASGI Specification:**
+    - ASGI is a specification that defines a standard interface between asynchronous Python web servers, frameworks, and applications. It extends WSGI to handle asynchronous operations.
+- **Role of ASGI:**
+    - ASGI enables asynchronous communication, making it suitable for applications that require real-time features like WebSockets.
+- **Uvicorn as an ASGI Server:**
+    - Uvicorn is a lightning-fast ASGI server, implemented in Python and Cython. It's used to run asynchronous Python web applications.
+- **Request Handling:**
+    - When a request comes in, it's received by Uvicorn, which then forwards it to the Django ASGI application. Responses are handled asynchronously.
+- **Web Server (Nginx):**
+    - Similar to WSGI, Nginx is often used as a reverse proxy in front of Uvicorn.
+- **Asynchronous Nature:**
+    - ASGI handles asynchronous requests, making it ideal for WebSockets and other long-lived connections.
+- **Features of ASGI:**
+    - Asynchronous request handling.
+    - WebSocket support.
+    - Concurrency for long-lived connections.
+- **ASGI Concurrency:**
+    - ASGI is designed for asynchronous concurrency, allowing efficient handling of numerous simultaneous connections and tasks without blocking.
+    - Handles long lived connections.
+    - Allows for asynchronous task execution.
 
 
 
@@ -94,9 +116,3 @@ server {
     }
 }
 ```
-## WSGI and ASGI
-- WSGI (Web Server Gateway Interface)
-  - 
-
-## Static and media files in production
-

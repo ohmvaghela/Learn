@@ -17,6 +17,19 @@
   - Template : HTML like files containing layout of webpage
   - URLs : on an incomming requrest, decides which url to send
 
+## Core configuration files / Entry point to django (Present in `<Project-Name>`)
+- `__init__.py`
+  - Signinifies that the dir should be treated as package
+  - In Django, it's often empty, but it can be used to execute initialization code for the package
+- `settings.py`
+  - Contains all the configuratons of the project
+- `urls.py`
+  - Used for mapping urls to specific sub-applications
+- `wsgi.py`
+  - interface between webserver and application 
+  - Like nginx and application(asgi or django)
+- `asgi.py`
+
 ## Creating a virtual evironment to work with
 
 - To address different django version problem we can create different env for each version

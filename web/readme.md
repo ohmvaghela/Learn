@@ -1,7 +1,27 @@
 # WEB
+- [API](./readme.md#api)
 - [JWT](./readme.md#web)
 - [Browser Storage](./readme.md#browser-storage)
 
+# API
+- REST v/s SOAP
+- PUT v/s PATCH
+- `application/json` v/s `application/x-www-form-urlencoded` v/s `multipart/form-data` v/s `text/plain` ....
+- What is idempotency in REST APIs? Which HTTP methods are idempotent?
+- What is API versioning? What are some common strategies for API versioning
+- How can you secure an API? Explain authentication vs. authorization
+- How does rate limiting work in APIs?
+- What are API gateways, and why are they used
+- What are webhooks, and how do they differ from polling?
+- What is OpenAPI (Swagger), and why is it useful?
+- Explain HATEOAS in RESTful APIs.
+- What is GraphQL, and how is it different from REST?
+- How would you handle pagination in an API?
+- How do you optimize API performance? (e.g., caching, compression, load balancing)
+- What are API contracts, and how do you enforce them?
+
+
+- What is difference between bearer and auth token when sending token 
 # JWT 
 ## Authorisation v/s Authentication
 - `Authentication` :  is verifying the true identity of a user or entity
@@ -92,3 +112,4 @@
   - Secure : When true, cookie is sent only to HTTPS secured server
   - Partitioned?
   - Priority?
+

@@ -1,136 +1,398 @@
 # Kubernetes
 - Open source container orchestraition system for automating deployment, scaling, and management.
-### Kubernetes cluster
-- A cluster is made of : `Control planes` + `worker nodes`
-- Each node has a `kubelet` working on it
-- Depending on load different number of docker containers are running on a worker node
-- Terminology
-  - Control plane : Master node
-  - Node : Virtual or Physical Machine
-- Parts of Control Panel 
-  - `API server` : Entry Point to k8d cluster
-    - Basically UI/API/CLI talk to this server
-  - `Control Manager` : Manages nodes, restarting of container, container repair
-  - `Schedular` : Decides on which node a new `pod` will be scheduled
-  - `etcd` key value storage : has config data and status of each node
-  > - More then one `control plane` is running at a time so if one goes down then other will be still working 
-  > - To restart control plain there exist a backup, which is made of `etcd snap shot`
-- `Virtual network` 
-  - Spins nodes that are part of cluster
-  - Communication between node and master
->  - Kublet process : ?
-- Kubectl(Kubernetes CLI) : Commands Control plane   
+
+## Content
+- [Master Node](./kubernetes.md#master-node--control-plane)
+- [Worker Node](./kubernetes.md#Worker-node)
+  - [Pods](./kubernetes.md#pods)
+  - [Deployment](./kubernetes.md#Deployment)
+  - [StatefulSet](./kubernetes.md#StatefulSet)
+  - [StatefulSet vs Deployment](./kubernetes.md#statefulset-vs-deployment)
+  - [Services](./kubernetes.md#services)
+  - [Volume](./kubernetes.md#volume)
+  - [Namespaces](./kubernetes.md#Namespaces)
+- [Minikube](./kubernetes.md#Minikube)
+- [MongoDB example](./kubernetes.md#MongoDB-example)
+- [Helm](./kubernetes.md#Helm)
 
 
-## Data Plane v/s control Plane
-- Control Plane : Manages 
-  - kube-apiserver
+## Master Node / Control Plane
+
+- Set of distributed processes that run together to orchestrate containers 
+- ### **Core Components**
+  - API server
   - etcd
-  - kube-Schedular
-  - kube-controller-manager
-  - cloud-control-manager
-- Data plane : manages
-  - kubelet : Agent that runs and manages nodes
-  - kubeproxy
-  - container runtime
-- Basically `control plane` makes decision and `Data plane` implement decisions
+  - Schedular
+  - Controller Manager
+  - Cloud Controller Manager
+- ### **API server**
+  - Central point of contact for all interaction in k8s cluster
+  - Communcation happen using RESTful API
+  - Versioning happen through path versioning 
+  - APIs are organized in groups via path
+
+    ```bash
+    core/v1 # (core API group, version 1)
+    apps/v1 # (apps API group, version 1)
+    networking.k8s.io/v1 # (networking API group, version 1)
+    ```
+  
+  - Also handles authorization and authentication
+- ### **etcd** 
+  - Stores metadata about the entire cluster in key-value pair
+  - Also stores current and desired state 
+- ### **Controller Manager**
+  - Periodically requests data from etcd about current state and desired state
+    - And acts upon it
+  - Takes care of 
+    - Container health
+    - Number of replicas
+    - endpoints
+    - Volumes
+- ### **Schedulars**
+  - They generally recieve request for creating new resources
+  - Once they recieve request Schedulars check for existing resources
+  - Then it instructs node manager to create reousrce 
+- ### **Cloud Controller Manager**
+  - Provide integration with cloud provider
 
 <center>
-<img src='image.png' alt="kubernetes arch" width=500/>
+<img src='./images/image-14.png' alt="kubernetes arch" width=500/>
+<img src='./images/image.png' alt="kubernetes arch" width=500/>
 </center>
 
-### Main Kubernetes Componenets
-- List of Main Kubernetes Componenets
-  - Pod
-  - Service
-  - Ingress
-  - ConfigMap
-  - Secret
-  - Deployment
-  - StatefulSet
-  - DaemonSet
-- `Pod`
-  - A node has multiple pods
-  - Smallest unit in kubernetes
-  - Abstraction over `container`
-    - So we dont need to interact with `container` directly
-    - And we only interact with Kubernetes layer
-  - Pod runs one application at a time (usually)
-  - For communication each pod has its own `IP address`
-    - But if the pod dies new `IP` is assigned 
-    - So to solve this `Service` is used
-- `Service`
-  - Have `permanent` `IP address` 
-  - Lifecycle of pod and service are not connected
-  - They also work as load balancer
-    - Multiple pod can be connected to a service
-    - Hence requests can be routed accordingly 
-  - `Internal service` or `ClusterIP`  
-    - Default service
-    - Exposes service on internal IP making it accessable only on internal server
-  - `External Service` 
-    - Allows communication between `kubernetes cluster` and `external entities`
-- `Ingess`
-  - Manages external access to service, typically HTTP and HTTPS
-  - When a http or https request comes it goes to ingress then it is forwarded to desired service
-- `ConfigMap`
-  - Say the url of my database is changed in the internal server
-  - So we need to re`build` the app push it to repo and pull it in the `pod`
-    - This is tedeous
-  - ConfigMap has all this data like URL and other like env variable file
-  - `Stores non-confidential` configuration data in key-value pairs.
-- `Secret`
-  - It is like ConfigMap but store data in 64-bit encoded format
-  - They are needed to be encrypted by a third party app furthur
-- `Volume`
-  - If the pod restarts and the data is stored in pod then it is lost 
-  - It attaches physical location to the cluster so if the pod is lost then the data is not lost, just like `docker volume`
-  - Kubernetes does not itself manage data persistance
-- `Deployment`
-  - It is a `blueprint` for `pods`
-  - We will be creating `deployments` and we can mention how many duplicate pods need to run   
-  - `Deployment` is abstraction of `pods`
-  - So if a pod dies then request are directed to other pod
-  - However data base cannot be replicated using deployment as they have currentt state
-  - Hence `only stateless app's` blueprint should be creating using `deployment`
-- `StatefulSet`
-  - As `databases have states` so the blueprint of database should be created using `StatefulSet` 
-  - Hence Stateful app's blueprint should be created using `StatefulSet`
+## Worker Node
+- ### **Kubelet**
+  - Each worker node has one kubelet
+  - It ensures containers are running on pods
+  - It communicates with control plane and recieves instruction
+- ### **kube-proxy**
+  - They are part of network rules management
+  - Helps services in redirecting traffic recieved 
 
-### Configuration
-- Template for deployment pod
-```yaml
-apiversion: apps/v1
-kind: Deployment
-metadata:
-  name: my-app
-  labels:
-    app: my-app
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
+
+<center>
+<img src='./images/image-15.png' alt="kubernetes arch" width=500/>
+</center>
+
+## Pods 
+- Smallest deployable unit
+- Each pod can host multiple containers
+- Why pods instead of containers
+   - Grouping containers locally
+   - Shared Resources
+   - Atomic Unit
+- Pods have their own IP 
+  - But it changes when a new pod replaces current pod
+  - So to communicate with pod we depend on services 
+
+<details>
+  <summary> Pod's code </summary>
+
+  ```yaml
+  apiVersion: v1 # Specifies the API version for the resource (core API version 1)
+  kind: Pod # Declares that this YAML defines a Pod resource
+
+  metadata: # Metadata about the Pod
+    name: detailed-pod-example # The unique name of the Pod
+    namespace: default # Specifies the namespace for the Pod (optional, defaults to "default")
+    labels: # Key-value pairs used to identify and select the Pod
+      app: my-app # Label indicating the application this Pod belongs to
+      environment: development # Label indicating the environment the Pod is running in
+    annotations: # Key-value pairs for non-identifying metadata
+      description: "This is a detailed example Pod." # A description of the Pod
+      owner: "team-dev" # The team or person responsible for the Pod
+
+  spec: # Specification of the Pod's desired state
+    containers: # Defines the containers that will run within the Pod
+    - name: main-container # The name of the main container
+      image: nginx:latest # The Docker image to use for the container (nginx, latest tag)
+      ports: # Defines the ports that the container will expose
+      - containerPort: 80 # The port number that the container is listening on
+        name: http-port # A name for the port
+        protocol: TCP # The protocol used by the port (TCP)
+      resources: # Defines resource requests and limits for the container
+        requests: # Minimum resources the container requires
+          cpu: "100m" # Requests 100 millicores of CPU
+          memory: "256Mi" # Requests 256 megabytes of memory
+        limits: # Maximum resources the container is allowed to use
+          cpu: "500m" # Limits CPU usage to 500 millicores
+          memory: "512Mi" # Limits memory usage to 512 megabytes
+      env: # Defines environment variables for the container
+      - name: ENVIRONMENT # Environment variable name
+        value: "development" # Static value of the environment variable
+      - name: CONFIG_VALUE # Environment variable name
+        valueFrom: # Value is sourced from a ConfigMap
+          configMapKeyRef: # Reference to the ConfigMap
+            name: app-config # Name of the ConfigMap
+            key: config_key # Key within the ConfigMap
+      volumeMounts: # Mounts volumes into the container's filesystem
+      - name: data-volume # Name of the volume to mount (defined later)
+        mountPath: /usr/share/nginx/html # The path within the container where the volume will be mounted
+      livenessProbe: # Checks if the container is still running
+        httpGet: # Performs an HTTP GET request to check liveness
+          path: / # The path to check (root path)
+          port: http-port # The port to check (using the named port)
+        initialDelaySeconds: 15 # Delay before the first probe is executed (15 seconds)
+        periodSeconds: 20 # How often to perform the probe (20 seconds)
+      readinessProbe: # Checks if the container is ready to serve traffic
+        httpGet: # Performs an HTTP GET request to check readiness
+          path: / # The path to check (root path)
+          port: http-port # The port to check (using the named port)
+        initialDelaySeconds: 5 # Delay before the first probe is executed (5 seconds)
+        periodSeconds: 10 # How often to perform the probe (10 seconds)
+    initContainers: # Defines containers that run before the main containers
+    - name: init-container # Name of the init container
+      image: busybox:latest # Docker image for the init container (busybox, latest tag)
+      command: ['sh', '-c', 'echo "Initializing..." && sleep 5'] # Command to run in the init container (simulates initialization)
+    volumes: # Defines volumes that can be mounted into containers
+    - name: data-volume # Name of the volume
+      emptyDir: {} # Creates an empty directory volume (ephemeral)
+    nodeSelector: # Selects nodes based on labels
+      kubernetes.io/os: linux # Schedules the Pod to nodes with the "kubernetes.io/os: linux" label
+    tolerations: # Allows the Pod to tolerate taints on nodes
+    - key: "node.kubernetes.io/unreachable" # Tolerates nodes with the "node.kubernetes.io/unreachable" taint
+      operator: "Exists" # Matches any value of the taint
+      effect: "NoExecute" # Tolerates taints with the "NoExecute" effect
+      tolerationSeconds: 600 # Time to tolerate the taint (600 seconds)
+    affinity: # Defines affinity rules for scheduling the Pod
+      podAntiAffinity: # Prevents Pods with the same label from being scheduled on the same node
+        requiredDuringSchedulingIgnoredDuringExecution: # Hard requirement during scheduling
+        - labelSelector: # Selects Pods based on labels
+            matchExpressions: # Defines label matching rules
+            - key: "app" # Label key to match
+              operator: In # Matches if the label value is in the list
+              values: # List of label values to match
+              - "my-app" # Matches Pods with the "app: my-app" label
+          topologyKey: "kubernetes.io/hostname" # Ensures Pods are not scheduled on the same node (hostname)
+  ```
+
+</details>
+
+## Deployment
+- Used to manage stateless applicaton
+- They are blueprint of pods
+- Why not use pod?
+  - Pods dont provide replication, we need to manually scale pods
+  - Pods dont provide rollback if the new update fails
+  - For updating pods we need to take them down and update them manually
+  - If pods fail we need to manually repair them
+
+<details>
+  <summary>Basic code</summary>
+
+  ```yaml
+  apiversion: apps/v1
+  kind: Deployment
+  metadata:
+    name: my-app
+    labels:
       app: my-app
-  template:
-    metadata:
-      labels:
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
         app: my-app
+    template:
+      metadata:
+        labels:
+          app: my-app
+        spec:
+          containers:
+            - name: my-app
+              image: my-image
+              env:
+                - name: SOME_ENV
+                  value: $SOME_ENV
+              ports:
+                containerPort: 8080
+  ```
+
+</details>
+
+<details>
+  <summary>Deployment code</summary>
+
+  ```yaml
+  apiVersion: apps/v1 # Specifies the API version for Deployments (apps/v1 is the current stable version)
+  kind: Deployment # Declares that this YAML defines a Deployment resource
+  metadata:
+    name: my-application-deployment # The name of the Deployment (must be unique within the namespace)
+    namespace: production # The namespace where the Deployment will be created (optional, defaults to "default")
+    labels:
+      app: my-application # Labels applied to the Deployment itself (used for organization and selection)
+      environment: production # Additional label indicating the environment
+    annotations:
+      description: "Deployment for the main application" # Annotations for additional, non-identifying metadata
+      owner: "team-app" # Annotation indicating the owner of the deployment
+  spec:
+    replicas: 3 # Specifies the desired number of Pod replicas (3 in this case)
+    selector:
+      matchLabels:
+        app: my-application # Selects Pods with the label "app: my-application"
+    strategy:
+      type: RollingUpdate # Specifies the update strategy (RollingUpdate or Recreate)
+      rollingUpdate: # Configuration for RollingUpdate strategy
+        maxSurge: 25% # Maximum number of Pods that can be created above the desired number during update
+        maxUnavailable: 25% # Maximum number of Pods that can be unavailable during update
+    template: # Defines the Pod template that the Deployment will use to create Pods
+      metadata:
+        labels:
+          app: my-application # Labels applied to the Pods created by the Deployment
       spec:
         containers:
-          - name: my-app
-            image: my-image
-            env:
-              - name: SOME_ENV
-                value: $SOME_ENV
-            ports:
-              containerPort: 8080
-```
-- Parts of configuration file
-  1. Metadata
-  2. Specification
-  3. Status (auto generated not to be added)
-      - Kubernetes compare current state and desired state(found in config file)
-      - This is self healing feature
+        - name: application-container # Name of the container
+          image: your-registry/my-application:v1.2.3 # Specifies the container image (replace with your actual image)
+          ports:
+          - containerPort: 8080 # Specifies the container port
+            name: http-port # Name of the port
+            protocol: TCP # Protocol used by the port
+          resources: # Resource requests and limits for the container
+            requests:
+              cpu: "200m" # Requests 200 millicores of CPU
+              memory: "512Mi" # Requests 512 megabytes of memory
+            limits:
+              cpu: "500m" # Limits CPU usage to 500 millicores
+              memory: "1Gi" # Limits memory usage to 1 gigabyte
+          env: # Environment variables for the container
+          - name: DATABASE_URL # Example environment variable
+            valueFrom:
+              secretKeyRef:
+                name: database-secret # Name of the Secret containing the database URL
+                key: url # Key within the Secret
+          - name: CONFIG_VALUE # Example environment variable sourced from a ConfigMap
+            valueFrom:
+              configMapKeyRef:
+                name: app-config # Name of the ConfigMap
+                key: config-key # Key within the ConfigMap
+          livenessProbe: # Probe to check if the container is running
+            httpGet:
+              path: /health # Path to the health check endpoint
+              port: http-port # Port to use for the health check
+            initialDelaySeconds: 30 # Delay before the first probe
+            periodSeconds: 10 # How often to perform the probe
+          readinessProbe: # Probe to check if the container is ready to serve traffic
+            httpGet:
+              path: /ready # Path to the readiness check endpoint
+              port: http-port # Port to use for the readiness check
+            initialDelaySeconds: 15 # Delay before the first probe
+            periodSeconds: 10 # How often to perform the probe
+          volumeMounts: # Mounts volumes into the container
+          - name: config-volume # Name of the volume to mount
+            mountPath: /app/config # Path where the volume will be mounted
+        volumes: # Defines volumes that can be mounted into containers
+        - name: config-volume # Name of the volume
+          configMap: # Specifies that this volume is sourced from a ConfigMap
+            name: app-config # Name of the ConfigMap
+        imagePullSecrets: # Used to specify secrets for pulling images from private registries.
+        - name: regcred # Name of the secret.
+        nodeSelector: # Select nodes based on labels
+          kubernetes.io/os: linux # Schedule pods to nodes with the label kubernetes.io/os: linux.
+        tolerations: # Allows pods to tolerate taints on nodes.
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 600
+        affinity: # Defines affinity rules for scheduling the Pod
+          podAntiAffinity: # Prevents Pods with the same label from being scheduled on the same node
+            requiredDuringSchedulingIgnoredDuringExecution: # Hard requirement during scheduling
+            - labelSelector: # Selects Pods based on labels
+                matchExpressions: # Defines label matching rules
+                - key: "app" # Label key to match
+                  operator: In # Matches if the label value is in the list
+                  values: # List of label values to match
+                  - "my-application" # Matches Pods with the "app: my-application" label
+              topologyKey: "kubernetes.io/hostname" # Ensures Pods are not scheduled on the same node (hostname) 
+  ```
+
+</details>
+
+
+## StatefulSet
+- Unlike Deployment they provide stable IP 
+- When using with volumes each StatefulSet gets its own volume
+
+<details>
+  <summary>StatefulSet code</summary>
+
+  ```yaml
+  apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    name: my-statefulset
+    namespace: production # Use namespaces for better organization
+    labels:
+      app: my-stateful-app
+  spec:
+    serviceName: "my-stateful-service" # Headless service used for stable network identities
+    replicas: 3 # Number of Pod replicas
+    selector:
+      matchLabels:
+        app: my-stateful-app # Selector to match Pods
+    template:
+      metadata:
+        labels:
+          app: my-stateful-app # Labels applied to Pods
+      spec:
+        containers:
+        - name: my-container
+          image: your-registry/my-stateful-app:v1.0.0 # Replace with your image
+          ports:
+          - containerPort: 8080
+            name: web
+          volumeMounts:
+          - name: data-volume # Mounts the persistent volume
+            mountPath: /data # Path inside the container to mount the volume
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name # Passes the Pod's name as an environment variable
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: web
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: web
+            initialDelaySeconds: 15
+            periodSeconds: 10
+        imagePullSecrets:
+        - name: regcred # for private registries.
+    volumeClaimTemplates: # Defines persistent volume claims
+    - metadata:
+        name: data-volume # Name of the volume claim
+      spec:
+        accessModes: [ "ReadWriteOnce" ] # Access mode for the volume
+        resources:
+          requests:
+            storage: 1Gi # Storage request for each volume
+    updateStrategy:
+      type: RollingUpdate # Specifies the update strategy
+    podManagementPolicy: OrderedReady # Pod management policy for ordered deployment and scaling
+
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-stateful-service # Headless service name
+    namespace: production
+    labels:
+      app: my-stateful-app
+  spec:
+    clusterIP: None # Creates a headless service
+    selector:
+      app: my-stateful-app
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  ```
+
+</details>
 
 ## StatefulSet v/s Deployment
 - When scaling up and down horizontally deployment are created and destroyed randomly
@@ -143,11 +405,317 @@ spec:
 > ### They are just slightly better choise but not the best choise
  
 <center>
-<img src='image-1.png' width=300 height = 300/>
+<img src='./images/image-1.png' width=300 height = 300/>
 </center>
 
+## Services
+- They provide stable IP for communication with the resources like pods, deployment, statefulset etc.
+- The key value pair in selector are mapped to `app:label` in `deployment`/`statefulset`
+- We use `selector` to know where should `Service` forward request to, i.e. which `pod` to forward request to 
+- Types of services
+  - **ClusterIP** : Used to expose IP to internal resources in the cluster
+  - **NodePort** : Expose service on a static port accessable to outside world
+    - Range for nodeport : `30000`-`32767`
+  - **LoadBalancer** : Expose service to outside world using cloud provider's load balancer
+    - If loadbalancer is mentioned in service cloud manager auto detectes and assigns public IP
+  - **Headless** : A service without clusterIP
+    - Here DNS name of the service resolves to IP address of pod
+  - **ExternalName**
+      - Used to map service to external DNS name
+      - When we use this k8s return CNAME record with external name
+      - CNAME mapping domain->domain, domain->IP
+- `EndpointSlice` : It is a resource that manages endpoints(IPs and Ports) for services
+- **Protocol**
+  - By default it is `TCP`
+  - It can be `UDP`, `SCTP`
+- To forwad request to another IP
+
+  ```yaml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-service
+  spec:
+    selector:
+      app.kubernetes.io/name: MyApp
+    ports:
+      - name: http
+        protocol: TCP
+        port: 80
+        targetPort: 49152
+    externalIPs:
+      - 198.51.100.32
+  ```
+
+
+<details>
+  <summary>base deployment</summary>
+
+  ```yaml
+  # Example Deployment for the Pods the services are selecting.
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: my-app-deployment
+    namespace: default
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: my-app
+    template:
+      metadata:
+        labels:
+          app: my-app
+      spec:
+        containers:
+        - name: my-app-container
+          image: nginx:latest
+          ports:
+          - containerPort: 8080
+  ```
+
+</details>
+<details>
+  <summary>CluserIP</summary>
+
+  ```yaml
+  # ClusterIP Service Example
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-clusterip-service
+    namespace: default # Or your desired namespace
+  spec:
+    selector:
+      app: my-app # Select pods with label app: my-app
+    ports:
+      - protocol: TCP
+        port: 80 # Service port
+        targetPort: 8080 # Target port on the pod
+    type: ClusterIP # Specifies ClusterIP type
+  ```
+
+</details>
+<details>
+  <summary>Node Port</summary>
+
+  ```yaml
+  # NodePort Service Example
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-nodeport-service
+    namespace: default # Or your desired namespace
+  spec:
+    selector:
+      app: my-app # Select pods with label app: my-app
+    ports:
+      - protocol: TCP
+        port: 80 # Service port
+        targetPort: 8080 # Target port on the pod
+        nodePort: 30080 # Specifies the NodePort (optional, Kubernetes assigns if omitted)
+    type: NodePort # Specifies NodePort type
+  ```
+
+</details>
+<details>
+  <summary>LoadBalancer</summary>
+
+  ```yaml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-loadbalancer-service
+    namespace: default # Or your desired namespace
+  spec:
+    selector:
+      app: my-app # Select pods with label app: my-app
+    ports:
+      - protocol: TCP
+        port: 80 # Service port
+        targetPort: 8080 # Target port on the pod
+    type: LoadBalancer # Specifies LoadBalancer type
+  ```
+
+</details>
+<details>
+  <summary>Headless</summary>
+
+  ```yaml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: my-headless-service
+    namespace: default # Or your desired namespace
+  spec:
+    selector:
+      app: my-headless-app # Select pods with label app: my-headless-app
+    ports:
+      - protocol: TCP
+        port: 8080 # Port that the service exposes
+        targetPort: 8080 # Port on the pod
+    clusterIP: None # This makes it a headless service
+  ```
+
+</details>
+<table>
+<tr>
+<th></th>
+<th></th>
+</tr>
+<tr>
+<tb><img src="./images/image-6.png" width=400/></tb>
+<tb><img src="./images/image-7.png" width=200/></tb>
+</tr>
+</table>
+
+
+<img src="./images/image-16.png" />
+
+## Volume
+- Kubernetes does not provide data persistence. To achieve persistence, we need a storage solution that is independent of the pod lifecycle and available to all nodes.
+
+### Persistent Volume (PV)
+- A cluster resource that can be created using kubectl or a YAML file.
+- An abstract component that represents a storage resource, such as a local hard drive, NFS server, or cloud storage.
+- PV is an interface to access the actual storage
+
+> Note: For database persistence, it is recommended to use remote storage instead of local storage.
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteMany
+  local:
+    path: /miniK/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube
+```
+
+- Access Modes:
+  - ReadWriteMany: Multiple pods across nodes can read and write.
+  - ReadWriteOnce: Pods on the same node can access the volume.
+  - ReadOnlyMany: Same as ReadWriteMany, but only read is allowed.
+  - ReadOnlyOnce: Same as ReadWriteOnce, but only read is allowed.
+  - ReadWriteOncePod: Only one pod can access the volume
+
+### Persistent Volume Claim (PVC)
+- Pods do not directly access Persistent Volumes.
+- Pods need to specify the storage resources they require using a PVC.
+- PVC requests resources from a PV.
+> - Note: PVC must exist in the same namespace as the pod.
+
+  ```yaml
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: mongo-pvc
+    namespace: default
+    labels:
+      app: mongo-pvc
+  spec:
+    storageClassName: ""
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 100Mi
+  ```
+
+### Storage Class
+- Managing and creating multiple PVs and PVCs can be tedious.
+- StorageClass handles the management and creation of PVs.
+- StorageClass defines the type of storage and its parameters.
+> - Note: We cannot create PVs for hundreds of pods. Instead, we define a StorageClass and use it in our PVC.
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mongo-storageclass
+provisioner: k8s.io/minikube-hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+```
+
+### Volume Binding Mode:
+- Immediate: PV is created as soon as PVC is created.
+- WaitForFirstConsumer: Waits until PVC is claimed by a pod.
+### Reclaim Policy:
+- Retain: Does not delete PV when PVC is deleted
+- Delete: Deletes PV when PVC is deleted.
+  
+  
+</details>
+<table>
+<tr>
+<th></th>
+<th></th>
+</tr>
+<tr>
+<tb><img src="./images/image-4.png" width=300/></tb>
+<tb><img src="./images/image-5.png" width=300/></tb>
+</tr>
+</table>
+
+## Namespaces
+- Used to organise resource
+- Virtual cluster inside a cluster
+```
+kubectl create namespace <namespace-name>
+```
+- Using config file to creae namespace
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-configmap
+  namespace: my-namespace
+data:
+  db_url: mysql-service.database
+```
+- By default everything goes into one namespace
+- It can become a mess when there so many resource
+- Use
+  - Limit the resource access
+  - Blue/Green deployment
+    - One is in production and other is in staging but both share same resource
+    - So multiple resource wont be created for the production and staged namespace
+  - Conflicting names of config files
+- Property
+  - ConfigMap and Secret connot be shared
+  - Service can be shared accross namespace 
+    - Now the service name changes to `<service-name>.<namespace>`
+  - Resources that cannot be contained in namespace
+    - Presistant volumes, nodes
+  - We can make resource global like persistant volume
+    ``` 
+    kubectl <api-resource> --namespace=false
+    ```
+- Change default namespace
+  ```
+  kubie ctx <context>
+  kubie ns <namespace>
+  ```
+  ```
+  kubie ctx minikube
+  kubie ns my-ns
+  ```
+
 ## Minikube
-> ### kubernetes is running in minikube cluster
 > - minikube cli is just for startup and deleting the cluste
 > - kubectl cli is for configuring minikube cluster
 
@@ -197,187 +765,38 @@ Cluster Management|	Simplified, lacks advanced features	|Extensive, with auto-sc
     apiserver: Running
     kubeconfig: Configured
     ```
-- getting Nodes
-  ``` 
-  kubectl get nodes
-  ```
-- Creating most basic deployment using kubectl
-  ```
-  kubectl create deployment <deployment-name> --image=<image>
-  ```
-  ```
-  kubectl create deployment redis-kube-dep --image=redis:latest --replica=1
-  ```
-- Check pods and deployments and replicaset
-  - ```
-    kubectl get pods | kubectl get pods -o wide
-    ```
-  - ```
-    kubectl get deployments
-    ```
-  - ```
-    kubectl get replicaset
-    ```
-- Edit deployment
-  ```
-    kubectl edit deployment <deployment-name>
-  ```
-  - This will open vim editor
-- get logs
-  ```
-  kubectl logs <pod-name>
-  ```
-- To access pod(docker container in the pod)
-  - ```
-    kubectl exec -it <pod-name> -- <container-command>
-    ```
-  - ```
-    kubectl exec -it redis-kube-dep-5754ccb858-nxwcx -- redis-cli
-    ```
-  - ```
-    kubectl exec -it ubuntu-pod-5754ccb858-nxwcx -- bin/bash
-    ```
-- Describe service
-  ``` 
-    kubectl describe service <service-name>
-  ```
-- Get status of depolyment
-  ```
-    kubectl get deployment <deployment-name> -o yaml
-  ```
-- Delete pod/service/deployment
-  ```
-    kubectl delete pod <pod-name/id>
-    kubectl delete pod <pod-name/id> --force
-  ```
-  ```
-    kubectl delete deployment <deployment-name/id>
-    kubectl delete deployment <deployment-name/id> --force
-  ```
-  ```
-    kubectl delete svc <service-name/id>
-    kubectl delete svc <service-name/id> --force
-  ```
-- If a yaml file is used to create multiple deployments/services/statefulset the 
-  ```
-    kubectl delete -f <deployment-file-name>.yaml
-  ```
+
+| Command Description                     | Command                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Cluster Management** |                                                                                                                                    |
+| Getting Nodes                           | `kubectl get nodes`                                                                                                                  |
+| Describe Node                           | `kubectl describe node <node-name>`                                                                                                   |
+| **Pod Management** |                                                                                                                                    |
+| Creating basic Pod using kubectl        | `kubectl run <pod-name> --image=<image>`                                                                                              |
+| Check pods (detailed)                   | `kubectl get pods \| kubectl get pods -o wide`                                                                                        |
+| Get Pod Logs                            | `kubectl logs <pod-name>`                                                                                                            |
+| Access Pod (Execute Command)            | `kubectl exec -it <pod-name> -- <container-command>`                                                                                |
+| Access Pod (Interactive Shell)          | `kubectl exec -it <pod-name> -- bin/bash`                                                                                             |
+| Delete Pod                              | `kubectl delete pod <pod-name/id>` or `kubectl delete pod <pod-name/id> --force`                                                     |
+| **Deployment Management** |                                                                                                                                    |
+| Creating basic deployment using kubectl | `kubectl create deployment <deployment-name> --image=<image>`                                                                         |
+| Check Deployments                       | `kubectl get deployments`                                                                                                            |
+| Edit Deployment                         | `kubectl edit deployment <deployment-name>` *(Opens vim editor)* |
+| Get Deployment Status (YAML)            | `kubectl get deployment <deployment-name> -o yaml`                                                                                    |
+| Delete Deployment                       | `kubectl delete deployment <deployment-name/id>` or `kubectl delete deployment <deployment-name/id> --force`                            |
+| **Service Management** |                                                                                                                                    |
+| Describe Service                        | `kubectl describe service <service-name>`                                                                                             |
+| Delete Service                          | `kubectl delete svc <service-name/id>` or `kubectl delete svc <service-name/id> --force`                                            |
+| **Configuration Management** |                                                                                                                                    |
+| Apply Configuration from YAML file      | `kubectl apply -f <deployment-file-name>.yaml`                                                                                       |
+| Apply Configuration from Directory      | `kubectl apply -f <directory-path>`                                                                                                  |
+| Apply Configuration from STDIN          | `kubectl apply -f -`                                                                                                                 |
+| Apply Configuration with Dry Run        | `kubectl apply -f <deployment-file-name>.yaml --dry-run`                                                                            |
+| Apply Configuration with Server Side    | `kubectl apply -f <deployment-file-name>.yaml --server-side`                                                                         |
+| Delete Resources from YAML file         | `kubectl delete -f <deployment-file-name>.yaml`                                                                                      |
 
 
-
-## yaml config file for kubernetes cluster
-- Basic config file for running redis
-- Use apply to create node
-  ```
-  kubectl apply -f <file-name>.yaml
-  ```
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis-deployment
-  labels:
-    app: redis
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      containers:
-      - name: redis
-        image: redis:latest
-        ports:
-        - containerPort: 6379
-```
-- 4 parts of config file
-  1. apiVersion
-  2. Kind
-  3. metadata
-  4. spec
-- ### `apiVersion`
-  | apiVersion | Group members | 
-  |-|-|
-  |`v1`|Pods, Services, ConfigMaps, Secrets|
-  |`apps/v1`|Deployments, StatefulSets, DaemonSets, and ReplicaSets|
-  |`batch/v1`| Jobs and CronJobs| 
-  |`batch/v1beta1`|  beta features related to batch processing|
-  |`autoscaling/v1`|  HorizontalPodAutoscalers |
-  |`networking.k8s.io/v1`|  NetworkPolicies and Ingress|
-  |`rbac.authorization.k8s.io/v1`|  Role, ClusterRole, RoleBinding, and ClusterRoleBinding|
-  |`policy/v1beta1`|  PodDisruptionBudgets and PodSecurityPolicies|
-  |`storage.k8s.io/v1`|  StorageClasses, VolumeAttachments, and CSI drivers|
-  |`apiextensions.k8s.io/v1`|  CustomResourceDefinitions (CRDs)|
-  |`admissionregistration.k8s.io/v1`|  Admission Webhooks|
-  |`scheduling.k8s.io/v1`| PriorityClasses|
-  |`coordination.k8s.io/v1`|  Leases|
-- ### `kind`
-  - Core resource
-    - `Pod`, `Service`
-  - Workload resource
-    - `Deployment`,  `StatefulSet`,  `DaemonSet`,  `ReplicaSet`,  `Job`,  `CronJob`
-  - Networking resources
-    - `Ingress`,`NetworkPolicy`
-  - Configuration and storage resource
-    - `ConfigMap`,`Secret`,`PersistentVolume`,`PersistentVolumeClaim`
-  - Policy resource
-    - `PodDisruptionBudget`,`PodSecurityPolicy`
-  - Custom resource
-    - `CustomResourceDefinition (CRD)`
-- ### `metadata`
-  - This contains information about the resources
-  - `name` : name of the resource like name of deployment or name of service
-  - `labels`(optional) : used in grouping resources
-    - `app` and `environment` are two sub parts of label along with many others
-- ### `spec`
-  - Components depend on `kind`
-    - Eg: Deployment has 3 componenets : `replicas`, `selector`, `template`
-    - Eg: Service has 2 components : `selector`, `port`
-  - `replicas` : number of replicas of pods required
-  - `template` 
-    - It has its own `metadata` and `spec`
-    - `spec` : 
-      - one subpart under spec is `container` any number of different container can come under spec
-    ```yaml
-      template:
-        metadata:
-          labels:
-            app: multi-container-app
-        spec:
-          containers:
-          - name: nginx-container
-            image: nginx:latest
-            ports:
-            - containerPort: 80
-          - name: redis-container
-            image: redis:latest
-            ports:
-            - containerPort: 6379
-    ```
-  - Spec has `selector` which has `matchLabels` which bind the pod to all the key-value pairs present and matches with its own key value pair
-  - And then the `labels` in `template: metadata:` are the labels of pod
-  - Together with these two pod can connect to `service` as `service` also has `selector` in them 
-- Now lets say a service want to access current pod then it will access using pod's service
-  - hence all the request to the service will be forwarded to pod
-  - so pod has three ports
-    - port : External port
-    - targetPort : port of pod should match with containerPort
-    - nodePort : optional
-  <center>
-    <img src='image-2.png'/>
-  </center>
-
-
-### Requirements for file
-- For a deployment to run it needs to have services to interact with others
-- Example of deployment with service
-
-
+Helm  
 <table>
   <tr>
     <th>MongoDB Deployment</th>
@@ -557,49 +976,6 @@ data:
 > - Points to take care
 >  - The url used will be the service name as done in 
 
-## Namespaces
-- Used to organise resource
-- Virtual cluster inside a cluster
-```
-kubectl create namespace <namespace-name>
-```
-- Using config file to creae namespace
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-configmap
-  namespace: my-namespace
-data:
-  db_url: mysql-service.database
-```
-- By default everything goes into one namespace
-- It can become a mess when there so many resource
-- Use
-  - Limit the resource access
-  - Blue/Green deployment
-    - One is in production and other is in staging but both share same resource
-    - So multiple resource wont be created for the production and staged namespace
-  - Conflicting names of config files
-- Property
-  - ConfigMap and Secret connot be shared
-  - Service can be shared accross namespace 
-    - Now the service name changes to `<service-name>.<namespace>`
-  - Resources that cannot be contained in namespace
-    - Presistant volumes, nodes
-  - We can make resource global like persistant volume
-    ``` 
-    kubectl <api-resource> --namespace=false
-    ```
-- Change default namespace
-  ```
-  kubie ctx <context>
-  kubie ns <namespace>
-  ```
-  ```
-  kubie ctx minikube
-  kubie ns my-ns
-  ```
 ## Helm
 - It is package manager for kubernetes like `apt`
 - It helps in distributing them in public and private repo
@@ -663,392 +1039,11 @@ spec:
   - Default values can be overriden 
   - chart : chart dependencies
 
-## Kubernetes volume
-- We can store the container data on the pod using volume mount
-- But this craete problem
-  - When pod restart then data is deleted
-  - Data sharing is a little difficult
-  - Explain to see
-  - <details>
-      <summary> to open code </summary>
 
-      ```yaml
-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: mongo
-      spec:
-        replicas: 1 
-        selector:
-          matchLabels:
-            app: mongo
-        template:
-          metadata:
-            labels:
-              app: mongo
-          spec:
-            containers:
-            - image: mongo
-              name: mongo
-              args: ["-dbpath", "/data/db"]
-              env:
-              - name: MONGO_INITDB_ROOT_USERNAME
-                value: "admin"
-              - name: MONGO_INITDB_ROOT_PASSWORD
-                value: "password"
-              volumeMounts:
-              - mountPath: /data/db
-                name: mongo-volume
-            volumes:
-            - name: mongo-volume
-              emptyDir: {}
-      ---
-
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: mongo-svc
-      spec:
-        ports:
-        - port: 27017
-          protocol: TCP
-          targetPort: 27017
-          nodePort: 32000
-        selector:
-          app: mongo
-        type: NodePort
-
-
-      ```
-
-    </details>
-
-- So else we can store data on node
-  - for that just change the volume from
-  ```yaml
-  volume: 
-  - name: mongo-volume
-    emptyDir: {} 
-  ```
-  - to this  
-  ```yaml
-  volume: 
-  - name: mongo-volume
-    hostPath: 
-      path: /path/in/node
-  ```
-- But what if a node goes down? then again it is problem
-- Also data between nodes cannot be shared
-
-- So the volumes discussed till now are ephimeral volumes
-  - ephimeral volumes are ones that are created by resources itself
-    - also these ephimeral volumes get deleted when resource goes down
-- Hence we shift to a DB outside our custer like googleCloud   
-
-- There are three types of volume 
-  - Persistent volume
-  - Persistent volume claim
-  - Storage class
-- Storage requirement
-  - As kubernetes does not provide data persistance
-    - Hence we need a storage that does not depend on pod lifecycle
-  - Also storage must be available to all nodes
-    - Hence it cannot be in a namespace
-  - It needs to survive cluster crash
-### 1. <u> Persistent volume </u>
-  - cluster resource, can be created using kubeclt of yaml file
-  - It is just an abstract componenet of storage
-    - These storage can be local harddrive, nfs server, cloud-storage etc.
-  - Hence Persistent volume is an interface that can be used to access actual database
-> ### - For database perisitance we should we remote storage instead of local storage
-  - Creating PersistentVolume
-  ```yaml
-  apiVersion: v1
-  kind: PersistentVolume
-  metadata:
-    name: mongo-pv
-  spec:
-    capacity:
-      storage: 100Mi
-    accessModes:
-      - ReadWriteMany
-    local:
-      path: /miniK/data
-    nodeAffinity:
-      required:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kubernetes.io/hostname
-            operator: In
-            values:
-            - minikube
-  ```
-  - AccessMode
-    - `ReadWriteMany` : Multiple pods accross nodes can read write 
-    - `ReadWriteOnce` : Pods of same node can access node
-    - `ReadOnlyMany` : Same as ReadWriteMany but only read is allowed 
-    - `ReadOnlyOnce` : Same as ReadWriteOnce but only read is allowed
-    - `ReadWriteOncePod` : Only one pod can access data
-### 2. <u> Persistent volume claim </u>
-  - Pods dont directly access `persistent volume`
-  - They need to specifically mention details 
-  - Here is where `persistent volume claim` comes
-    - It mentions details about the resources that pods require
-    - And then request it to `persistent volume`
-  > - `Persistent volume claim` must exist in same namespace as `pod`
-  <center>
-  <img src="image-4.png" width=400/>
-  </center> 
-
-  - Example of PVC 
-  ```yaml
-    apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: mongo-pvc
-      namespace: default
-      labels:
-        app: mongo-pvc
-    spec:
-      storageClassName: ""
-      accessModes:
-      - ReadWriteMany
-      resources:
-        requests:
-          storage: 100Mi
-  ```
-> ### I dont know how to bind PVC to specific PV it goes for default behavior 
-
-- ### <u> Storage class </u>
-  - Say there are 100s of `pods` and 100s of `persistent volumes` managing and craeting them is a tedious task
-  - Hence `storage class` handles management and craetion of this `persistent volumes`
-  <center>
-  <img src="image-5.png" width=400/>
-  </center> 
-  
-  - So we cannot go creating PV for 100's of pods so storage class comes into picture
-  - We can define whihc storage class to use PVC and then according to storage class PV will be creted
-  
-  ```yaml
-  apiVersion: storage.k8s.io/v1
-  kind: StorageClass
-  metadata:
-    name: mongo-storageclass
-  provisioner: k8s.io/minikube-hostpath
-  volumeBindingMode: Immediate
-  reclaimPolicy: Delete
-  ```
-
-  - `volumeBindingMode` : 
-     - `Immediate`: PV is created as soon as PVC is created
-     - `WaitForFirstConsumer` : Waits till PVC is claimed by any pod
-  - `reclaimPolicy`:
-    - What to do with PV when PVC is deleted
-    - `Delete` : delete PV when PVC is deleted
-    - `Retain` : Dont delete PV when PVC is deleted
->  ### - When PV is deleted only the resouce is deleted and not the actual data 
->  ### - The actual storage is to be deleted manually when reqired
-## Kubernetes Services
-- It is an abstraction layer which has a stable IP address
-- We use `selector` to know where should `Service` forward request to / which `pod` to forward request to 
-  - The key value pair in selector are mapped to `app` in `label` in `deployment`/`statefulset`
-  - Then for the port to forward to in the pod is defined by `targetPort` in `service`
-- The `pod-ip:ports` are endpoints of service, and the list is maintained. This list can be fetched using 
-  ``` 
-    kubectl get endpoints
-  ```
-- Each `Pod` gets its own unique IP, Pod also have their own private network for containers to communicate within the pod
-- A Pod can communicate with any other pod on the cluster irrespective of node without the use of proxies or address translator (NAT)
-	- Cluster has its own DNS record 
-	- this doesnot apply on windows
-- `Services` provide static IP or hostname
-- `EndpointSlice` : It is a resource that manages endpoints(IPs and Ports) for services
-- Kubernetes manages this `EndpointSlice` for `Services`
-- If the workload or requests are http type then we choose `ingress`
-  - this is not a service but is designed to handle HTTP/s loads
-  - It can expose multiple resources with one ingress resources
-  - We write all routing rules in ingress
-  - It is main communication between client and cluster
-- If we have multi-port service then we have to define the name
-
-<table>
-<tr>
-<th></th>
-<th></th>
-</tr>
-<tr>
-<tb><img src="image-6.png" width=400/></tb>
-<tb><img src="image-7.png" width=200/></tb>
-</tr>
-</table>
-
-### Selector label
-- Services have `selector` label that finds the pod with label mentioned in svc
-- As seen over here label is ` labels: app.kubernetes.io/name: proxy `
-  - and label selector is `  selector:app.kubernetes.io/name: proxy `
-- Also instead of PORT number we can give port name in the service as shown 
-  - Container port and Target Port in the code
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-  labels:
-    app.kubernetes.io/name: proxy
-spec:
-  containers:
-  - name: nginx
-    image: nginx:stable
-    ports:
-      - containerPort: 80
-        name: http-web-svc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-spec:
-  selector:
-    app.kubernetes.io/name: proxy
-  ports:
-  - name: name-of-service-port
-    protocol: TCP
-    port: 80
-    targetPort: http-web-svc
-```
-
-### Protocol
-- By default it is `TCP`
-- It can be `UDP`, `SCTP`
-
-### Service without selector
-- Selector are basically used to match pod
-- Service can be without selector eg.
-  - We want to have external database in the cluster
-  - Point to a service in another namespace or cluster
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-service
-spec:
-  ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 9376
-```
-- As the selector is not there, so `EndpointSlice` object are not created
-  - Hence we can manually configure it
-- For the above service following is the `EndpointSlice` 
-- for this when a request hits service at port 80 it forward it to port 9376 then `endpointslice` forward it to addresses mentioned "`10.4.5.6` & `10.1.2.3`"
-
-
-```yaml
-
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: my-service-1 # by convention, use the name of the Service
-                     # as a prefix for the name of the EndpointSlice
-  labels:
-    # You should set the "kubernetes.io/service-name" label.
-    # Set its value to match the name of the Service
-    kubernetes.io/service-name: my-service
-addressType: IPv4
-ports:
-  - name: http # should match with the name of the service port defined above
-    appProtocol: http
-    protocol: TCP
-    port: 9376
-endpoints:
-  - addresses:
-      - "10.4.5.6"
-  - addresses:
-      - "10.1.2.3"
-
-```
-
-- Types of services
-  1. ClusterIP 
-      - Default type
-      - Can only serve inside cluster
-      - The service acts as load balancer 
-      - Hence direct request randomly depending on load
-      - For public access use `Ingress` or `Gateway` 
-  2. Headless
-      - In `StatefulSet` we need to direct request to specific `pod`
-      - like say a `mongodb-pod` so we can write only in first `pod`
-        - So we want to direct write request to only first pod
-      - Also in `StatefulSet` when a new `pods` start it replicates specifically the previos pod
-      - Hence `Headless` service comes into play
-      - So we make the `ClusterIP` in service to `none` 
-        - So when client do `DNS lookup` it instead of IP address of service IP address of pod is returned which is static in case of `StatefulSet` 
-  3. NodePort
-      - Creates a `static port` on the `node` that is accessible to `external client`
-        - Basically an external port   
-        - But the clusterIP is only internally accessable
-        - This nodeport can be in range of `30000-32767`
-      - Not very secure
-  4. Load-balance
-      - Service becomes accessable through the `LoadBalance` of the `cloud provider`  
-      - Each cloud service has its own `load balancer functionality` 
-      - When we use `Load Balancer` service a `Cloud provider's` `load balancer` is created
-  5. ExternalName
-      - Used to map service to external DNS name
-      - When we use this k8s return CNAME record with external name
-      - CNAME mapping domain->domain, domain->IP
-      ```yaml
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: db-service
-      spec:
-        type: ExternalName
-        externalName: my.database.example.com
-      ```
-#### External IPs
-- If we want to forward request to another cluster or IP we can do it as 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-service
-spec:
-  selector:
-    app.kubernetes.io/name: MyApp
-  ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 49152
-  externalIPs:
-    - 198.51.100.32
-```
-- This take request from 49152 and send it to 198.51.100.32 via port 80 if it own
-
-## Gateway API
-- Allows us to make `service` accessable to external client
-- Basically exposes service
-- A simple way of exposing port is `Loadbalancer` service
-  - While nodePort also expose service by directly exposing the node IP but 
-  - `Loadbalancer` is external to cluster and is managed by `service provider`
-  - Nodeport is mostly used in testing and development
-
-
-## Redirecting services from WSL to windows (Port Forwarding)
+Helm Redirecting services from WSL to windows (Port Forwarding)
 ```
 minikube service <service-1> <service-2> 
 ```
-## Problems Deploying MERN stack app on kubernetes
-- When we have deployed a react(javascript based frontend) app on kubernetes
-  - The service run on pod but the javascript code runs on browser
-  - So it runs outside the pod hence it does not have access to kuberenetes resources
-- To solve this there are two ways
-  - Setup loadBalancer service and put external endpoint to backend config
-  - Setup ingress controller and deploy both Ingress controller and Service with backend   
 
 
 # Context in Kubernetes
