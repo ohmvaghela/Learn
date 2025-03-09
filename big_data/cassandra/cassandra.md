@@ -9,7 +9,6 @@
 
 ## Content
 
-
 - [Cassandra Architecture](./cassandra.md#cassandra-architecture)
 - [Cassandra Data Model](./cassandra.md#cassandra-data-model)
 - [Cassandra vs RDBMS](./cassandra.md#cassandra-vs-rdbms)

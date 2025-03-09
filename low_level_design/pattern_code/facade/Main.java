@@ -40,5 +40,9 @@ class Controller{
 }
 
 public class Main {
+
+    private static A A(int i, int i0, String ohm) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
   
 }
