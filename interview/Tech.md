@@ -1,41 +1,118 @@
-# Interview 
-1. Day 1 (27)
-    - Array, List, String, Queue, Stack
-2. Day 2 (28)
-    - OS
-    - Tree, Graph
-3. Day 3 (1)
-    - Creational Patterns (Factory, Abstract Factory, Builder, Singleton, Prototype).
-    - Any two pattern real world question
-4. Day 4 (2)
-    - Structural Patterns (Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy).
-    - Any two pattern real world question
-5. Day 5 (3)
-    - Autobilling
-    - MechSimVault
-    - Two design Pattern + Sort and Search algos
-6. Day 6 (4)
-    - Accio 
-    - Two design Pattern 
-    - DSA
-      - Linked Lists: (Singly, Doubly, Circular)
-      - Hashing: (HashMaps, HashSets, collision handling)
-7. Day 7 (5)
-    - Docker
-    - Two design Pattern + DSA
-      - Dynamic Programming: (Knapsack, Fibonacci, Coin Change, etc.)
-      - Greedy Algorithms: (Activity Selection, Huffman Coding, etc.)
-8. Day 8 (6)
-    - Kubernetes
-    - Two design Pattern + DSA
-      - Heaps: (Heap Sort, Priority Queue)
-      - Tries: (Prefix Tree, Autocomplete, Search Suggestions)
-- Extra Time
-  - SQL queries
+# Tech interview
+
+## Content
+- [Time Complexicities](./Tech.md#time-complexicities)
+    - [B+ Tree](./Tech.md#b-tree)
+    - [Red-Black Tree](./Tech.md#red-black-tree)
+    - [HashMap](./Tech.md#hashmap)
+    - [HashSet](./Tech.md#hashset)
+    - [OrderedSet](./Tech.md#orderedset)
+    - [OrderedMap](./Tech.md#orderedmap)
+    - [QuickSort](./Tech.md#quicksort)
+    - [MergeSort](./Tech.md#mergesort)
+    - [PriorityQueue](./Tech.md#priorityqueue)
+    - [Binary Search Tree (BST)](./Tech.md#binary-search-tree-bst)
+    - [Binary Search](./Tech.md#binary-search)
+- [AutoBilling MERN Stack Application](./Tech.md#autobilling-mern-stack-application)
+- [Mechanical Simulation Showcase](./Tech.md#mechanical-simulation-showcase)
 
 
+## Time Complexicities
 
-## AutoBilling - MERN Stack Application
+### B+ Tree
+- Variation Balanced Binary Tree
+    - Here only leaf node points to actual data
+    - Leaf node has extra pointer pointing to next leaf node
+    - Non-leaf node do not have data pointer, or next Non-leaf node data
+    - Non-leaf node just have pointer to child node
+- Generally used for Indexing in Databases
+
+<img src="./images/B_plus_tree.png">
+
+
+### Red Black Tree
+> ### Set, Maps are implemented using Red-Black Tree
+- It is balanced binary search tree
+- Each node is either red or black.
+- The root node is always black.
+- Every leaf (NULL node) is black.
+- Red Node cannot have red as children, but black node can have either red or black node as children
+- For each node, every path from that node to descendant NULL nodes must have the same number of black nodes.
+
+1. ### HashMap
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(1)     | O(1)          | O(n) | O(n) |
+| Search    | O(1)     | O(1)          | O(n) | O(n) |
+| Delete    | O(1)     | O(1)          | O(n) | O(n) |
+
+2. ### HashSet
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(1)     | O(1)          | O(n) | O(n) |
+| Search    | O(1)     | O(1)          | O(n) | O(n) |
+| Delete    | O(1)     | O(1)          | O(n) | O(n) |
+
+3. ### OrderedSet
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(log n) | O(log n)      | O(log n)  | O(n) |
+| Search    | O(log n) | O(log n)      | O(log n)  | O(n) |
+| Delete    | O(log n) | O(log n)      | O(log n)  | O(n) |
+
+4. ### OrderedMap
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(log n) | O(log n)      | O(log n)  | O(n) |
+| Search    | O(log n) | O(log n)      | O(log n)  | O(n) |
+| Delete    | O(log n) | O(log n)      | O(log n)  | O(n) |
+
+5. ### QuickSort
+
+| Case      | Time Complexity | Space Complexity |
+|-----------|---------------|------------------|
+| Best Case  | O(n log n)   | O(log n) |
+| Average Case | O(n log n)   | O(log n) |
+| Worst Case  | O(n²)       | O(log n) |
+
+6. ### MergeSort
+
+| Case      | Time Complexity | Space Complexity |
+|-----------|---------------|------------------|
+| Best Case  | O(n log n)   | O(n) |
+| Average Case | O(n log n)   | O(n) |
+| Worst Case  | O(n log n)   | O(n) |
+
+7. ### PriorityQueue
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(1)     | O(log n)     | O(log n)  | O(n) |
+| Extract Min/Max | O(1) | O(log n) | O(log n) | O(n) |
+| Delete    | O(log n) | O(log n) | O(log n) | O(n) |
+
+8. ### Binary Search Tree (BST)
+
+| Operation | Best Case | Average Case | Worst Case | Space Complexity |
+|-----------|----------|--------------|------------|------------------|
+| Insert    | O(log n) | O(log n)      | O(n) | O(n) |
+| Search    | O(log n) | O(log n)      | O(n) | O(n) |
+| Delete    | O(log n) | O(log n)      | O(n) | O(n) |
+
+9. ### Binary Search
+
+| Case      | Time Complexity | Space Complexity |
+|-----------|---------------|------------------|
+| Best Case  | O(1)        | O(1) |
+| Average Case | O(log n)   | O(1) |
+| Worst Case  | O(log n)   | O(1) |
+
+
+## AutoBilling MERN Stack Application
 
 ### 1. Brief Overview  
 **AutoBilling** is a MERN stack application designed to help shopkeepers manage pending payments efficiently.  

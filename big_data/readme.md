@@ -11,3 +11,8 @@
   - [Cassandra Practical](./cassandra/cassandra_coding.md)
 - [Mongo](./mongoDB/mongo.md)
   - [Mongo Practical](./mongoDB/mongo_coding.md)
+- [Spark](./spark/spark.md)
+  - [SparkCoding](./spark/spark_coding.md)
+- [Spark Steaming](./spark/spark_stream.md)
+  - [Spark Steaming Coding](./spark/spark_stream_coding.md)
+- [Kafka](./kafka_spark/kafka.md)

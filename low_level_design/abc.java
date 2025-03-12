@@ -1,37 +1,31 @@
 
-import java.util.ArrayList;
+class B{}
 
 class A implements Cloneable{
-  int a;
-  int b;
-  String c;
-  public ArrayList<Integer> arr;
-
-  public A(int a, int b, String c, ArrayList<Integer> arr){
-    this.a = a;this.b = b; this.c = c; this.arr = arr;
+  B b;
+  int intA;
+  String stringA;
+  public A(int intA, String stringA, B b){
+    this.intA = intA; this.stringA = stringA; this.b = b;
   }
-
   @Override
   public A clone() throws CloneNotSupportedException {
-    A newA = (A) super.clone();
-    newA.arr = new ArrayList<Integer> (this.arr);
+    A newA = (A)super.clone();
+    newA.b = new B();
     return newA;
   }
 
   @Override
-  public String toString(){
-    return this.a+"-"+this.b+"-"+this.c + "-" +arr.size();
+  public boolean equals(Object obj){
+    if(this == obj) return true;
+    if(obj == null || obj.getClass() != getClass()) return false;
+    A newObj = (A) obj;
+    return (newObj.intA == this.intA) && (newObj.stringA.equals(this.stringA)) && (newObj.b.equals(this.b));
   }
 }
 
 class Main{
-  public static void main(String[] args) throws  CloneNotSupportedException {
-    A oldA = new A(1,2,"ohm", new ArrayList<>());
-    oldA.arr.add(1);
-    A newA = oldA.clone();
-
-    newA.arr.add(2);
-    System.out.println(oldA);
-    System.out.println(newA);
+  public static void main(String[] args){
+    
   }
 }
