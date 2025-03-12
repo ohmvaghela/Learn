@@ -1,4 +1,10 @@
 # NodeJS
+- [Basics](./NodeJS.md#basics)
+- [Basic Setup](./NodeJS.md#basic-setup)
+- [Package.json](./NodeJS.md#packagejson)
+- [Importing/Exporting Packages (Import vs Require)](./NodeJS.md#importingexporting-packages)
+
+## Basics
 - Node.js is an open-source, cross-platform JavaScript runtime environment and library to run web applications outside the client’s browser
 - ECMAScript : Standard scripting language with include JS, and many more
 - V8 engine : Parses and Executes JS
@@ -8,387 +14,155 @@
   - Callback Queue : Stores callback functions in web API 
   - CallStack : Keeps track of where we are in the program
   - Event loop : Moniters CallStack and Callback Queue
-  - Heap
-- JavaScript is a single-threaded syncronus language
+  - Heap : The actual code
+- JavaScript is a single-threaded syncronus language, but Node.js as Async.
+  - As it has event loop
 
 - event handler moves callback from the Callback Queue to Callstack 
   - This happens only when callstack is empty 
   - or else event handler will wait till callstack is empty then It will fill the callback from queue
 
   ![alt text](image.png)
-#
 
 - NodeJs is on server side
 - HTML,CSS,JS are on client side
 - NodeJs developer create API
-- Why there is `undefined` written when we run code in console
-  - statements like 
-  - ```js
-      console.log("34"), var a = 5, const b = ["sada","dsadas"]
-    ```
 
-  - These statement dont return anything
-  - But say we have defined an array : 
-   ```js 
-      const fruits = ["mango","banana","apple"] 
-    ```
-  - Now whenever I just type "fruits" in command line it wont show undefined
-- Global models are already present and non-Global modules need to be imported
+## Basic Setup
+- Initializing environemnt
+  
+  ```
+  npm init
+  ```
 
-# initialise
+## Creating RESTful request
+- GET request of `/home?name=ohm&id=1`
 
-`go inside the folder and then initialise the work space `
-
-`file can run even with initializing environemt`
-
-    npm init
-
-# HTTP
-> Program to print hello world
-- HTTP module : Handle server's request and response
-- syntax
-- ```js
+  ```js
   var http = require("http");
+  const url = require('url');
 
   http.createServer((req, res) => {
+    // get parsed url from url
+    const parsedUrl = url.parse(req.url, true);
+    // get path domain.com/api/path1 -> /api/path1
+    const path = parsedUrl.pathname;
+    // get queries domain.com/api?name=ohm&id=1
+    /*
+    {
+      name: ohm,
+      id: 1
+    }
+    */ 
+    const query = parsedUrl.query;
+
+    if (path=='/home' && req.method === "GET") {
+      let name = query.name;
+      let id = query.id;
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.write("Hello world");
+      res.write("GET request received");
       res.end();
-    }).listen(8000);
-  // localhost:8000
-
-  //The first argument of the res.writeHead() method is the status code
-  // 200 means that all is OK,
-  // the second argument is an object containing the response headers.
+    }
+    else {
+      res.writeHead(405, { "Content-Type": "text/html" }); 
+      res.write("Method not allowed");
+      res.end();
+    }
+  }).listen(8000);
   ```
 
-- ```js
-  var http = require("http");
+- To send data, it is good practice to convert to JSON 
+  - And for the data needs to encoeded like
+    - `JSON.stringify({data:data})`
 
-  http.createServer(function (req, res) {
-      res.write("<h1>Holla!</h1>");
-      res.end();
-    }).listen(8000);
-  ```
-
-## HTTP status code
-- 1xx : Information response
-- 2xx : Success response(Eg. 200)
-- 3xx : Redirection message
-- 4xx : Client error response (Eg. 404)
-- 5xx : Server Response Error
-
-## HTTP communication protocals
-1. GET 
-2. POST
-3. PUT
-4. DELETE
-5. ...
-
-  ### GET
-  - Used to request data from a specific reource
-  - the qurey string is sent in the URL of GET request
-  - Eg. 
-    ```
-        /test/demo_form.php?name1=value1&name2=value2
-    ```
-  - Can be `Cached`
-  - Remains in `browser history`
-  - Never be used while sending sensitive data
-  - Should only be used to request data and not modify data
-
-  ### POST
-  - Should be used to creating data 
-  - The data sent to the server with POST is stored in the request body of the HTTP request:
-  - POST requests are never cached
-  - POST requests do not remain in the browser history
-  - POST requests have no restrictions on data length
-  - POST is `not idempotent` : Multiple request will result in multiple resource being created
-
-  ### PUT
-  - Mostly used for updating data
-  - PUT is `idempotent` : sending same request will result in same output 
-
-  ### DELETE
-  - Delete resource
-
-  
-
-# Running file
-
-    node file.js
-
-continous running
-
-    nodemon index.js
-
-# Package.json
-
-- Contains meta-data about the project like name,version,git etc
-- install package
-
-        npm install package
-
-- uninstall package
-
-        npm uninstall package
-
-> nodejs is `single threaded`?
-> JS and NodeJS is `single threaded` with event loop model
-
-- > NodeJs is `async`
-  - > Asyncronus : many functions can run parallely
-  - > Syncronus : all the code, functions etc. run after executoin of previous is complete
-
-> to ignore files while git push create ".gitignore" file and write the folder name in it "/node_modules" here
-
-> Drawback of async : consistancy issue (say data is updation take longer time then read, so wrong data will be read as updation will take time)
-
-# Nodemon
-
-- After making any change in project we need to restart it and it is time consuming when we are working on huge project
-
-        nodemon index.js
-
-# Creating API
-
-- Response used for sending data
-  - resp.WriteHead(200,{})
-  - first : Status code
-  - Second : Status message
-- to stringify `object`
   ```js
-  // JSON.stringify({object})
-  JSON.stringify({ name: "asa", email: "dsad" });
+  const http = require('http');
+
+  http.createServer((req, res) => {
+    const data = {name: 'asa',email: 'dsad'};
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(data));
+  }).listen(8000);
   ```
 
-# Importing data
+- Running node file
 
-- say we have file in a folder
+  ```
+  node file.js
+  ```
 
-        /data/data.js
+- For node to update on every update
 
-- now we want to import data
-```
-  const data = require('./data/data');
-```
-# comand line input
+  ```
+  nodemon index.js
+  ```
 
-- we can access command line parameters using `process.argv`
-```
-  const input = process.argv;
-```
-- Here input is an array where first two element are path to nodejs and current repo
-- ```
-  [
-    "/usr/bin/node",
-    "/home/ohm/GitRepo/NodeJS/temp.js",
-    .
-    .
-    .
-  ]
+## Package.json
+- Contains meta-data about the project like `name`,`version`,`scripts`, `dependencies` etc
+- install dependencies
+
+  ```
+  # install dependencies locally
+  npm install <package-name>:<version(optional)>
+  ```
+  
+  ```bash
+  # install dependencies globally
+  npm install -g <package-name>:<version(optional)>
   ```
 
 
+- uninstall dependenceies
 
+  ```
+  npm uninstall <package-name>:<version(optional)>
+  ```
 
-# file system module
+## Importing/Exporting packages
 
-    const fs = require('fs')
+### Import
 
-## creating file
+- We can import packages using `import` and `require`
 
-```js
-// fs.writeFileSync(path_with_file_name, content)
-fs.writeFileSync(dir_path + "/filename.txt", "lora ipsum");
-// File will be created in dir_path with
-// name "filename.txt"
-// content "lora ipsum"
-```
+| `import/export` | `require` |
+|-|-|
+| Asynchronous | Synchronous |
+| part of ECMAScript Modules | part of CommonJS (Old) |
+| `import express from 'express';` | `const express = require('express');` |
 
-## get files name
+### Export
+- Assume following is the data to be exported
 
-```js
-fs.readdir(dir_path, (err, files) => {
-  console.warn(files);
-});
-```
-
-output
-
-    ['file1.txt','file2.txt','file3.txt', ... ]
-
-to iterate over items
-
-```js
-fs.readdir(dir_path, (err, files) => {
-  files.forEach((item) => {
-    console.log(item);
-  });
-});
-```
-
-output
-
-    file1.txt
-    file2.txt
-    file3.txt
-    .
-    .
-    .
-
-> we cannot access files outside this envt without user permission
-
-## getting path
-
-```js
-const path = require('path');
-// changing file
-const dir_path = path.join(__dirname,'data');
-```
-
-## reading file
-
-```js
-fs.readFile(`${file_path}/filename.txt`, "utf8", (err, item) => {
-  console.log(item);
-});
-```
-
-if 'utf8' is not written then output will be
-
-    <Buffer 45 25 c3 s5 ...>
-    // this is file location
-    // utf8 is encoding
-
-## update
-
-```js
-fs.append(
-  `${file_path}/filename.txt`,
-  "this will also be added to file",
-  (err) => {
-    if (!err) console.log("operation succesfull");
-    else console.log(err);
+  ```js
+  export function myFunction() {
+    return 'Hello from ES Modules';
   }
-);
-```
+  export const myVariable = 42;
+  ```
 
-## Rename
+- Export using CommonJS (module.exports)
 
-```js
-fs.rename(`${file_path}/filename.txt`, `${file_path}/new_name.txt`, (err) => {
-  if (!err) console.log("operation succesfull");
-  else console.log(err);
-});
-```
+  ```js
+  // Single export
+  module.exports = myFunction;
 
-## delete
+  // Multiple exports
+  module.exports = {
+    myFunction: myFunction,
+    myVariable: 42,
+  };
+  ```
 
-```js
-fs.unlinkSync(`${file_path}/filename.txt`);
-```
+- Export using ES Modules(export)
 
-# Promise (Detailed version in JS md)
-> ### Consistancy issue due to async behaviour of node
->
+  ```js
+  // one is default and rest can be accessed
+  export default myFunction;
+  // Rest of items
+  export const myVariable = 42;
+  ```
 
-> ### JS is asyc language
-> Eg : 
-> ```js
->   console.log("start exe...")
->   setTimeout(()=>{
->     console.log("logic exe...")
->   },2000)
->   console.log("complete exe...") 
-> ```
-> - Output
-> ```
-> start exe...
-> complete exe...
-> logic exe...
-> ```
 
-### This create consistancy issue
-- Say a = 10, b=0;
-- I update b = 10; but that process is time taking
-- And in next line I display a+b 
-- So ideally output should be 20 but it will be 10 as b was not updated at the time when a and b were added
-- ```js
-  let a = 10,b = 0;
-  // timetaking function 
-  SetTimeout(()=>{
-
-  },2000);
-  console.log(a+b);//output will be 10 instead of 20
-  ``` 
-
-### Handling consistancy issue with Promise
-
-- promise wait till execution is not completed
-
-#### Using Promise 1st method
-```js
-a = 10;
-b = 0;
-
-let waitingdata = new Promise((resolve, reject) => {
-  // time taking function
-  // for now we are adding delay to duplicate time taking function
-  setTimeout(() => {
-    // resolve returns the data
-    resolve(30);
-  }, 2000);
-});
-
-waitingdata.then((data) => {
-  // data is the value that we passed in resolve in promise above
-  b = data;
-  console.log(a + b);
-});
-```
-
-#### Using Promise method 2
-
-```js
-const express = require("express");
-const app = express();
-
-app.get("", async (req,res)=>{
-  let a = new Promise((resolve,reject)=>{
-    if(req.qureyy.name == "ohm"){
-      resolve();// if promise is resolved 
-    }
-    else{
-      reject();// if promise is not resolved
-    }
-  }).then(()=>{
-    res.send("correct name");
-  }).catch(()=>{
-    res.send("incorrect name");
-  });
-})
-
-```
-
-# Working of Node.Js (Detailed version in JS.md)
-
-- In `Node.js` architecture there is an `event loop` which has 3 components
-  1. Callstack 
-      - Stacks all the function from bottom to top
-      - There is a main function by default in the stack at the bottom
-  2. Node API
-      - All the inherited objects, function etc. goes to `Node API block`
-      - Here `setTimeout` is written in C++ hence it is inherited 
-      - These work async from Call Stack 
-  3. Callback queue
-      - As the process complete in Node API block then are send to Callback queue
-      - From here the process are sent to call stack to be executed
-     >- Process waits for call stack to get empty and then goes to call stack one by one (waits for one process to complete then enters call stack) 
-
- 
-
-- <img src="./images/readme_img/node.png" width=700/>
 
 # Express Js
 

@@ -1,4 +1,8 @@
 # Javascript basics
+- [JavaScript's Asynchronous Execution](./JS.md#javascripts-asynchronous-execution)
+- [Promise](./JS.md#promise)
+- [Async/Await](./JS.md#asyncawait)
+- [Using FS](./JS.md#using-fs)
 
 ## JavaScript's Asynchronous Execution
 - JavaScript is single-threaded, hence Syncronus. 
@@ -146,7 +150,6 @@ The event loop is the core mechanism that manages asynchronous execution. It con
   - Keyword used inside async function only
   - Stops the code execution till the results come
 
-
   ```js
   // use 1
   const newPromise = async () =>{
@@ -201,6 +204,7 @@ The event loop is the core mechanism that manages asynchronous execution. It con
   }
   processDataParallel();  
   ```
+
 ### Problem with array iteration
 -
   ```js
@@ -226,4 +230,94 @@ The event loop is the core mechanism that manages asynchronous execution. It con
   }
   ```
 
+## Using FS
+- Import lib
 
+  ```js
+  const fs = require('fs');
+  const path = require('path');
+  ```
+
+- Read current file path
+
+  ```js
+  const currentFilePath = path.join(__dirname);
+  const dataFilePath = path.join(__dirname, 'data.txt');
+  ```
+
+- List files in dir
+
+  ```js
+  fs.readdir(dir_path, (err, files) => {
+      console.log(files)
+  });
+  ```
+
+- Read file
+
+  ```js
+  fs.readFile(`${file_path}/filename.txt`, "utf8", (err, item) => {
+    console.log(item);
+  });
+  ```
+
+- Create File
+  
+  ```js
+  // create file async
+  fs.writeFile(filePath, content, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log('File created successfully!');
+  });
+  // append file async 
+  fs.appendFile(filePath, content, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log('Data appended successfully!');
+  });
+  // create file Sync
+  try {
+  fs.writeFileSync(filePath, content);
+    console.log('Synchronous append successful');
+  } catch (err) {
+    console.error(err);
+  }
+  // append file Sync
+  try {
+    fs.appendFileSync(filePath, content);
+    console.log('Synchronous append successful');
+  } catch (err) {
+    console.error(err);
+  }
+  ```
+  
+- Update File
+  - To update file read data
+  - Save it in memory like `const data = fs.readFile()`
+  - Then update the `data`
+  - Then use writeFile to replace data, or appendFile to add data at end
+
+- Delete file
+
+  ```js
+  // delete file Async
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error('Error deleting file:', err);
+      return;
+    }
+    console.log('File deleted successfully!');
+  });
+  // delete file Sync
+  try {
+    fs.unlinkSync(filePath);
+    console.log('File deleted synchronously!');
+  } catch (err) {
+    console.error('Error deleting file:', err);
+  }
+  ```
