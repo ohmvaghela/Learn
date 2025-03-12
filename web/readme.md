@@ -18,6 +18,7 @@
     - [Local Storage & Session Storage](./readme.md#local-storage--session-storage)
     - [CORS (Cross-Origin Resource Sharing)](./readme.md#cors-cross-origin-resource-sharing)
     - [Cookie Attributes](./readme.md#cookie-attributes)
+- [HTTP 1/2/3](./readme.md#http-123)
 # API
 ## Basic HTTP Methods
 - **GET:**
@@ -313,3 +314,55 @@
   - Partitioned?
   - Priority?
 
+
+## HTTP 1/2/3
+- Earlier it was used to send HTML, images, vidoes etc
+- Now they are used for API, file transfer, web services etc
+- HTTP 0.9
+    - Only send HTML
+    - Only GET method available
+    - No header or status
+- HTTP 1
+    - Added status code, headers, POST, HEAD
+    - A single request-response lifecycle looks like
+        - 3-way handshake
+            - client-server : TCP sync
+            - server-client : TCP sync + TCP ack
+            - client-server : TCP ack
+        - Then
+            - Client-server : request
+            - Server-client : response
+    - After one request is completed only then next request starts
+    - And for security, between 3-way handshake and request-response there was
+        - Certificate check
+            - Client-server : Client hello
+            - Server-Client : Server hello
+            - Server-Client : Certificate
+            - Server-Client : Server hello done
+        - Key encription : 3 client + 2 server
+- HTTP 1.1
+    - In HTTP/1 after resources are shared connection is closed
+    - For HTTP/1.1 connection is open till explicitly told to close
+    - Hence Persistant connection
+    - And here client can send multiple request before even getting response
+    - But there was a header line blocking
+        - If the first request was not responded then rest of the requests wait
+- HTTP/2
+    - Here the request and response are broken into `frames`
+    - Like for a respone it is broken into
+        - Frame1 : header
+        - Frame2 : body
+    - Then if introducted full request-response multiplexing
+    - Request and response can be broken into frames and sent in any-order
+    - On the reciving end they will be assembeled
+    
+     ![image](https://github.com/user-attachments/assets/1df83780-0974-49bc-a394-f497f87029b8)
+
+    - Another feature is stream prioritisation
+        - This lets developers set priority on steams
+        - Higher priority streams will be rendered/processed first
+    - HTTP/2 also allows client push : Multiple response for a single client request
+    - HTTP/2 introcduced header compression
+- HTTP/3
+    - used QUIC
+    - Read more later
