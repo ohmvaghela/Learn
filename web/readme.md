@@ -1,4 +1,10 @@
 # WEB
+- [DNS](./readme.md#dns)
+  - [Recursive DNS resolver](./readme.md#working-of-recursive-dns-resolver)
+  - [Top Level Domain Name Server](./readme.md#working-of-top-level-domain-name-server-tld-ns)
+  - [Authoritative Name Server](./readme.md#working-of-authoritative-name-server)
+  - [AnyCast DNS Server](./readme.md#anycast-dns-server)
+- [CDN](./readme.md#cdn)
 - [API](./readme.md#api)
     - [Basic HTTP Methods](./readme.md#basic-http-methods)
     - [Idempotency](./readme.md#idempotency)
@@ -19,6 +25,82 @@
     - [CORS (Cross-Origin Resource Sharing)](./readme.md#cors-cross-origin-resource-sharing)
     - [Cookie Attributes](./readme.md#cookie-attributes)
 - [HTTP 1/2/3](./readme.md#http-123)
+
+<img src="./images/image-3.png">
+
+# DNS
+- DNS : Domain Name Service
+- Convert domain name to IP address
+- Working
+  1. We enter a website name
+  2. First cache is checked for IP address in order
+      - Browser Cache
+      - OS cache
+      - ISP cache
+  3. Request IP from `recursive DNS resolver`
+      - Majorly there are 3 types of `Recursive DNS resolver`
+        - ISP's `recursive DNS resolver`
+        - Public DNS providers like
+          - Google Public DNS (8.8.8.8, 8.8.4.4)
+          - Cloudflare DNS (1.1.1.1)
+          - OpenDNS (by Cisco) (208.67.222.222, 208.67.220.220)
+        - Enterprise or custom DNS server like gov, or huge firms
+  4. `Recursive DNS resolver` returns IP of website
+
+### Working of `Recursive DNS resolver`
+- First `Recursive DNS resolver` contacts one of 13 `Root Name Servers`
+  - Root name servers are managed by different orgs world wide
+- These root name servers do not have IP of websites but they provide `Top level Domain name server (TLD NS)`
+- Now `Recursive DNS resolver` requests `Top Level Domain Domain Name Server` for `Authoritative Name Server`
+- Then `Recursive DNS resolver` asks `Authoritative Name Server` for IP, and `Authoritative Name Server` returns IP
+
+### Working of Top Level Domain Name Server (TLD NS)
+- It is responsive for managing specific Domain extension like 
+  - .com (for commercial websites)
+  - .xyz (generic TLD)
+  - .org (for organizations)
+  - .in (for India)
+  - .gov (for government)
+- Each TLD has a dedicated server that stores the info about domain 
+  - But TLD does not store the actual IP
+- Based on the domain TLD returns the `Authoritative Name Server`
+### Working of Authoritative Name Server
+- It has actual Domain to IP mapping
+- It looks up the A record (IPv4) or AAAA record (IPv6) for a domain and sends the IP back to the DNS resolver.
+- The DNS resolver caches this IP and returns it to the user’s browser.
+
+<img src="./images/image-2.png" width=500>
+
+### AnyCast DNS server
+- Here all the DNS server have same IP address
+- And traffic is routed to nearest or best-perfroming DNS server
+- Example AnyCast DNS server
+  - Root name servers ( `Google's 8.8.8.8` or `Cloudflare's 1.1.1.1`)
+
+# CDN
+- A CDN is a distributed network of servers designed to deliver content quickly and efficiently.
+- It works by caching frequently requested static data, reducing the load on the origin server.
+- CDNs are deployed in hundreds of locations worldwide.
+- Each location is called a PoP (Point of Presence).
+- A server inside a PoP is known as an Edge Server.
+### Routing Mechanisms in a CDN
+- CDNs use different methods to route user requests
+  - **DNS-based Routing**: Each CDN node has a different IP address, and DNS resolves the best location.
+  - **Anycast-based Routing**: All CDN nodes share the same IP address, and traffic is automatically directed to the nearest edge server.
+### Why the Entire Communication Flows Through CDN?
+- **Reduces TLS Handshake Overhead**: TLS handshakes are expensive; keeping the connection with CDN reduces latency.
+- **Prevents Single Point of Failure**: If all requests were forwarded to the origin server, it could become a bottleneck or fail under heavy load.
+- **High Availability & Reliability**: Multiple CDN nodes ensure redundancy—if one fails, another takes over.
+- **DDoS Mitigation**: CDNs absorb and filter out malicious traffic, preventing Distributed Denial of Service (DDoS) attacks.
+- **Performance Optimization**: CDNs compress data, cache intelligently, and serve content from optimal locations.
+### CDN Request Flow
+- **DNS Lookup**: When a user requests a website, the DNS typically resolves to a CDN’s IP address instead of the origin server.
+- **Content Request**:
+  - If the requested static content is cached in the CDN, it is served immediately.
+  - For dynamic or missing content, the CDN fetches data from the origin server.
+- **Response Delivery**:
+  - The CDN combines the fetched dynamic content with cached static content and delivers the response to the user.
+
 # API
 ## Basic HTTP Methods
 - **GET:**
