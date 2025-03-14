@@ -114,7 +114,8 @@
   - Now branch_1 is merged to branch_2
 
 ```mermaid
-gitGraph
+%%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
+gitGraph TB:
     commit id: "Initial commit"
     branch featureBranch
     commit id: "Feature commit 1"
@@ -131,28 +132,49 @@ gitGraph
 
 ## Rebase
 
-```mermaid
-gitGraph
-    commit id: "Initial commit"
-    branch featureBranch
-    commit id: "Feature commit 1"
-    commit id: "Feature commit 2"
-    checkout main
-    commit id: "Main commit 1"
-    commit id: "Main commit 2"
-    checkout featureBranch
-    commit id: "Feature commit 3"
+<table>
+  <thead>
+    <tr>
+      <th>Before</th>
+      <th>After</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <div class="mermaid">
+          %%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
+          gitGraph TB:
+            commit id: "IC"
+            branch featureBranch
+            commit id: "FC 1"
+            commit id: "FC 2"
+            checkout main
+            commit id: "IC 1"
+            commit id: "IC 2"
+            checkout featureBranch
+            commit id: "FC 3"
+            %% Before Rebase (Visual representation)
+            checkout main
+            commit id: "IC 3"
+        </div>
+      </td>
+      <td>
+        <div class="mermaid">
+          %%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
+          gitGraph TB:
+            commit id: "IC"
+            checkout main
+            commit id: "IC 1"
+            commit id: "IC 2"
+            commit id: "IC 3"
+            branch rebasedFeatureBranch
+            commit id: "FC 1'"
+            commit id: "FC 2'"
+            commit id: "FC 3'"
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-    %% Before Rebase (Visual representation)
-    
-    checkout main
-    commit id: "Main commit 3"
-
-    %% After Rebase (Visual representation - manually simulated)
-
-    checkout main
-    branch rebasedFeatureBranch
-    commit id: "Feature commit 1'"
-    commit id: "Feature commit 2'"
-    commit id: "Feature commit 3'"
-```
