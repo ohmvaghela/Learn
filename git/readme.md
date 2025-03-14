@@ -114,9 +114,45 @@
   - Now branch_1 is merged to branch_2
 
 ```mermaid
-graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
+gitGraph
+    commit id: "Initial commit"
+    branch featureBranch
+    commit id: "Feature commit 1"
+    commit id: "Feature commit 2"
+    checkout main
+    commit id: "Main commit 1"
+    commit id: "Main commit 2"
+    checkout featureBranch
+    commit id: "Feature commit 3"
+    checkout main
+    merge featureBranch
+    commit id: "Merge featureBranch into main"
+```
+
+## Rebase
+
+```mermaid
+gitGraph
+    commit id: "Initial commit"
+    branch featureBranch
+    commit id: "Feature commit 1"
+    commit id: "Feature commit 2"
+    checkout main
+    commit id: "Main commit 1"
+    commit id: "Main commit 2"
+    checkout featureBranch
+    commit id: "Feature commit 3"
+
+    %% Before Rebase (Visual representation)
+    
+    checkout main
+    commit id: "Main commit 3"
+
+    %% After Rebase (Visual representation - manually simulated)
+
+    checkout main
+    branch rebasedFeatureBranch
+    commit id: "Feature commit 1'"
+    commit id: "Feature commit 2'"
+    commit id: "Feature commit 3'"
 ```
