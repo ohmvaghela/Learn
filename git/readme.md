@@ -10,6 +10,7 @@
   - [Revert](./readme.md#revert)
 - [Cherry Pick](./readme.md#cherry-pick)
 - [Stash](./readme.md#stash)
+- [Remote](./readme.md#remote)
 - [Miscellaneous](./readme.md#miscellaneous)
 
 
@@ -411,6 +412,90 @@ gitGraph
     </tr>
   </tbody>
 </table>
+
+## Remote
+- A remote in Git is a reference to a **repository hosted** on the **internet or another network**
+- Local vs Remote Repository
+  - Local repository: Your copy of the project on your machine.
+  - Remote repository: A version stored on GitHub, GitLab, or another Git server
+- Checking remotes on a local machine
+
+  ```bash
+  git remote
+  git remote -v
+  ```
+
+- Adding remote
+
+  ```bash
+  git remote add <remote-name> https://github.com/user/repo.git
+  git remote add <remote-name> git@github.com:user/repo.git
+  ```
+
+> - When having multiple remote of a single repo on a local machine makes sense
+>   - You might want to push over SSH but fetch over HTTPS for security or network restrictions.
+
+### Pushing new brach
+
+  ```bash
+  git push <remote-name> <branch-name>
+  git push origin main
+  ```
+
+### Pulling changes from remote repo
+- Fetch : Pull changes dont apply
+  
+  ```bash
+  git fetch
+  ```
+
+- Applying changes one after another
+
+  ```bash
+  git merge <commit-id>
+  ```
+
+- Merging with last commit
+
+  ```bash
+  git pull
+  ```
+
+  - After this conflits will be seen
+
+- If you are few commits ahead say remote is on `v3` and you are on `v4`
+1. Merge
+    -  Checkout on `v3`
+  
+      ```
+      git checkout <v3-commit-hash>
+      ```
+
+    - Merge with lastest commit
+
+        ```bash
+        git merge <v4-commit-hash>
+        ```
+
+2. Rebase v4
+    -  Checkout on `v4`
+  
+      ```
+      git checkout <v4-commit-hash>
+      ```
+
+    - rebase
+
+      ```
+      git rebase <v3-commit-hash>
+      ```
+
+    - Push changes
+
+      ```
+      git push
+      ```  
+
 
 ## Miscellaneous
 
