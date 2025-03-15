@@ -1,5 +1,12 @@
 # Git / Github
 
+## Content
+- [Basic Commands](./readme.md#basic-commands)
+- [Branch](./readme.md#branch)
+- [Merge](./readme.md#merge)
+- [Rebase](./readme.md#rebase)
+- [Miscellaneous](./readme.md#miscellaneous)
+
 ## Basic commands
 
 <table>
@@ -112,19 +119,42 @@
     ```
 
   - Now branch_1 is merged to branch_2
+    - If you want to abort merge
+
+      ```bash
+      git merge --abort
+      ```
+
+    - If confict arrsie we need to manually open file and make changes
+
+    - Once changes are made stage changes
+    
+      ```bash
+      git add <file-changed>
+      ```
+
+    - Then complete the merge
+
+      ```bash
+      git merge --continue
+      ```
+
+    - It will open a nano editor, you can edit commit message over there
+    - Once saved and exited the changes will be reflected 
+
 
 ```mermaid
 %%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
 gitGraph TB:
-    commit id: "Initial commit"
+    commit id: "IC"
     branch featureBranch
-    commit id: "Feature commit 1"
-    commit id: "Feature commit 2"
+    commit id: "FC 1"
+    commit id: "FC 2"
     checkout main
-    commit id: "Main commit 1"
-    commit id: "Main commit 2"
+    commit id: "IC 1"
+    commit id: "IC 2"
     checkout featureBranch
-    commit id: "Feature commit 3"
+    commit id: "FC 3"
     checkout main
     merge featureBranch
     commit id: "Merge featureBranch into main"
@@ -132,49 +162,67 @@ gitGraph TB:
 
 ## Rebase
 
+
+### Before
+
+```mermaid
+%%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
+gitGraph:
+  commit id: "IC"
+  branch featureBranch
+  commit id: "FC 1"
+  commit id: "FC 2"
+  checkout main
+  commit id: "IC 1"
+  commit id: "IC 2"
+  checkout featureBranch
+  commit id: "FC 3"
+  %% Before Rebase (Visual representation)
+  checkout main
+  commit id: "IC 3"
+```
+
+<hr>
+
+### After
+
+```mermaid
+%%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
+gitGraph
+  commit id: "IC"
+  checkout main
+  commit id: "IC 1"
+  commit id: "IC 2"
+  commit id: "IC 3"
+  branch rebasedFeatureBranch
+  commit id: "FC 1'"
+  commit id: "FC 2'"
+  commit id: "FC 3'"
+```
+
+## Miscellaneous
+
 <table>
   <thead>
     <tr>
-      <th>Before</th>
-      <th>After</th>
+      <td> Task </td>
+      <td> Code </td>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td>show tree</td>
+      <td> <pre><code> git log --graph --oneline --decorate --all </code></pre> </td>
+    </tr>
+    <tr>
       <td>
-        <div class="mermaid">
-          %%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
-          gitGraph TB:
-            commit id: "IC"
-            branch featureBranch
-            commit id: "FC 1"
-            commit id: "FC 2"
-            checkout main
-            commit id: "IC 1"
-            commit id: "IC 2"
-            checkout featureBranch
-            commit id: "FC 3"
-            %% Before Rebase (Visual representation)
-            checkout main
-            commit id: "IC 3"
-        </div>
+        remove all commits after &lt;commit-hash&gt; <br><br> delete last commit <br><br> delete last n commit
       </td>
-      <td>
-        <div class="mermaid">
-          %%{init: { 'logLevel': 'debug', 'theme': 'default' } }%%
-          gitGraph TB:
-            commit id: "IC"
-            checkout main
-            commit id: "IC 1"
-            commit id: "IC 2"
-            commit id: "IC 3"
-            branch rebasedFeatureBranch
-            commit id: "FC 1'"
-            commit id: "FC 2'"
-            commit id: "FC 3'"
-        </div>
+      <td> 
+        <pre><code> git reset --hard &lt;commit-hash&gt; </code></pre> 
+        <pre><code> git reset --hard head~1 </code></pre> 
+        <pre><code> git reset --hard head~n </code></pre> 
       </td>
     </tr>
   </tbody>
 </table>
-
