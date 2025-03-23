@@ -16,60 +16,20 @@
 | `go mod init <domain>/<project-name>` | Initialize project  | 
 | `go get <dependency-link>` | Initialize project  |
 
-> [!IMPORTANT] Main Package
+> [!IMPORTANT] 
+> ## Main Package
 > - for the package which will be running it needs to be named as `main.go`
 > ```go
 > package main
 > func main(){}
 > ```
 
-> [!TIP] Functions
+> [!TIP] 
+> ## Functions
 > - functions name starting with LowerCase char
 >   - Cannot be accessed outside same package 
 > - functions name starting with Upper char
 >   - Can be accessed outside same package 
-
-> [!NOTE] Declaring variable
-> ```go
-> // 1
-> var name = "ohm";
-> var name string = "ohm";
-> var name string
-> 
-> // 2
-> const name = "ohm"
-> const name string = "ohm"
-> 
-> // 3
-> name := "ohm"
-> ```
-
-> [!NOTE] FOR Loop / If statement
-> ```go
-> // infinite loop
-> for {}
-> 
-> // Iteratuing through list
->   // Range returns index,value 
-> for index, value := range MyList{}
-> for _, value := range MyList{}
-> for index, _ := range MyList{}
-> ```
-
-> [!NOTE] If condition
-> ```go
-> // 1✅
-> if condition1 {} 
-> else if condition2 {} 
-> else {}
-> 
-> // 2 ✅
-> if variable := expression; condition {}
-> // ❌ Only expression is allowed
-> if variable := expression;variable := expression; condition {}
-> ```
-
-
 
 ## Basic files 
 ### `go.mod`
