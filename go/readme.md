@@ -1,4 +1,9 @@
 # GoLang
+
+> [!NOTE]
+> - [<u>**Basic Syntax**</u>](./basic_syntax.md) 
+> - [<u>**Net/Http**</u>](./net_http.md) 
+
 - [GoLang](#golang)
   - [Basic Commands](#basic-commands)
   - [Basic files](#basic-files)
