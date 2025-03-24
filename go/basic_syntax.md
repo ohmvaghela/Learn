@@ -21,6 +21,7 @@
     - [Make a function goRoutine](#make-a-function-goroutine)
     - [WaitGroup](#waitgroup)
     - [Locks in go](#locks-in-go)
+    - [Channels](#channels)
   - [To learn](#to-learn)
 
 ## Varialbe decelaration
@@ -417,11 +418,10 @@ func main(){go sayHello()}
   - Add : Increment for number of coroutines to wait for
   - Done : make one coroutine as complete
   - Wait : Wait for all coroutines to complete
-
 ```go
-func sayHello(wg *sync.WaitGroup){
+func sayHello(wg *sync.WaitGroup, i int){
   defer wg.Done()// marks one coroutine to wait for
-  fmt.Println("Hellow")
+  fmt.Println(i)
 }
 
 func main(){
@@ -429,7 +429,7 @@ func main(){
 
   for i := 0;i< 5;i++ {
     wg.Add(1)// adds one coroutine to wait for
-    go sayHello(&wg)
+    go sayHello(&wg,i)
   }
   wg.Wait() // wait till all coroutines are done
 }
@@ -445,6 +445,49 @@ func increment(wg *sync.WaitGroup) {
 }
 ```
 
+### Channels
+- For concurrent message passing, instead of locking
+
+```go
+// creating go channel that works with int
+ch := make(chan int)
+// creating go channel buffer of size 5
+ch := make(chan int, 5)
+
+// Sending data into buffer
+ch<-3
+
+// reciving data from buffer
+var a int = <-ch 
+a := <-ch 
+fmt.Print(<-ch)
+```
+
+- To handle multiple channel
+
+```go
+ch1 := make(chan string)
+ch2 := make(chan string)
+
+go func() {ch1 <- "Message from ch1"}()
+go func() {ch2 <- "Message from ch2"}()
+
+select {
+  case msg1 := <-ch1: fmt.Println("Received:", msg1)
+  case msg2 := <-ch2: fmt.Println("Received:", msg2)
+}
+```
+
+- Go channel are bi-directional but it can be made directional 
+- Say a function that only recives data in reciver channel and send data in sender channel
+
+```go
+// We can't send data to receiver in the function
+// We can only accept (receive) data from receiver in the function
+// We can't receive data from sender in the function
+// We can only send data to sender in the function
+func worker(receiver <-chan int, sender chan<- int) {}
+```
 
 ## To learn
 - make()
