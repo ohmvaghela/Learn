@@ -22,7 +22,12 @@
     - [WaitGroup](#waitgroup)
     - [Locks in go](#locks-in-go)
     - [Channels](#channels)
-  - [To learn](#to-learn)
+      - [bi-directional and directional channel](#bi-directional-and-directional-channel)
+      - [To close channel](#to-close-channel)
+      - [Accessing the buffer](#accessing-the-buffer)
+    - [Worker Pool](#worker-pool)
+  - [Error Handling](#error-handling)
+    - [Panic and Recover](#panic-and-recover)
 
 ## Varialbe decelaration
 ```go
@@ -447,7 +452,6 @@ func increment(wg *sync.WaitGroup) {
 
 ### Channels
 - For concurrent message passing, instead of locking
-
 ```go
 // creating go channel that works with int
 ch := make(chan int)
@@ -477,7 +481,7 @@ select {
   case msg2 := <-ch2: fmt.Println("Received:", msg2)
 }
 ```
-
+#### bi-directional and directional channel
 - Go channel are bi-directional but it can be made directional 
 - Say a function that only recives data in reciver channel and send data in sender channel
 
@@ -488,20 +492,113 @@ select {
 // We can only send data to sender in the function
 func worker(receiver <-chan int, sender chan<- int) {}
 ```
+#### To close channel 
+```go
+ch := make(chan int)
+close(ch)
+```
 
-## To learn
-- make()
-- reflect
-  - TypeOf
-  - Kind
-- go func()
-- Select
-- Using set, map, slice, stack, queue, unordered_set, unordered_map
-- String 
-  - Substring
-  - and more string function
-- Sync 
-  - Pool, 
-  - New: func() interface
-- Switch 
-  - type
+#### Accessing the buffer
+```go
+jobs := make(chan int, 5)
+for job := range jobs{fmt.Println(job)}
+for i:=0;i<10;i++{jobs<-i}
+```
+
+
+### Worker Pool
+- Parallel processing of jobs
+- Say we create multiple works to process a channel buffer
+
+```go
+func worker(jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {}
+func main(){
+  for i := 1; i <= numWorkers; i++ {
+      wg.Add(1)
+      go worker(i, jobs, results, &wg)
+    }
+}
+for j := 1; j <= numJobs; j++ {
+  jobs <- j
+}
+```
+> ![NOTE]
+> - Even though multiple workers are creating the channel pool is shared
+> - But here the jobs can be processed parallely
+> - Else jobs will be processed one after another if only one worker is there 
+> - If job buffer is full then the loop will till buffer is full 
+> ```go
+> for j := 1; j <= 4*numJobs; j++ {
+>   jobs <- j
+> }
+> ```
+
+## Error Handling
+- Error is an built in interface
+```go
+type error interface {
+    Error() string
+}
+```
+- Using error
+```go
+func divide(a,b int)(int, error){
+  if b==0:
+    return 0, error.New("Division by zero")
+  else:
+    return a/b, nil
+}
+func main() {
+    result, err := divide(10, 0)
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Result:", result)
+    }
+}
+```
+- Creating custom error
+```go
+type Divide struct{
+  Divisor, Divident int
+  Message String
+}
+func (d *Divide) Error() string{
+  return fmt.Sprintf(
+    "cannot divide %d by %d: %s", 
+    e.Dividend, 
+    e.Divisor, 
+    e.Message,
+  )
+}
+
+func divider(a,b int)(int, error){
+  if b==0:
+    return 0, &Divide(a,b,"Divider Error")
+  else:
+    return a/b, nil
+}
+```
+### Panic and Recover
+- For catching server errors we use Panic and Recover
+  - `panic` stops execution and begins unwinding the stack.
+  - `recover` catches the panic if it's called inside a deferred function.
+
+```go
+package main
+import "fmt"
+
+func riskyFunction() {
+    panic("Something went wrong!")
+}
+
+func main() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("Recovered from:", r)
+        }
+    }()
+    riskyFunction()
+    fmt.Println("This won't be reached due to panic.")
+}
+```
