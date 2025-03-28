@@ -17,6 +17,7 @@
     - [Functional Interface](#functional-interface)
     - [Empty Interface](#empty-interface)
     - [Interface inheritence](#interface-inheritence)
+  - [Custom Types in Go](#custom-types-in-go)
   - [GoRoutines](#goroutines)
     - [Make a function goRoutine](#make-a-function-goroutine)
     - [WaitGroup](#waitgroup)
@@ -28,6 +29,8 @@
     - [Worker Pool](#worker-pool)
   - [Error Handling](#error-handling)
     - [Panic and Recover](#panic-and-recover)
+  - [Misc](#misc)
+    - [Reflect](#reflect)
 
 ## Varialbe decelaration
 ```go
@@ -333,10 +336,10 @@ fmt.Println(r) // {14,92}
 ## Interface
 ### Functional Interface
 - For interface of functions
-  - If a function implements a method of interface 
+  - If a function implements a method of interface
   - All the methods in interface must be defined by function
   - Say shape interface has Area, Perimeter as methods
-    - Now rectangle must implement both Area and Perimeter 
+    - Now rectangle must implement both Area and Perimeter
     - Or else rectangle should not implement any
 ```go
 // Basic syntax
@@ -405,6 +408,62 @@ type Animal interface {
 type Pet interface {
     Animal    // Embedding Animal interface
     Play() string
+}
+```
+
+## Custom Types in Go
+- Go allows you to create custom types, which can enhance code readability and type safety. Here's a breakdown of the examples:
+
+**1. Custom Type Based on a Built-in Type (String)**
+
+- You can create custom types based on existing types like `string`, `int`, etc.
+- This allows you to add methods specific to your custom type.
+
+```go
+type extendedString string
+
+func (e extendedString) endsWithZero() bool {
+  length := len(e)
+  if length == 0 { //Handle empty string case.
+    return false;
+  }
+  return e[length-1] == '0'
+}
+
+func main() {
+  var name extendedString = "ohm0"
+  fmt.Println("Does name end with zero? :", name.endsWithZero()) //Corrected Println usage.
+
+  var emptyName extendedString = ""
+  fmt.Println("Does emptyName end with zero?", emptyName.endsWithZero())
+}
+```
+
+**2. Custom Function Type**
+- You can define custom function types, which can be useful for working with functions as first-class citizens.
+- This allows you to create specialized function signatures and add methods to function types
+
+```go
+type mySumFunctionDefinition func(a, b, c, d int) int
+
+func (f mySumFunctionDefinition) mySumSubFunction1(a,b int) int {
+  return f(a,b,1,1)
+}
+
+
+func main() {
+  // Direct use
+  var mySumFunction1 mySumFunctionDefinition = func(a, b, c, d int) int {
+    return a + b + c + d
+  }
+
+  result1 := mySumFunction1(1, 2, 3, 4)
+  fmt.Println("Result 1:", result1)
+
+  // Creating a method for the function type.
+
+  result2 := mySumFunction1.mySumSubFunction1(1, 3)
+  fmt.Println("Result 2:", result2)
 }
 ```
 
@@ -602,3 +661,30 @@ func main() {
     fmt.Println("This won't be reached due to panic.")
 }
 ```
+
+
+## Misc
+
+### Reflect
+| Code                                 | Description                                                                                                                                                                                                                            |
+|--------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `reflect.TypeOf(value)`              | Returns the `reflect.Type` of the given `value`. This `reflect.Type` represents the type of the value at runtime and provides methods to inspect its properties.                                                                       |
+| `t.Name()`                           | Returns the name of the type `t` as a string. For struct types, this returns the struct's name.                                                                                                                                     |
+| `t.PkgPath()`                        | Returns the package path of the type `t` as a string. For built-in types, it returns an empty string.                                                                                                                            |
+| `t.Kind()`                           | Returns the `reflect.Kind` of the type `t`. `reflect.Kind` represents the specific kind of type, such as `reflect.Struct`, `reflect.Int`, `reflect.String`, etc. This is useful for determining the underlying type category. |
+| `t.NumField()`                       | Returns the number of struct fields (if `t` is a struct). Panics if `t` is not a struct.                                                                                                                                            |
+| `t.Field(i)`                         | Returns the `reflect.StructField` at index `i` (if `t` is a struct). Panics if `t` is not a struct or if `i` is out of range.                                                                                                         |
+| `t.FieldByName(name)`                | Returns the `reflect.StructField` with the given `name` and a boolean indicating whether the field was found (if `t` is a struct).                                                                                                   |
+| `reflect.ValueOf(value)`             | Returns a `reflect.Value` representing the value of `value`. `reflect.Value` provides methods for examining and manipulating the value.                                                                                             |
+| `v.Type()`                           | Returns the `reflect.Type` of the value `v`.                                                                                                                                                                                         |
+| `v.Kind()`                           | Returns the `reflect.Kind` of the value `v`.                                                                                                                                                                                         |
+| `v.Interface()`                      | Returns the value `v` as an `interface{}`. This allows you to convert the `reflect.Value` back to its original type.                                                                                                                 |
+| `v.Field(i)`                         | Returns the `reflect.Value` of the struct field at index `i` (if `v` is a struct). Panics if `v` is not a struct.                                                                                                                     |
+| `v.FieldByName(name)`                | Returns the `reflect.Value` of the struct field with the given `name` (if `v` is a struct).                                                                                                                                           |
+| `v.Set(x)`                           | Sets the value of `v` to `x`. `v` must be addressable and settable. Panics if `v` is not settable or if `x`'s type is not assignable to `v`'s type.                                                                              |
+| `v.Elem()`                           | Returns the value that the interface `v` contains or that the pointer `v` points to. Panics if `v`'s `Kind` is not `reflect.Interface` or `reflect.Ptr`.                                                                           |
+| `reflect.Indirect(v)`                | Returns the value that the interface `v` contains or that the pointer `v` points to, like `v.Elem()`, but handles `nil` pointers gracefully by returning the zero `reflect.Value` of the pointed-to type. |
+| `reflect.Zero(t)`                    | Returns the zero `reflect.Value` for the type `t`.                                                                                                                                                                                     |
+| `reflect.New(t)`                     | Returns a `reflect.Value` representing a pointer to a new zero value for the type `t`.                                                                                                                                              |
+| `reflect.MakeSlice(t, len, cap)`      | Creates a new slice `reflect.Value` with the given type `t`, length `len`, and capacity `cap`.                                                                                                                                         |
+| `reflect.MakeMap(t)`                 | Creates a new map `reflect.Value` with the given type `t`.                                                                                                                                                                            |

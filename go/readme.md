@@ -136,7 +136,7 @@ go work init <pkg1-path> <pkg2-path>
 go work init ./lib1 ./lib2
 ```
 
-- To add other modules 
+- To add other modules
 
 ```
 go work use <pkg1-path> <pkg2-path>
