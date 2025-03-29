@@ -8,6 +8,7 @@
       - [Gracefully stopping server](#gracefully-stopping-server)
     - [Custom HTTP server](#custom-http-server)
   - [HTTP path and query params](#http-path-and-query-params)
+  - [Setting Headers](#setting-headers)
   - [Gorilla/Mux (github.com/gorilla/mux)](#gorillamux-githubcomgorillamux)
     - [Basic http server](#basic-http-server)
     - [URL Path / Query Params](#url-path--query-params)
@@ -17,6 +18,11 @@
   - [Adding Middleware](#adding-middleware)
   - [Handling CORS `github.com/gorilla/handlers`](#handling-cors-githubcomgorillahandlers)
     - [Middleware in CORS](#middleware-in-cors)
+  - [Working with JSON](#working-with-json)
+    - [Converting struct to json](#converting-struct-to-json)
+    - [Converting JSON/JSON array to go data types](#converting-jsonjson-array-to-go-data-types)
+    - [Converting Request Body to JSON](#converting-request-body-to-json)
+    - [Sending JSON response](#sending-json-response)
 
 
 ## Mux (Multiplexer)
@@ -229,6 +235,20 @@ func greetHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/greet/", greetHandler) // Handle URLs like /greet/John?q=10
 	http.ListenAndServe(":8080", nil)
+}
+```
+
+## Setting Headers
+
+```go
+func createPersonHandler(w http.ResponseWriter, r *http.Request) {
+  // Set multiple headers
+  w.Header().Set("Content-Type", "application/json")
+  w.Header().Set("Cache-Control", "no-cache") // Example: prevent caching
+  w.Header().Set("X-Custom-Header", "MyValue") // Example: custom header
+  w.Header().Set("Location", "/people") //Example: location header
+  w.WriteHeader(http.StatusCreated) // Set status code after setting headers
+
 }
 ```
 
@@ -484,3 +504,154 @@ func main() {
   	http.ListenAndServe(":8080", securedRouter)
   }
   ```
+
+## Working with JSON
+  - Type in Go is stores as array of byte(**uint 8**)
+    - `[]byte`
+### Converting struct to json
+
+  ```go
+  // if json name is not mentioned then data will take name of corrosponding variable
+  type Person struct {
+  	Name string `json:"name"`
+  	Age int `json:"age"`
+  	Addresses string `json:"address"`
+  }
+  type Person1 struct {
+  	Name string
+  	Age int
+  	Addresses string
+  }
+  func main() {
+  	person := Person{ Name: "ohm", Age: 12, Addresses: "address"}
+    person1 := Person1{ Name: "ohm", Age: 12, Addresses: "address"}
+  	
+  	jsonData,  err  := json.Marshal(person)
+  	jsonData1, err1 := json.Marshal(person1)
+  	fmt.Println(string(jsonData)) // {"name":"ohm","age":12,"address":"address"}
+  	fmt.Println(string(jsonData1)) // {"Name":"ohm","Age":12,"Address":"address"}
+  }
+  ```
+
+### Converting JSON/JSON array to go data types
+- Base structs
+  ```go
+  type Person struct {
+  	Name    string `json:"name"`
+  	Age     int    `json:"age"`
+  	Address string `json:"address"`
+  }
+  type PersonDelay struct {
+  	Name json.RawMessage `json:"name"`
+  	Age  json.RawMessage `json:"age"`
+  	City string          `json:"city"`
+  }
+
+  ```
+
+- Implementations
+
+  ```go
+  // JSON to Slice
+	jsonData := `[1, 2, 3, 4, 5]`
+  var intSlice []int
+  err := json.Unmarshal([]byte(jsonData), &intSlice)
+
+  //////////////
+  // JSON to map
+    // With defined value type
+  jsonDataMap := `{"name": "Alice", "ageString": "30", "city": "New York"}`
+  var personMap map[string]string // JSON object to map
+  json.Unmarshal([]byte(jsonDataMap), &personMap)
+    // With undefined value type
+  jsonDataMap := `{"name": "Alice", "age": 30, "city": "New York"}`
+  var personMap map[string]interface{} // JSON object to map
+  json.Unmarshal([]byte(jsonDataMap), &personMap)
+
+  //////////////
+  // JSON to Map with delayed parsing
+	jsonData := `{"name": "Alice", "age": 30, "city": "New York"}`
+	var rawMap map[string]json.RawMessage // Store raw JSON values
+	err := json.Unmarshal([]byte(jsonData), &rawMap)
+  
+  // Delayed parsing
+  var name string
+	json.Unmarshal(rawMap["name"], &name)
+	var age int
+	json.Unmarshal(rawMap["age"], &age)
+
+  //////////////
+  // JSON to Struct
+	jsonData := `{"name":"Jane Doe","age":25,"address":"4321 Oak Avenue"}`
+  jsonArray := `[{"name":"John Doe","age":30,"address":"1234 Elm Street"},
+	{"name":"Jane Doe","age":25,"address":"4321 Oak Avenue"}]`
+	
+  // Create a Person variable to hold the unmarshalled data
+	var person Person
+  var people []Person
+	
+  // Unmarshal the JSON into the Person struct
+	err := json.Unmarshal([]byte(jsonData), &person)
+  err1 := json.Unmarshal([]byte(jsonArray), &people)
+
+  //////////////
+  // JSON to struct with delayed parsing
+	jsonData := `{"name": "Alice", "age": 30, "city": "New York"}`
+	var person PersonDelay
+	err := json.Unmarshal([]byte(jsonData), &person)
+
+  // Delayed Parsing
+	var name string
+	json.Unmarshal(person.Name, &name)
+	var age int
+	json.Unmarshal(person.Age, &age)
+  ```
+
+### Converting Request Body to JSON
+- Request body is `io.ReadCloser`
+
+  ```go
+  package io
+  type ReadCloser interface {
+  	Reader
+  	Closer
+  }
+  ```
+
+- Converting Request body to JSON
+
+  ```go
+  func createPersonHandler(w http.ResponseWriter, r *http.Request) {
+	var person Person
+
+  // json.NewDecoder(r.Body) : Returns JSON.Decoder
+    // it takes io.Reader as input
+  // Decode(v any)
+    // Processes the stream and updates the input
+  err := json.NewDecoder(r.Body).Decode(&person)  
+  }
+  ```
+
+### Sending JSON response
+
+```go
+func createPersonHandler(w http.ResponseWriter, r *http.Request) {
+	
+  
+  // Respond with the received data in JSON format
+	w.Header().Set("Content-Type", "application/json")
+  // If response code is not set in headers it is assumed as 200
+	w.WriteHeader(http.StatusCreated)
+
+  // Data to be sent
+	person := Person{ Name: "ohm", Age: 12, Addresses: "address"}
+
+  // 1st approah
+  jsonResponse,  err  := json.Marshal(person)
+	w.Write(jsonResponse)
+
+  // 2nd approach : More efficient
+  err := json.NewEncoder(w).Encode(jsonResponse)
+}
+```
+

@@ -1,8 +1,8 @@
 # GoLang
 
 > [!NOTE]
-> - [<u>**Basic Syntax**</u>](./basic_syntax.md) 
-> - [<u>**Net/Http**</u>](./net_http.md) 
+> - [<u>**Basic Syntax**</u>](./basic_syntax.md)
+> - [<u>**Http Routing**</u>](./http_routing.md)
 
 - [GoLang](#golang)
   - [Basic Commands](#basic-commands)
@@ -16,12 +16,12 @@
 
 ## Basic Commands
 
-| command | use | 
+| command | use |
 |-|-|
-| `go mod init <domain>/<project-name>` | Initialize project  | 
+| `go mod init <domain>/<project-name>` | Initialize project  |
 | `go get <dependency-link>` | Initialize project  |
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > ## Main Package
 > - for the package which will be running it needs to be named as `main.go`
 > ```go
@@ -29,14 +29,14 @@
 > func main(){}
 > ```
 
-> [!TIP] 
+> [!TIP]
 > ## Functions
 > - functions name starting with LowerCase char
->   - Cannot be accessed outside same package 
+>   - Cannot be accessed outside same package
 > - functions name starting with Upper char
->   - Can be accessed outside same package 
+>   - Can be accessed outside same package
 
-## Basic files 
+## Basic files
 ### `go.mod`
 - Defines the module properties and dependencies.
 - Contains a require list that specifies the dependencies used in the project.

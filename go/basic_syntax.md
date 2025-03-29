@@ -29,6 +29,14 @@
     - [Worker Pool](#worker-pool)
   - [Error Handling](#error-handling)
     - [Panic and Recover](#panic-and-recover)
+  - [IO Reader/Writer](#io-readerwriter)
+    - [IO Reader](#io-reader)
+    - [IO Writer](#io-writer)
+  - [Working with JSON](#working-with-json)
+    - [Converting struct to json](#converting-struct-to-json)
+    - [Converting JSON/JSON array to go data types](#converting-jsonjson-array-to-go-data-types)
+    - [Converting Request Body to JSON](#converting-request-body-to-json)
+    - [Sending JSON response](#sending-json-response)
   - [Misc](#misc)
     - [Reflect](#reflect)
 
@@ -659,6 +667,285 @@ func main() {
     }()
     riskyFunction()
     fmt.Println("This won't be reached due to panic.")
+}
+```
+
+## IO Reader/Writer
+
+### IO Reader
+- Used to read stream of data
+- Interface :
+  
+  ```go
+  package io
+  // Takes slice as input
+  // Return stream size n
+  type Reader interface{
+    Read(p []byte) (n int, e error)
+  }
+  ```
+
+> [!NOTE]
+> - Before processing error, n bytes must be processed
+> - io.EOF error marks end of file
+
+- **Uses**
+  - `*os.File` : Used to read data from file
+  - `string.Reader` : Create reader to read string stream
+  - `http.Request.body`
+
+- **Implementation**
+
+```go
+// Creating IO.reader from file
+reader, err := os.Open("file1.txt") // reader : *os.file implements *IO.reader
+
+// Creating IO.reader from string
+reader := strings.NewReader("Hello World") // reader : *strings.Reader implements *IO.reader
+```
+
+- Working with `io.Reader`
+
+```go
+func printStream(r io.Reader){
+  // this will hold stream data in byte slice
+  buffer := make([]byte, 1024)
+
+  for{
+    // n is the size of buffer
+    // buffer is updated with the data
+    n, err := r.Read(buffer)
+    // iterating from 0 to n as the entire buffer may not be used
+    for _, val := range buffer[:n]{
+      fmt.print(string(value))
+    }
+    // error can be io.EOF marking end of stream
+    if err == io.EOF{
+      return
+    }
+    // error occured due to something else
+    if err != io.EOF && err != nil{
+      return
+    }
+  }
+}
+
+// using printStream
+reader, err := os.Open("file1.txt") // reader : *os.file implements *IO.reader
+reader := strings.NewReader("Hello World") // reader : *strings.Reader implements *IO.reader
+printStream(reader)
+```
+
+- Stream reading
+
+```go
+// say following is the stream
+str := strings.NewReader(
+  `12345
+6789`
+)
+
+// say the buffer size in the printStream function is 3
+// So buffer in each iteration will look like
+  // 1: 1 2 3
+  // 2: 4 5 \n
+  // 3: 6 7 8
+  // 4: 9
+  // 5: io.EOF
+```
+
+### IO Writer
+
+- Used to write a stream of data.
+- Interface:
+
+  ```go
+  package io
+
+  // Takes slice as input
+  // Returns number of bytes written n and error
+  type Writer interface {
+    Write(p []byte) (n int, err error)
+  }
+  ```
+
+> [!NOTE]
+> - Before processing error, n bytes must be processed.
+> - Errors indicate issues during the write operation.
+
+- **Uses**
+  - `*os.File`: Used to write data to a file.
+  - `bytes.Buffer`: Used to write data to an in-memory buffer.
+  - `http.ResponseWriter`: Used to write HTTP response data.
+
+- **Implementation**
+
+```go
+func main(){
+	f, err := os.Create("Output.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	n, err := writeStream("Hello Word", f)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Done : ", string(n))
+}
+
+func writeStream(s string, f io.Writer )(int, error){
+	n, err := f.Write([]byte(s))
+
+	if err != nil {
+		return 0,err
+	}
+	return n,nil
+}
+```
+
+## Working with JSON
+  - Type in Go is stores as array of byte(**uint 8**)
+    - `[]byte`
+### Converting struct to json
+
+  ```go
+  // if json name is not mentioned then data will take name of corrosponding variable
+  type Person struct {
+  	Name string `json:"name"`
+  	Age int `json:"age"`
+  	Addresses string `json:"address"`
+  }
+  type Person1 struct {
+  	Name string
+  	Age int
+  	Addresses string
+  }
+  func main() {
+  	person := Person{ Name: "ohm", Age: 12, Addresses: "address"}
+    person1 := Person1{ Name: "ohm", Age: 12, Addresses: "address"}
+  	
+  	jsonData,  err  := json.Marshal(person)
+  	jsonData1, err1 := json.Marshal(person1)
+  	fmt.Println(string(jsonData)) // {"name":"ohm","age":12,"address":"address"}
+  	fmt.Println(string(jsonData1)) // {"Name":"ohm","Age":12,"Address":"address"}
+  }
+  ```
+
+### Converting JSON/JSON array to go data types
+- Base structs
+  ```go
+  type Person struct {
+  	Name    string `json:"name"`
+  	Age     int    `json:"age"`
+  	Address string `json:"address"`
+  }
+  type PersonDelay struct {
+  	Name json.RawMessage `json:"name"`
+  	Age  json.RawMessage `json:"age"`
+  	City string          `json:"city"`
+  }
+
+  ```
+
+- Implementations
+
+  ```go
+  // JSON to Slice
+	jsonData := `[1, 2, 3, 4, 5]`
+  var intSlice []int
+  err := json.Unmarshal([]byte(jsonData), &intSlice)
+
+  //////////////
+  // JSON to map
+    // With defined value type
+  jsonDataMap := `{"name": "Alice", "ageString": "30", "city": "New York"}`
+  var personMap map[string]string // JSON object to map
+  json.Unmarshal([]byte(jsonDataMap), &personMap)
+    // With undefined value type
+  jsonDataMap := `{"name": "Alice", "age": 30, "city": "New York"}`
+  var personMap map[string]interface{} // JSON object to map
+  json.Unmarshal([]byte(jsonDataMap), &personMap)
+
+  //////////////
+  // JSON to Map with delayed parsing
+	jsonData := `{"name": "Alice", "age": 30, "city": "New York"}`
+	var rawMap map[string]json.RawMessage // Store raw JSON values
+	err := json.Unmarshal([]byte(jsonData), &rawMap)
+  
+  // Delayed parsing
+  var name string
+	json.Unmarshal(rawMap["name"], &name)
+	var age int
+	json.Unmarshal(rawMap["age"], &age)
+
+  //////////////
+  // JSON to Struct
+	jsonData := `{"name":"Jane Doe","age":25,"address":"4321 Oak Avenue"}`
+  jsonArray := `[{"name":"John Doe","age":30,"address":"1234 Elm Street"},
+	{"name":"Jane Doe","age":25,"address":"4321 Oak Avenue"}]`
+	
+  // Create a Person variable to hold the unmarshalled data
+	var person Person
+  var people []Person
+	
+  // Unmarshal the JSON into the Person struct
+	err := json.Unmarshal([]byte(jsonData), &person)
+  err1 := json.Unmarshal([]byte(jsonArray), &people)
+
+  //////////////
+  // JSON to struct with delayed parsing
+	jsonData := `{"name": "Alice", "age": 30, "city": "New York"}`
+	var person PersonDelay
+	err := json.Unmarshal([]byte(jsonData), &person)
+
+  // Delayed Parsing
+	var name string
+	json.Unmarshal(person.Name, &name)
+	var age int
+	json.Unmarshal(person.Age, &age)
+  ```
+
+### Converting Request Body to JSON
+- Request body is `io.ReadCloser`
+
+  ```go
+  package io
+  type ReadCloser interface {
+  	Reader
+  	Closer
+  }
+  ```
+
+- Converting Request body to JSON
+
+  ```go
+  func createPersonHandler(w http.ResponseWriter, r *http.Request) {
+	var person Person
+
+  // json.NewDecoder(r.Body) : Returns JSON.Decoder
+    // it takes io.Reader as input
+  // Decode(v any)
+    // Processes the stream and updates the input
+  err := json.NewDecoder(r.Body).Decode(&person)  
+  }
+  ```
+
+### Sending JSON response
+
+```go
+func createPersonHandler(w http.ResponseWriter, r *http.Request) {
+	
+	person := Person{ Name: "ohm", Age: 12, Addresses: "address"}
+	jsonData,  err  := json.Marshal(person)
+
+	// Respond with the received data in JSON format
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+  // If response code is not set in headers it is assumed as 200
+	w.Write(jsonResponse)
 }
 ```
 
