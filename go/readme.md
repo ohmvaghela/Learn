@@ -3,7 +3,8 @@
 > [!NOTE]
 > - [<u>**Basic Syntax**</u>](./basic_syntax.md)
 > - [<u>**Http Routing**</u>](./http_routing.md)
-
+> - [<u>**Gin**</u>](./gin.md)
+> - [<u>**Database connectivity**</u>](./database_connectivity.md)
 - [GoLang](#golang)
   - [Basic Commands](#basic-commands)
   - [Basic files](#basic-files)
