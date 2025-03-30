@@ -5,6 +5,8 @@
 > - [<u>**Http Routing**</u>](./http_routing.md)
 > - [<u>**Gin**</u>](./gin.md)
 > - [<u>**Database connectivity**</u>](./database_connectivity.md)
+> - [<u>**Authorization/ Authentication**</u>](./authorization_authentication.md)
+
 - [GoLang](#golang)
   - [Basic Commands](#basic-commands)
   - [Basic files](#basic-files)
