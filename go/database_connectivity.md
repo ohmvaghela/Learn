@@ -7,10 +7,28 @@
 - [CRUD operations](#crud-operations)
   - [Using Raw Query](#using-raw-query)
   - [Create Operation](#create-operation)
-  - [Read/find](#readfind)
   - [Update Operations](#update-operations)
 - [Entity in golang](#entity-in-golang)
-  - [First/ Find/ Scan with OrderBy/ Where/ GroupBy/ Limit/ Offset](#first-find-scan-with-orderby-where-groupby-limit-offset)
+- [SQL queries](#sql-queries)
+  - [Grom Model](#grom-model)
+  - [Selecting table to be used](#selecting-table-to-be-used)
+    - [Model](#model)
+    - [Table](#table)
+  - [Find](#find)
+  - [Take](#take)
+  - [First](#first)
+  - [Scan](#scan)
+  - [Select](#select)
+  - [Query Modifiers](#query-modifiers)
+    - [OrderBy](#orderby)
+    - [Where](#where)
+    - [GroupBy + Having](#groupby--having)
+    - [Limit and Offset](#limit-and-offset)
+    - [Count](#count)
+    - [Distinct](#distinct)
+    - [Attrs](#attrs)
+    - [FirstOrCreate](#firstorcreate)
+  - [Query Modifier usage mapping](#query-modifier-usage-mapping)
 
 
 # Creating DB connection instance
@@ -114,9 +132,12 @@
       func connectDB() (*gorm.DB, error) {
         dsn := "user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
         customNamingSchema := schema.NamingStrategy{
-            TablePrefix:   "t_",   // Table names should start with `t_`
-            SingularTable: true,   // Use singular table names, disable pluralization
-            NameReplacer:  strings.NewReplacer("UUID", "UUID"), //avoid gorm change UUID to uuid
+            // Table names should start with `t_`
+            TablePrefix:   "t_",   
+            // Use singular table names, disable pluralization
+            SingularTable: true,   
+            //avoid gorm change UUID to uuid
+            NameReplacer:  strings.NewReplacer("UUID", "UUID"), 
             Column: func(name string) string {
               return strings.ReplaceAll(name, "CamelCase", "snake_case")
             },
@@ -135,12 +156,17 @@
         dsn := "user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
 
         newLogger := logger.New(
-          log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+          // io writer
+          log.New(os.Stdout, "\r\n", log.LstdFlags), 
           logger.Config{
-            SlowThreshold:       time.Second,   // Slow SQL threshold
-            LogLevel:    logger.Info, // Log level
-            IgnoreRecordNotFoundError: true,    // Ignore ErrRecordNotFound error
-            Colorful:    true,   // Disable color
+            // Slow SQL threshold
+            SlowThreshold:       time.Second,   
+            // Log level
+            LogLevel:    logger.Info, 
+            // Ignore ErrRecordNotFound error
+            IgnoreRecordNotFoundError: true,    
+            // Disable color
+            Colorful:    true,   
           },
         )
         db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -247,24 +273,6 @@ func main(){
 }
 ```
 
-## Read/find
-
-```go
-func main(){
-	connectDatabase("root","ohm123ohm","127.0.0.1","3306","temp")
-  
-  // get all users
-  var users []User
-  result := DB.Find(&users)
-  // log resutls
-  if result.Error != nil { /*print error */} 
-  else { /*print users */ }
-
-  // 
-
-}
-```
-
 ## Update Operations
 
 ```go
@@ -285,4 +293,268 @@ type User struct {
 }
 ```
 
-## First/ Find/ Scan with OrderBy/ Where/ GroupBy/ Limit/ Offset
+# SQL queries
+- For fetching data following can be use
+  - First : Order record by PK and fetch first
+  - Take : fetch first record
+  - Find : Fetch all records matching condition
+    - Only works with **Model** or **slice of model**
+    - Does not work with custom structs or queries
+  - Scan : Fetch all records matching condition
+    - Works with **Model** or **slice of model**
+    - Works with raw queries and custom struct mappings
+- These generally fill the interface or struct provided
+
+## Grom Model
+- In GORM, a model is just a Go struct that represents a table in the database. 
+- GORM automatically maps the struct fields to table columns based on their names and tags.
+
+  ```go
+  type User struct {
+      ID    uint   `gorm:"primaryKey"`
+      Name  string `gorm:"size:100"`
+      Email string `gorm:"unique"`
+  }
+  ```
+
+## Selecting table to be used
+
+### Model
+- Takes model struct as input
+
+  ```go
+  func (db *DB) Model(value interface{}) (tx *DB)
+  db.Model(&User{})
+  ```
+
+### Table
+- Takes string as input
+
+  ```go
+  func (db *DB) Table(name string, args ...interface{}) (tx *DB)
+  db.Table("users")
+  ```
+
+## Find 
+- Syntax
+  
+  ```go
+  func (db *DB) Find(dest interface{}, conds ...interface{}) (tx *DB)
+  ```
+
+- Use
+  
+  ```go
+  var users []User
+  err := db.Find(&users).Error
+  err := db.Find(&users, "age > ?", 25).Error // SELECT * FROM users WHERE age > 25;
+
+  // If you are sure only one entry will be returned
+  var user User
+  err := db.Find(&user).Error
+  err := db.Find(&user, "age > ?", 25).Error // SELECT * FROM users WHERE age > 25;
+  ```
+
+- Other options for condition
+
+  ```go
+  // direct PK/id
+  err := db.Find(&users, 1).Error // SELECT * FROM users WHERE id = 1;
+
+  // Condition : SELECT * FROM USERS WHERE Name = "John"
+  err := db.Find(&users, "name = ?", "John").Error  
+
+  // Struct :  SELECT * FROM USERS WHERE Name = "John"
+  err := db.Find(&users, User{Name: "John"}).Error
+
+  // Map : SELECT * FROM USERS WHERE Name = "John"
+  err := db.Find(&users, map[string]interface{}{"name": "John"}).Error
+  ```
+
+## Take
+- Syntax
+
+  ```go
+  func (db *DB) Take(dest interface{}, conds ...interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  var user User
+  err := db.Take(&user).Error // SELECT * FROM users LIMIT 1;
+  ```
+
+## First
+
+- Syntax
+
+  ```go
+  func (db *DB) Take(dest interface{}, conds ...interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  var user User
+  err := db.First(&user).Error // SELECT * FROM users ORDER BY id LIMIT 1;
+  ```
+
+## Scan 
+- Syntax
+
+  ```go
+  func (db *DB) Scan(dest interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  type Result struct {
+    Name string
+    Age  int
+  }
+  var result Result
+
+  // query : SELECT name, age from users where id = 1
+  err := db.Table("users").Select("name, age").Where("id = ?", 1).Scan(&result).Error
+  ```
+
+> [!NOTE]
+> - Mostly used for Map query result into custom struct
+
+> [!CAUTION]
+> - `Result` is not grom model so we cannot use `Find(&result)` over here
+
+## Select
+- Use to filter columns
+
+```go
+func (db *DB) Select(query interface{}, args ...interface{}) (tx *DB)
+db.Table("users").Select("name, age").Where("id = ?", 1).Scan(&result)
+```
+
+
+## Query Modifiers
+
+### OrderBy
+- Syntax
+
+  ```go
+  func (db *DB) Order(value interface{}) (tx *DB)
+  ```  
+
+- Use
+
+  ```go
+  db.Order("age desc").Find(&users)
+  ```
+
+### Where
+- Syntax
+  
+  ```go
+  func (db *DB) Where(query interface{}, args ...interface{}) (tx *DB)
+  func (db *DB) Order(value interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  // 1
+  db.Where("name = ?", "John").Find(&users)
+  // 2
+  db.Where([]map[string]interface{}{
+    {"name": "John", "age": 23},
+    {"name": "Ram", "age": 24},
+  }).Find(&users)
+  ```
+
+### GroupBy + Having
+- Syntax
+  
+  ```go
+  func (db *DB) Having(query interface{}, args ...interface{}) (tx *DB)
+
+  ```
+
+- Use
+
+  ```go
+  db.Model(&User{}).Select("age, count(*) as total").Group("age").Having("count(*) > ?", 5).Find(&results)
+  ```
+
+### Limit and Offset
+- Syntax
+  
+
+- Use
+
+  ```go
+  db.Limit(10).Offset(20).Find(&users)
+  ```
+
+### Count
+- Syntax
+  
+  ```go
+  func (db *DB) Limit(limit int) (tx *DB)
+  func (db *DB) Offset(offset int) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  var count int64
+  db.Model(&User{}).Where("age > ?", 25).Count(&count)
+  ```
+
+### Distinct
+- Syntax
+
+  ```go  
+  func (db *DB) Distinct(args ...interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  db.Distinct("age").Find(&users)
+  ```
+
+### Attrs
+- If value of column mentioned in null then it is replaced with default value
+
+- Syntax
+  
+  ```go
+  func (db *DB) Attrs(attrs ...interface{}) (tx *DB)
+  ```
+
+- Use
+
+  ```go
+  db.Where(User{Name: "John"}).Attrs(User{Age: 30}).FirstOrCreate(&user)
+  ```
+
+### FirstOrCreate
+- Checks if a user with Name = "John" exists.
+  - If yes, it returns that user (without modifying anything).
+  - If no, it creates a new user with Name: "John", ignoring "Ohm".
+
+  ```go
+  db.Where(User{Name: "John"}).Attrs(User{Name: "Ohm"}).FirstOrCreate(&user)
+
+  ```
+
+## Query Modifier usage mapping
+
+| Function | 	Use Case | Works With |
+|-|-|-|
+| Model | Used when working with a GORM model	| `.Where(),` `.Count(),` `.Find(),` `.Select()` |
+| Table | Used when working with raw tables instead of GORM models | `.Scan(),` `.Select(),` `.Where()` |
+| Find | Fetch multiple rows | `.Where(),` `.Order(),` `.Group(),` `.Limit()` |
+| First | Fetch the first row (ordered by primary key) | `.Where(),` `.Order()` |
+| Count | Count records | `.Where(),` `.Group(),` `.Having()` |
+| Distinct | Fetch unique values | `.Select(),` `.Find()` |
+| Attrs | Set default values if the record doesn't exist | `.FirstOrCreate()` |
