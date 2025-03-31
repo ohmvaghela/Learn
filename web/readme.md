@@ -1,23 +1,31 @@
 # WEB
-- [API](./readme.md#api)
-    - [Basic HTTP Methods](./readme.md#basic-http-methods)
-    - [Idempotency](./readme.md#idempotency)
-    - [Different Request Body](./readme.md#different-request-body)
-    - [Ways to send Token in header](./readme.md#ways-to-send-token-in-header)
-    - [Common Status code](./readme.md#common-status-code)
-    - [API versioning](./readme.md#api-versioning)
-    - [Rate limiting](./readme.md#rate-limiting)
-    - [Pagination](./readme.md#pagination)
-- [CSRF (Cross-Site Resource Forgery)](./readme.md#csrf-cross-site-resource-forgery)
-- [gRPC (Google Remote Procedure Call)](./readme.md#grpc-google-remote-procedure-call)
-- [JWT](./readme.md#jwt)
-    - [Authorisation v/s Authentication](./readme.md#authorisation-vs-authentication)
-    - [Ways of using JWT](./readme.md#ways-of-using-jwt)
-- [Browser Storage](./readme.md#browser-storage)
-    - [Browser has three types of storages](./readme.md#browser-has-three-types-of-storages)
-    - [Local Storage & Session Storage](./readme.md#local-storage--session-storage)
-    - [CORS (Cross-Origin Resource Sharing)](./readme.md#cors-cross-origin-resource-sharing)
-    - [Cookie Attributes](./readme.md#cookie-attributes)
+
+- [WEB](#web)
+- [API](#api)
+  - [Basic HTTP Methods](#basic-http-methods)
+  - [Idempotency](#idempotency)
+  - [Different Request Body](#different-request-body)
+  - [Ways to send Token in header](#ways-to-send-token-in-header)
+  - [Common Status code](#common-status-code)
+  - [API versioning](#api-versioning)
+  - [Rate limiting](#rate-limiting)
+  - [Pagination](#pagination)
+- [CSRF (Cross-Site Resource Forgery)](#csrf-cross-site-resource-forgery)
+- [gRPC (Google Remote Procedure Call)](#grpc-google-remote-procedure-call)
+- [JWT](#jwt)
+  - [Authorisation v/s Authentication](#authorisation-vs-authentication)
+  - [Ways of using JWT](#ways-of-using-jwt)
+- [Browser Storage](#browser-storage)
+  - [Browser has three types of storages](#browser-has-three-types-of-storages)
+  - [Local Storage \& Session Storage](#local-storage--session-storage)
+  - [CORS (Cross-Origin Resource Sharing)](#cors-cross-origin-resource-sharing)
+  - [Cookie Attribures](#cookie-attribures)
+    - [Core Attributes](#core-attributes)
+    - [Security and Privacy Attribute](#security-and-privacy-attribute)
+- [OAuth2](#oauth2)
+  - [Types of Grants](#types-of-grants)
+
+
 # API
 ## Basic HTTP Methods
 - **GET:**
@@ -313,3 +321,32 @@
   - Partitioned?
   - Priority?
 
+# OAuth2
+- industry-standard protocol for authorization
+- allows applications to securely access resources on behalf of a user without exposing their credentials
+<h3> Terminologies </h3>
+  
+  - **Resource Owner** (User)
+    - The resource owner is the user who owns the data or resources
+  - **Client**
+    - The application into which user is trying to login
+  - **Resource Server**
+    - The server that hosts and protects user resources.
+  - **Authorization Server**
+    - The server that `authenticate` user
+    - This server issues access tokens after verifying user consent.
+  - **Access Token**
+    - A short-lived credential used by the client to access resources on behalf of the user.
+    - Generally stored in browser memory like HttpOnly cookie
+  - **Refresh Token** 
+    - A long-lived credential used to obtain new access tokens without requiring the user to log in again.
+    - Refresh tokens should always be stored securely on the backend server/database
+
+## Types of Grants
+1. **Authorization Code Grants (Most Secure)**
+2. Implicit Grants (Depriciated)
+3. Client Credential Grants
+4. Resource Owner Password Grant (Can be Security Issue)
+5. Authorization Code with PKCE (For mobile and SPA(Single Page Applications))
+
+  <img src="images/image-2.png"/>
