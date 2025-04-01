@@ -27,7 +27,10 @@
       - [bi-directional and directional channel](#bi-directional-and-directional-channel)
       - [To close channel](#to-close-channel)
       - [Accessing the buffer](#accessing-the-buffer)
+    - [Pool](#pool)
     - [Worker Pool](#worker-pool)
+    - [Cond (Condition Variable)](#cond-condition-variable)
+    - [Sync Once](#sync-once)
   - [Error Handling](#error-handling)
     - [Panic and Recover](#panic-and-recover)
   - [IO Reader/Writer](#io-readerwriter)
@@ -599,6 +602,55 @@ for i:=0;i<10;i++{jobs<-i}
 ```
 
 
+### Pool
+- When object creation and deletion happens rapidly
+- So to save memory, and garbage collection we use `Sync.Pool`, it allows reuse of objects
+- If not object is left then new object is created else object left is given to reuse
+- Syntax
+  
+  ```go
+  type Pool struct {
+  	New func() any
+  }  
+  func (p *Pool) Get() any
+  func (p *Pool) Put(x any)
+  ```
+
+- Use
+
+  ```go
+  type HeavyStruct struct{
+    data string
+  }
+  // Creatimg single pool
+  var pool = sync.Pool{
+    New : func() any {
+      return &HeavyStruct{}
+    }
+  }
+
+  // Creating pool with mutliple instances
+  func MultiStructPool(cap int) *sync.Pool {
+    p := &sync.Pool{
+      New : func() any {
+        return &HeavyStruct{}
+      }
+    }
+    for i:=0;i<cap;i++{
+      p.Put(&HeavyStruct{})
+    }
+  }
+
+  func main(){
+    pool := MultiStructPool(5)
+    for i:=0;i<10;i++{
+      item := pool.Get().(*HeavyStruct)
+      fmt.Println(item)
+      pool.Put(item)
+    }
+  }
+  ```
+
 ### Worker Pool
 - Parallel processing of jobs
 - Say we create multiple works to process a channel buffer
@@ -625,6 +677,117 @@ for j := 1; j <= numJobs; j++ {
 >   jobs <- j
 > }
 > ```
+
+### Cond (Condition Variable)
+- Similar to `Condition_Variable` in CPP
+- It has
+  - `Locker` : `Sync.Mutex` or `Sync.RWMutex`
+  - `Wait()` : Wait for signal
+  - `Signal()` : Notify One
+  - `BroadCast()` : Notify All
+- Creating Condition Variable
+
+```go
+// mutex to be used
+mutex := sync.Mutex
+// Create condition_variable cv
+cv := sync.NewCond(&mutex)
+// Waiting on cv
+cv.Wait()
+// To lock/unlock mutex with cond
+cv.L.Lock()
+cv.L.Unlock()
+```
+
+<details>
+  <summary style="font-size:2vw"> Consumer-Producer Problem </summary>
+
+  ```go
+  package main
+
+  import (
+    "fmt"
+    "sync"
+  )
+
+  const bufferCapacity = 5
+
+  var (
+    sharedBuffer  = make([]int, bufferCapacity)
+    readIndex     = 0
+    writeIndex    = 0
+    itemCount     = 0
+    bufferMutex   sync.Mutex
+    bufferNotFull = sync.NewCond(&bufferMutex)
+    bufferNotEmpty = sync.NewCond(&bufferMutex)
+  )
+
+  func produceItem(itemToProduce int) {
+    bufferNotFull.L.Lock()
+    defer bufferNotFull.L.Unlock()
+
+    for itemCount == bufferCapacity {
+      bufferNotFull.Wait()
+    }
+
+    sharedBuffer[writeIndex] = itemToProduce
+    writeIndex = (writeIndex + 1) % bufferCapacity
+    itemCount++
+
+    bufferNotEmpty.Signal()
+  }
+
+  func consumeItem() int {
+    bufferNotEmpty.L.Lock()
+    defer bufferNotEmpty.L.Unlock()
+
+    for itemCount == 0 {
+      bufferNotEmpty.Wait()
+    }
+
+    itemConsumed := sharedBuffer[readIndex]
+    readIndex = (readIndex + 1) % bufferCapacity
+    itemCount--
+
+    bufferNotFull.Signal()
+    return itemConsumed
+  }
+
+  func main() {
+    go func() {
+      for itemNumber := 1; itemNumber < 10; itemNumber++ {
+        produceItem(itemNumber)
+        fmt.Println("Produced:", itemNumber)
+      }
+    }()
+
+    go func() {
+      for {
+        consumedItem := consumeItem()
+        fmt.Println("Consumed:", consumedItem)
+      }
+    }()
+
+    select {}
+  }
+  ```
+</details>
+
+### Sync Once
+- For Piece of code to be executed once
+
+```go
+// create global variable
+var myOnce sync.Once
+// Pass a function to `Do` method without any input output
+myOnce.Do(
+  func(){
+    SomethingOnce(i)
+  }
+)
+
+```
+
 
 ## Error Handling
 - Error is an built in interface
