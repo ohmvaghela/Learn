@@ -11,13 +11,14 @@
   - [Map](#map)
     - [Initializing Map](#initializing-map)
     - [Operations on Map](#operations-on-map)
+  - [IOTA / Enums](#iota--enums)
   - [Struct](#struct)
     - [Nested Struct](#nested-struct)
   - [Interface](#interface)
     - [Functional Interface](#functional-interface)
     - [Empty Interface](#empty-interface)
     - [Interface inheritence](#interface-inheritence)
-  - [Custom Types in Go](#custom-types-in-go)
+  - [Custom Types/ ***Derived Types*** in Go](#custom-types-derived-types-in-go)
   - [GoRoutines](#goroutines)
     - [Make a function goRoutine](#make-a-function-goroutine)
     - [WaitGroup](#waitgroup)
@@ -257,6 +258,26 @@ for key, value := range myMap {}
 fmt.Println("Length:", len(mp)) 
 ```
 
+## IOTA / Enums
+- Golang does not have enums
+- So we use iota instead, they are like increamental values
+
+```go
+type size int
+const (
+  small size = iota
+  medium
+  large
+  extraLarge
+)
+
+func main(){
+  fmt.Println(small, medium, large, extraLarge)
+  // 0, 1, 2, 3
+}
+
+```
+
 ## Struct
 ```go
 // basic syntax
@@ -419,13 +440,13 @@ type Pet interface {
 }
 ```
 
-## Custom Types in Go
-- Go allows you to create custom types, which can enhance code readability and type safety. Here's a breakdown of the examples:
+## Custom Types/ ***Derived Types*** in Go
+- Go allows you to create derived types, which can enhance code readability and type safety. Here's a breakdown of the examples:
 
-**1. Custom Type Based on a Built-in Type (String)**
+**1. Derived Type Based on a Built-in Type (String)**
 
-- You can create custom types based on existing types like `string`, `int`, etc.
-- This allows you to add methods specific to your custom type.
+- You can create derived types based on existing types like `string`, `int`, etc.
+- This allows you to add methods specific to your derived type.
 
 ```go
 type extendedString string
@@ -447,8 +468,8 @@ func main() {
 }
 ```
 
-**2. Custom Function Type**
-- You can define custom function types, which can be useful for working with functions as first-class citizens.
+**2. Derive Function Type**
+- You can define derive function types, which can be useful for working with functions as first-class citizens.
 - This allows you to create specialized function signatures and add methods to function types
 
 ```go
