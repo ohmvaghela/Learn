@@ -16,6 +16,9 @@
     - [Get unsigned token](#get-unsigned-token)
   - [Validating JWT token](#validating-jwt-token)
 - [OAuth2.0](#oauth20)
+  - [Authorization Code Request](#authorization-code-request)
+  - [`Third-Party Authorization Server` calls client callback with `authorization code`](#third-party-authorization-server-calls-client-callback-with-authorization-code)
+  - [Client Request for resources from Resource server](#client-request-for-resources-from-resource-server)
 
 
 # Bcrypt
@@ -338,3 +341,204 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 ```
 
 # OAuth2.0
+- It has config struct which has both client and auth-server info
+- Syntax
+
+  ```go
+  type Config struct {
+  	// Third Party app specific
+  	ClientID string
+  	ClientSecret string
+
+    // oauth2.Endpoint
+    // Details about third party Urls
+  	Endpoint Endpoint
+
+    // client callback url : where auth-server calls with auth-code
+  	RedirectURL string
+
+  	// Resources to be requested
+  	Scopes []string
+  }
+
+  // Example endpoint
+  var GitHub = oauth2.Endpoint{
+	AuthURL:       "https://github.com/login/oauth/authorize",
+	TokenURL:      "https://github.com/login/oauth/access_token",
+	DeviceAuthURL: "https://github.com/login/device/code",
+  }
+  ```
+
+- Example Config file
+
+  ```go
+  githubConfig: &oauth2.Config{
+  	ClientID:     "GITHUB_CLIENT_ID",
+  	ClientSecret: "GITHUB_CLIENT_SECRET",
+  	RedirectURL:  "http://localhost:8080/auth/github/callback",
+  	Scopes:       []string{"user:email"},
+  	Endpoint:     github.Endpoint,
+  }
+  ```
+
+## Authorization Code Request
+- When user selects Third-party app to authenticate itself it triggers `oAuthHandler`
+- `OAuthHandler` generates url to call `authorization server` to request `authorization code`
+- It is generated using
+
+  ```go
+  // Syntax
+  // state : token that is used to prevent CSRF attack
+  func (c *Config) AuthCodeURL(state string, opts ...AuthCodeOption) string
+
+  // Uses
+  // 1. oauth2.AccessTypeOffline : requests a refresh token along with the access token.
+  url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+  // 2. oauth2.AccessTypeOnline : No refresh token provided, access token only for current sessions
+  url := config.AuthCodeURL("state-token", oauth2.AccessTypeOnline)
+
+  // Additional Prompt
+  // prompt:concent : Forces user consent screen every time, Used when switching accounts.
+	url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent"))
+  ```
+
+- Using this url is generated
+
+  ```bash
+  https://github.com/login/oauth/authorize?access_type=offline
+    client_id=Ov23liJBVEBB87xNNsmm
+    prompt=consent
+    redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fauth%2Fgithub%2Fcallback
+    response_type=code
+    scope=user%3Aemail
+    state=state-token
+  ```
+
+- And then user is redirected to third-party app's login and conent page
+
+  ```go
+  // http.StatusTemporaryRedirect : 307
+	c.Redirect(http.StatusTemporaryRedirect, url)
+  ```
+
+## `Third-Party Authorization Server` calls client callback with `authorization code`
+- It has auth code
+
+  ```go
+	code := c.Query("code")
+  ```
+- Then using it access token and other details are extracted by making post request to resource server
+  - For getting token in go
+
+  ```go
+	token, err := config.Exchange(context.Background(), code)
+  ```
+
+  - Internal POST request looks like
+
+  ```bash
+  POST /login/oauth/access_token HTTP/1.1
+  Host: github.com
+  Content-Type: application/x-www-form-urlencoded
+    client_id=your-client-id&
+    client_secret=your-client-secret&
+    code=code
+  ```
+
+- And then response like following is recieved internally and converted to `oauth2.Token`
+  
+  ```json
+  {
+    "access_token": "ya29.a0AfH6S...",
+    "expires_in": 3600,
+    "refresh_token": "1//0g5sdR...",
+    "scope": "email profile",
+    "token_type": "Bearer"
+  }
+  ```
+
+- The converted `oauth2.Token` looks like
+
+  ```go
+  // syntax
+  type Token struct {
+  	AccessToken string `json:"access_token"`
+  	TokenType string `json:"token_type,omitempty"`
+  	RefreshToken string `json:"refresh_token,omitempty"`
+  	Expiry time.Time `json:"expiry,omitempty"`
+  	ExpiresIn int64 `json:"expires_in,omitempty"`
+  }
+  // Actual token
+  Token :  &{
+    access_token_string // Access token 
+    bearer  // Token type
+    0001-01-01 00:00:00 +0000 UTC // Expiry      
+    // idk what and why it this
+    map[ 
+      access_token:[
+        access_token_string
+      ] 
+      scope:[
+        user:email
+      ] 
+      token_type:[
+        bearer
+      ]
+    ] 
+    }
+  ```
+
+## Client Request for resources from Resource server
+- To do the same `http.Client` is created and details are attached using
+
+  ```go
+	client := config.Client(context.Background(), token)
+  ```
+
+- List of details attached are 
+
+  ```go
+  &http.Client{
+      Transport: &oauth2.Transport{
+          Base: http.DefaultTransport,   // Uses default transport for networking.
+          Source: oauth2.StaticTokenSource(token), // Fetches token when needed.
+      },
+  }
+  ```
+
+- Then request is send
+
+  ```go
+	response, err := client.Get(userInfoURL)
+  ```
+
+  - Now the request would look like 
+  
+  ```yaml
+  GET /oauth2/v2/userinfo?fields=email,name HTTP/1.1
+  Host: www.googleapis.com
+  Authorization: Bearer ya29.a0AfH6SM...
+  User-Agent: Go-http-client/1.1
+  Accept-Encoding: gzip
+  ```
+
+- And then data is extraced from the response
+
+  ```go
+	client := config.Client(context.Background(), token)
+	response, err := client.Get(userInfoURL)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Failed to fetch user info: %v", err)
+		return
+	}
+	defer response.Body.Close()
+
+	var userInfo map[string]interface{}
+	err = json.NewDecoder(response.Body).Decode(&userInfo)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to decode user info")
+		return
+	}
+
+	c.JSON(http.StatusOK, userInfo)
+  ```
