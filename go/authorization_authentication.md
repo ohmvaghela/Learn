@@ -15,6 +15,7 @@
     - [Generating token in 2 steps](#generating-token-in-2-steps)
     - [Get unsigned token](#get-unsigned-token)
   - [Validating JWT token](#validating-jwt-token)
+- [OAuth2.0](#oauth20)
 
 
 # Bcrypt
@@ -335,3 +336,5 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
  	return token, claims, nil 
 }
 ```
+
+# OAuth2.0
