@@ -1,6 +1,7 @@
 # Net/Http
 - [Net/Http](#nethttp)
   - [Mux (Multiplexer)](#mux-multiplexer)
+- [Handling Incommig Request](#handling-incommig-request)
   - [Handling HTTP request](#handling-http-request)
     - [Using functional implementation of http.Hanlder](#using-functional-implementation-of-httphanlder)
     - [Using a Struct as an HTTP Handler](#using-a-struct-as-an-http-handler)
@@ -23,10 +24,18 @@
     - [Converting JSON/JSON array to go data types](#converting-jsonjson-array-to-go-data-types)
     - [Converting Request Body to JSON](#converting-request-body-to-json)
     - [Sending JSON response](#sending-json-response)
+- [Making a request](#making-a-request)
+  - [Defining request](#defining-request)
+  - [Making Request](#making-request)
+    - [client.Do](#clientdo)
+    - [Client.Go / Client.Post / Client.Head](#clientgo--clientpost--clienthead)
+    - [Full code](#full-code)
 
 
 ## Mux (Multiplexer)
    device that enables the simultaneous transmission of several messages or signals over one communications channel
+
+# Handling Incommig Request
 
 ## Handling HTTP request
 - Go provide `Handler` interface to process HTTP request
@@ -655,3 +664,142 @@ func createPersonHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
+# Making a request
+
+- To make a request we can use `http.Client` as shown
+
+  ```go
+  client := &http.Client{Timeout : 10*time.Second}
+  ```
+
+## Defining request
+  
+  - Syntax
+  
+  ```go
+  // With context
+  func http.NewRequestWithContext(ctx context.Context, method string, url string, body io.Reader) (*http.Request, error)
+
+  // Without context
+  func http.NewRequest(method string, url string, body io.Reader) (*http.Request, error)
+  ```
+
+  - Use
+  
+  ```go
+  context := context.Background()
+  // Request with context
+  req,err := http.NewRequestWithContext(context, http.MethodGet, "/url", nil)
+  req,err := http.NewRequest(http.MethodGet, "/url", nil)
+  ```
+
+  - Request with IO reader
+
+  ```go
+  // Parsing Map
+  type url.Values map[string][]string
+  data := url.Values{
+      "key1": {"value1"},
+      "key2": {"value2"},
+  }
+  // returns string
+  encodedData := data.Encode()
+
+  req, err := http.NewRequestWithContext(
+    context,
+    http.MethodPost, 
+    "https://example.com/submit", 
+    strings.NewReader(encodedData)
+  )
+
+  // Passing JSON data
+  type Payload struct {
+    Name  string `json:"name"`
+    Value int    `json:"value"`
+  }
+
+  payload := Payload{Name: "example", Value: 123}
+  payloadBytes, err := json.Marshal(payload)
+  if err != nil {
+      return nil, err
+  }
+
+  req, err := http.NewRequestWithContext(
+    context,
+    http.MethodPost, 
+    "https://example.com/api", 
+    bytes.NewBuffer(payloadBytes)
+  )
+  ```
+
+- Setting Headers
+  
+  ```go
+  req.Header.Set("Content-Type", "application/json")
+  ```
+
+## Making Request
+
+### client.Do
+- Used when we have defined `*http.Request`
+
+```go
+// Syntax
+func (c *http.Client) Do(req *http.Request) (*http.Response, error)
+// use
+response, err := client.Do(req)
+```
+
+### Client.Go / Client.Post / Client.Head
+
+```go
+// Syntax
+func Get(url string) (resp *http.Response, err error)
+func Post(url string, contentType string, body io.Reader) (resp *http.Response, err error)
+func Head(url string) (resp *http.Response, err error)
+func PostForm(url string, data url.Values) (resp *http.Response, err error)
+type url.Values map[string][]string
+
+
+// use
+response, err := client.Get("/url")
+response, err := client.Post("/url", "application/json", nil)
+response, err := client.Head("/url")
+response, err := client.PostForm("/url", map[string][]string{
+  "key1" : ["value10","value11"],
+  "key2" : ["value20","value21"]
+})
+```
+
+- We need to close the `IO.readCloser`, if there is huge chunk of data then after stream is read then the stream needs to be closed 
+
+```go
+resposne.Body.Close()
+```
+
+### Full code
+
+```go
+func main() {
+  mycontext := context.Background() // Create a background context.
+  client := &http.Client{Timeout: 10 * time.Second} // Create HTTP client with 10-second timeout.
+
+  req, err := http.NewRequestWithContext(
+    mycontext, 
+    http.MethodGet, 
+    "https://example.com", 
+    nil
+  ) // Create GET request with context.
+  if err != nil {return}
+
+  response, err := client.Do(req) // Send the HTTP request.
+  if err != nil {return}
+
+  defer response.Body.Close() // Close the response body when the function returns.
+
+  body, err := io.ReadAll(response.Body) // Read the response body.
+  if err != nil {return}
+
+  fmt.Println(string(body)) // Print the response body.
+}
+```

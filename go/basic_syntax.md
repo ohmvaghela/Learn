@@ -38,6 +38,11 @@
     - [Converting JSON/JSON array to go data types](#converting-jsonjson-array-to-go-data-types)
     - [Converting Request Body to JSON](#converting-request-body-to-json)
     - [Sending JSON response](#sending-json-response)
+  - [Context](#context)
+    - [Key Concepts](#key-concepts)
+    - [Functions and Types](#functions-and-types)
+    - [Context Methods](#context-methods)
+    - [Example Usage](#example-usage)
   - [Misc](#misc)
     - [Reflect](#reflect)
 
@@ -970,6 +975,165 @@ func createPersonHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
+## Context 
+
+- It is used handle functions that
+  - Needs to be stopped gracefully
+  - Long time taking functions that needs to be ended within time limit
+  - Carry small bits of info
+- It is like a decrator pattern
+  - Create an empty, non-nil root context using `background` or `todo`
+  - Then add topping to it like `context.WithValue`, `context.WithTimeout`, and `context.WithCancel`
+  - They are `non-mutable`
+  
+### Key Concepts
+
+- **Context:**
+  - An interface that carries `deadlines`, `cancellation signals`, and `other request-scoped values` across API boundaries.
+  - Contexts are `immutable`; they can only be derived from existing contexts.
+
+- **Cancellation:**
+  - Contexts allow you to signal that an operation should be canceled.
+  - This is useful for gracefully shutting down long-running operations or handling timeouts.
+
+- **Deadlines:**
+  - Contexts can have deadlines, which specify when an operation should be canceled.
+  - This is useful for enforcing timeouts on network requests or other time-sensitive operations.
+
+- **Request-Scoped Values:**
+  - Contexts can carry `key-value` pairs that are scoped to a particular request.
+  - This is useful for passing request-specific data between functions and goroutines.
+
+### Functions and Types
+
+- **`context.Context`:**
+  - Base interface
+  
+  ```go
+  type Context interface {
+  	Deadline() (deadline time.Time, ok bool)
+  	Done() <-chan struct{}
+  	Err() error
+  	Value(key any) any
+  }
+  ```
+
+- **`context.Background()`:**
+  - Returns a `non-nil`, `empty context`.
+  - It's the `root context` for `all other contexts`.
+  - It is typically used in the `main` function, initial setup, and incoming requests.
+  - ```go
+      // Syntax
+      func Background() Context
+      // Use
+      backgroundCtx := context.Background()
+    ```
+
+- **`context.TODO()`:**
+  - Returns a `non-nil`, `empty context`.
+  - Used when you're not sure which context to use or when the context is not yet available.
+  - It signals that you intend to replace it with a proper context later.
+  - ```go
+      // Syntax
+      func TODO() Context
+      // Use
+      todoCtx := context.TODO()
+    ```
+
+- **`context.WithValue(parent context.Context, key, val interface{}) context.Context`:**
+    - Creates a new context that carries a `key-value pair`.
+    - The key and value can be of any type.
+    - Use sparingly; prefer passing values as function arguments when possible.
+    - ```go
+      // Syntax
+      func WithValue(parent Context, key, val any) Context
+      // Use
+      ctxWithValue := context.WithValue(parentCtx, "requestID", "12345")
+      ```
+
+- **`context.WithCancel(parent context.Context) (ctx context.Context, cancel context.CancelFunc)`:**
+  - Creates a new context that can be canceled.
+  - Returns the new context and a `cancel` function.
+  - Calling the `cancel` function cancels the context and all its derived contexts.
+  - ```go
+      // Syntax
+      func WithCancel(parent Context) (ctx Context, cancel CancelFunc)
+      // Use
+      ctxWithCancel, cancel := context.WithCancel(parentCtx)
+      defer cancel() // Cancel when we are finished consuming resources.
+    ```
+
+- **`context.WithDeadline(parent context.Context, d time.Time) (context.Context, context.CancelFunc)`:**
+  - Creates a new context that will be canceled at the specified deadline.
+  - Returns the new context and a `cancel` function.
+  - ```go
+      // Syntax
+      func WithDeadline(parent Context, d time.Time) (Context, CancelFunc)
+      // Use
+      deadline := time.Now().Add(10 * time.Second)
+      ctxWithDeadline, cancel := context.WithDeadline(parentCtx, deadline)
+      defer cancel()
+      ```
+
+- **`context.WithTimeout(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc)`:**
+    - Creates a new context that will be canceled after the specified timeout.
+    - Returns the new context and a `cancel` function.
+    - ```go
+        // Syntax
+        func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)
+        // Use
+        ctxWithTimeout, cancel := context.WithTimeout(parentCtx, 5 * time.Second)
+        defer cancel()
+        ```
+
+### Context Methods
+
+- **`Done() <-chan struct{}`:**
+    - Returns a channel that is closed when the context is canceled or its deadline expires.
+    - Use `select` to listen for cancellation signals.
+
+- **`Err() error`:**
+    - Returns an error indicating why the context was canceled.
+    - Returns `nil` if the context is not canceled.
+    - Possible errors:
+        - `context.Canceled`: The context was canceled.
+        - `context.DeadlineExceeded`: The context's deadline expired.
+
+- **`Deadline() (deadline time.Time, ok bool)`:**
+    - Returns the context's deadline and a boolean indicating whether a deadline is set.
+
+- **`Value(key interface{}) interface{}`:**
+    - Returns the value associated with the given key in the context.
+
+### Example Usage
+
+```go
+func process(ctx context.Context) {
+  select {
+  case <-time.After(3 * time.Second):
+    fmt.Println("Process completed")
+  case <-ctx.Done():
+    fmt.Println("Process canceled:", ctx.Err())
+  }
+}
+
+func main() {
+  ctx, cancel := context.WithTimeout(context.Background(), 2 * time.Second)
+  defer cancel()
+
+  go process(ctx)
+
+  time.Sleep(4 * time.Second)
+  fmt.Println("Main function finished")
+}
+
+```
+- Output
+
+```bash
+Process canceled: context deadline exceeded
+Main function finished
+```
 
 ## Misc
 
