@@ -30,6 +30,13 @@
     - [client.Do](#clientdo)
     - [Client.Go / Client.Post / Client.Head](#clientgo--clientpost--clienthead)
     - [Full code](#full-code)
+- [http.Transport, http.RoundTripper](#httptransport-httproundtripper)
+  - [RoundTripper](#roundtripper)
+  - [Transport](#transport)
+  - [Example Uses](#example-uses)
+    - [1. http.DefaultTransport / Custom http.Transport](#1-httpdefaulttransport--custom-httptransport)
+    - [2. Wrapping Multiple Transport](#2-wrapping-multiple-transport)
+    - [3. Logging Request and response using RoundTripper](#3-logging-request-and-response-using-roundtripper)
 
 
 ## Mux (Multiplexer)
@@ -803,3 +810,244 @@ func main() {
   fmt.Println(string(body)) // Print the response body.
 }
 ```
+
+# http.Transport, http.RoundTripper 
+
+## RoundTripper
+- RoundTrip executes a **single** HTTP transaction
+- And returns response
+- It does not handle high level protocals like redirects, authentication, or cookies.
+- Higher-level logic should be handled by http.Client, not RoundTripper
+  
+  ```go
+  type RoundTripper interface {
+    // returns error==nil if response is recieved
+    RoundTrip(*Request) (*Response, error)
+  }
+  ```
+
+> [!IMPORTANT]
+> - RoundTrip should not attempt to interpret the response
+> - RoundTrip should not modify the request
+>   - Except closing the Request's Body
+>   - Adding Headers
+
+> [!CAUTION]
+> <h3> A RoundTripper must be safe for concurrent use by multiple goroutines <h3>
+
+## Transport
+- `http.Transport` is a default implementation of `http.RoundTripper` 
+- Generally when creating custom `Transport` or custom implementaion `RoundTripper` we couple them with defaultTransport or Base Transport using Decorator Pattern
+
+  ```go
+  // Basic implementation of RoundTripper
+  type Transport struct {
+      Proxy func(*Request) (*url.URL, error)
+      DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+      TLSClientConfig *tls.Config
+      DisableKeepAlives bool
+      MaxIdleConns int
+      MaxIdleConnsPerHost int
+      ResponseHeaderTimeout time.Duration
+  }
+  
+  // Default Implementation of Transport
+  var DefaultTransport RoundTripper = &Transport{
+  	Proxy: ProxyFromEnvironment,
+  	DialContext: defaultTransportDialContext(&net.Dialer{
+  		Timeout:   30 * time.Second,
+  		KeepAlive: 30 * time.Second,
+  	}),
+  	ForceAttemptHTTP2:     true,
+  	MaxIdleConns:          100,
+  	IdleConnTimeout:       90 * time.Second,
+  	TLSHandshakeTimeout:   10 * time.Second,
+  	ExpectContinueTimeout: 1 * time.Second,
+  }
+  ```
+
+## Example Uses
+
+### 1. http.DefaultTransport / Custom http.Transport 
+
+```go
+func createNewRequestAndPrintBody(client *http.Client){
+    req, _ := http.NewRequest("GET", "https://httpbin.org/get", nil)
+    resp, err := client.Do(req)
+    if err != nil {return}
+    
+    // Print Body
+    body, _ := ioutil.ReadAll(resp.Body)
+    fmt.Println(string(body))
+}
+
+func main() {
+    // 1. Create a custom Transport with timeout and TLS settings
+    transport := &http.Transport{
+        // Ignore TLS verification
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, 
+        MaxIdleConns:    10,
+        IdleConnTimeout: 30 * time.Second,
+    }
+    // Rest functionalities of http.Transport are ignored
+
+    // 2. Using DefaultTransport
+    transport := http.DefaultTransport
+
+    // Creating http Client 
+    client := &http.Client{Transport: transport}
+
+    // Creating and sending request and recieving response 
+    createNewRequestAndPrintBody(client)
+}
+```
+
+### 2. Wrapping Multiple Transport
+
+- Custom RoundTrippers
+
+```go
+type CustomRoundTripper1 struct {
+  baseTransport http.RoundTripper
+}
+
+func (c *CustomRoundTripper1) RoundTrip(req *http.Request) (*http.Response, error){
+  // User Logic
+  // Forwarding request to underlying transporter
+  response, err := c.baseTransport.RoundTrip(req)
+  // Handling error
+  // Returning response 
+  return response, err
+}
+type CustomRoundTripper2 struct {
+  baseTransport http.RoundTripper
+}
+
+func (c *CustomRoundTripper2) RoundTrip(req *http.Request) (*http.Response, error){
+  // User Logic
+  // Forwarding request to underlying transporter
+  response, err := c.baseTransport.RoundTrip(req)
+  // Handling error
+  // Returning response 
+  return response, err
+}
+```
+
+- Main function 
+
+  ```go
+  func main() {
+      client := &http.Client{
+        Transport: &CustomRoundTripper1{
+          Transport: &CustomRoundTripper2{
+            Transport: http.DefaultTransport, // Use the default transport
+          },
+        },
+      }
+
+    // Creating and sending request and recieving response 
+    createNewRequestAndPrintBody(client)
+  }
+  ```
+### 3. Logging Request and response using RoundTripper
+
+- LoggingRoundTripper
+
+  ```go
+  type loggingRoundTripper struct {
+  	nextRoundTripper http.RoundTripper
+  	logger           io.Writer
+  }
+  ```
+
+- RoundTrip implementation
+
+  ```go
+  func (lrt *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+    // Prints request before sending
+  	fmt.Fprintf(lrt.logger, "[Request] %s %s\n", req.Method, req.URL.String())
+
+  	// Perform the request using the next RoundTripper in the chain
+  	resp, err := lrt.nextRoundTripper.RoundTrip(req)
+  	if err != nil {
+  		fmt.Fprintf(lrt.logger, "[Error] Request failed: %v\n", err)
+  		return nil, err
+  	}
+
+  	// Read response body for logging
+  	readBody(resp, lrt.logger, req.Method)
+
+  	return resp, nil
+  }
+  ```
+
+- Body reader
+
+  ```go
+  func readBody(resp *http.Response, logger io.Writer, httpMethod string) {
+  	var bodyBuf bytes.Buffer
+  	_, err := io.Copy(&bodyBuf, resp.Body)
+  	if err != nil {return}
+
+  	// Restore the response body so that it can be read again
+  	resp.Body = io.NopCloser(bytes.NewReader(bodyBuf.Bytes()))
+
+  	// Log the response details
+  	fmt.Fprintf(logger, "[Response] %s %d %s \n", httpMethod, resp.StatusCode, http.StatusText(resp.StatusCode))
+  	fmt.Fprintf(logger, "[Response Body] %s\n", bodyBuf.String())
+  }
+  ```
+
+- Main funciton
+
+  ```go
+  func main() {
+  	// Create a logging transport that logs only to stdout
+  	loggingTransport := &loggingRoundTripper{
+  		nextRoundTripper: http.DefaultTransport,
+  		logger:           os.Stdout,
+  	}
+
+  	// Create an HTTP client with the logging transport
+  	client := &http.Client{
+  		Transport: loggingTransport,
+  	}
+
+    // Create request
+    req, _ := http.NewRequest("GET", "https://httpbin.org/get", nil)
+  	// Send request 
+    // transport will log request and send request to url
+    // Then will recieve response and print body and return resposne
+    resp, err := client.Do(req)
+
+    // Error handling and closing body
+    if err != nil {return}
+  	defer resp.Body.Close()
+  }
+  ```
+
+- Output
+
+  ```yaml
+  [Request] GET https://httpbin.org/get
+  [Response] GET 200 OK 
+  [Response Body] {
+    "args": {}, 
+    "headers": {
+      "Accept-Encoding": "gzip", 
+      "Host": "httpbin.org", 
+      "User-Agent": "Go-http-client/2.0", 
+      "X-Amzn-Trace-Id": "Root=1-67ecfbac-7e8cabae34096e7a218b3cde"
+    }, 
+    "origin": "49.36.88.42", 
+    "url": "https://httpbin.org/get"
+  }
+  ```
+
+> [!NOTE]
+> - Uses of RoundTripper
+>   1. Custom Logging & Monitoring
+>   2. Custom Authentication (Adding Headers)
+>   3. Retry Mechanism for Unstable Networks (Limiting Client retries)
+>   4. Caching Responses (Reducing API Calls)
+
