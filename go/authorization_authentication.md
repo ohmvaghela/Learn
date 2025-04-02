@@ -17,8 +17,9 @@
   - [Validating JWT token](#validating-jwt-token)
 - [OAuth2.0](#oauth20)
   - [Authorization Code Request](#authorization-code-request)
-  - [`Third-Party Authorization Server` calls client callback with `authorization code`](#third-party-authorization-server-calls-client-callback-with-authorization-code)
-  - [Client Request for resources from Resource server](#client-request-for-resources-from-resource-server)
+  - [`Third-Party Authorization Server` calls `client callback url` with `authorization code` in query params](#third-party-authorization-server-calls-client-callback-url-with-authorization-code-in-query-params)
+  - [`Client(myApp)` Request for resources from `Resource server`](#clientmyapp-request-for-resources-from-resource-server)
+  - [Full working code](#full-working-code)
 
 
 # Bcrypt
@@ -341,7 +342,7 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 ```
 
 # OAuth2.0
-- It has config struct which has both client and auth-server info
+- It has `config` struct which has both client and auth-server info
 - Syntax
 
   ```go
@@ -386,26 +387,37 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 - `OAuthHandler` generates url to call `authorization server` to request `authorization code`
 - It is generated using
 
-  ```go
-  // Syntax
-  // state : token that is used to prevent CSRF attack
-  func (c *Config) AuthCodeURL(state string, opts ...AuthCodeOption) string
+  - Syntax
 
-  // Uses
-  // 1. oauth2.AccessTypeOffline : requests a refresh token along with the access token.
-  url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-  // 2. oauth2.AccessTypeOnline : No refresh token provided, access token only for current sessions
-  url := config.AuthCodeURL("state-token", oauth2.AccessTypeOnline)
+    ```go
+    // Syntax
+    // state : token string that is used to prevent CSRF attack
+    func (c *Config) AuthCodeURL(state string, opts ...AuthCodeOption) string
+    ```
 
-  // Additional Prompt
-  // prompt:concent : Forces user consent screen every time, Used when switching accounts.
-	url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent"))
-  ```
+  - Use
 
-- Using this url is generated
+    ```go
+    // Uses
+    // 1. oauth2.AccessTypeOffline : requests a refresh token along with the access token.
+    url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+    // 2. oauth2.AccessTypeOnline : No refresh token provided, access token only for current sessions
+    url := config.AuthCodeURL("state-token", oauth2.AccessTypeOnline)
+
+    // Additional Prompt
+    // prompt:concent : Forces user consent screen every time, Used when switching accounts.
+  	url := config.AuthCodeURL(
+      "state-token", 
+      oauth2.AccessTypeOffline, 
+      oauth2.SetAuthURLParam("prompt", "consent")
+    )
+    ```
+
+- URL generated is shown below
 
   ```bash
-  https://github.com/login/oauth/authorize?access_type=offline
+  https://github.com/login/oauth/authorize?
+    access_type=offline
     client_id=Ov23liJBVEBB87xNNsmm
     prompt=consent
     redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fauth%2Fgithub%2Fcallback
@@ -421,28 +433,74 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
 	c.Redirect(http.StatusTemporaryRedirect, url)
   ```
 
-## `Third-Party Authorization Server` calls client callback with `authorization code`
-- It has auth code
+## `Third-Party Authorization Server` calls `client callback url` with `authorization code` in query params
+- Third-Party Request
+  - url
+  
+    ```
+    GET localhost:8080/auth/github/callback?
+          code=8bbb66d708ef1c9ad379&
+          state=state-token
+    ```
+
+  -  <details>
+      <summary style="font-size:2vw"> Headers </summary>
+    
+       ```yaml
+       Headers:
+         Sec-Fetch-User: [?1]
+         Sec-Ch-Ua: ["Chromium";v="134", "Not:A-Brand";v="24", "Brave";v="134"]
+         User-Agent: [Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36]
+         Sec-Fetch-Dest: [document]
+         Accept-Encoding: [gzip, deflate, br, zstd]
+         Sec-Ch-Ua-Platform: ["Windows"]
+         Accept: [text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8]
+         Sec-Fetch-Mode: [navigate]
+         Connection: [keep-alive]
+         Sec-Ch-Ua-Mobile: [?0]
+         Upgrade-Insecure-Requests: [1]
+         Sec-Gpc: [1]
+         Accept-Language: [en-US,en;q=0.6]
+         Sec-Fetch-Site: [cross-site]
+       ```
+
+     </details>
+
+
+- Extract `Authorization Code` 
 
   ```go
+  // Authorization code
 	code := c.Query("code")
   ```
-- Then using it access token and other details are extracted by making post request to resource server
-  - For getting token in go
+
+- Authorization code is exchanged for Access Token and (Optional) Refresh Token
 
   ```go
 	token, err := config.Exchange(context.Background(), code)
+  // Here default context is provided
+  // But if request other types of contexts can be provided like
+  /*
+  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+  defer cancel() // Ensure cancel is always called to free resources
+  token, err := config.Exchange(ctx, code)
+  */
   ```
 
+  - `config.Exchange` internally calls for POST method to `third party authorization server` mentioned in `config.Endpoint` 
   - Internal POST request looks like
 
   ```bash
-  POST /login/oauth/access_token HTTP/1.1
-  Host: github.com
+  POST <TP-auth-server>/token HTTP/1.1
+  Host: my-app.com
   Content-Type: application/x-www-form-urlencoded
-    client_id=your-client-id&
-    client_secret=your-client-secret&
-    code=code
+
+  grant_type=authorization_code&
+  client_id=YOUR_CLIENT_ID&
+  client_secret=YOUR_CLIENT_SECRET&
+  code=AUTHORIZATION_CODE&
+  redirect_uri=http://localhost:8080/auth/google/callback&
+  code_verifier=YOUR_CODE_VERIFIER
   ```
 
 - And then response like following is recieved internally and converted to `oauth2.Token`
@@ -452,93 +510,246 @@ func ValidateJWT(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
     "access_token": "ya29.a0AfH6S...",
     "expires_in": 3600,
     "refresh_token": "1//0g5sdR...",
-    "scope": "email profile",
-    "token_type": "Bearer"
+    "scope": "email profile", // detials requested
+    "token_type": "Bearer" // How access token will be sent to resource server
   }
   ```
 
 - The converted `oauth2.Token` looks like
 
-  ```go
-  // syntax
-  type Token struct {
-  	AccessToken string `json:"access_token"`
-  	TokenType string `json:"token_type,omitempty"`
-  	RefreshToken string `json:"refresh_token,omitempty"`
-  	Expiry time.Time `json:"expiry,omitempty"`
-  	ExpiresIn int64 `json:"expires_in,omitempty"`
-  }
-  // Actual token
-  Token :  &{
-    access_token_string // Access token 
-    bearer  // Token type
-    0001-01-01 00:00:00 +0000 UTC // Expiry      
-    // idk what and why it this
-    map[ 
-      access_token:[
-        access_token_string
-      ] 
-      scope:[
-        user:email
-      ] 
-      token_type:[
-        bearer
-      ]
-    ] 
+  - Syntax
+
+    ```go
+    // syntax
+    type Token struct {
+    	AccessToken string `json:"access_token"`
+    	TokenType string `json:"token_type,omitempty"`
+    	RefreshToken string `json:"refresh_token,omitempty"`
+    	Expiry time.Time `json:"expiry,omitempty"`
+    	ExpiresIn int64 `json:"expires_in,omitempty"`
     }
-  ```
+    ```
 
-## Client Request for resources from Resource server
-- To do the same `http.Client` is created and details are attached using
+  - Actual Token
+    - When using `oauth2.AccessTypeOffline` in `config.AuthCodeUrl` client(myApp) will recieve refresh token only on first concent
+    - When using `oauth2.AccessTypeOnline` in `config.AuthCodeUrl` client(myApp) wont recieve refresh token 
 
-  ```go
-	client := config.Client(context.Background(), token)
-  ```
+    ```yaml
+    AccessToken: <access-token>
+    TokenType: Bearer
+    RefreshToken: <only-returned-on-first-concent>
+    Expiry: 2025-04-02 20:11:42.58320913 +0530 IST m=+3617.063303111
+    Extra:
+      id_token: <id-token>
+    ```
 
-- List of details attached are 
-
-  ```go
-  &http.Client{
-      Transport: &oauth2.Transport{
-          Base: http.DefaultTransport,   // Uses default transport for networking.
-          Source: oauth2.StaticTokenSource(token), // Fetches token when needed.
-      },
-  }
-  ```
-
-- Then request is send
-
-  ```go
-	response, err := client.Get(userInfoURL)
-  ```
-
-  - Now the request would look like 
-  
-  ```yaml
-  GET /oauth2/v2/userinfo?fields=email,name HTTP/1.1
-  Host: www.googleapis.com
-  Authorization: Bearer ya29.a0AfH6SM...
-  User-Agent: Go-http-client/1.1
-  Accept-Encoding: gzip
-  ```
-
-- And then data is extraced from the response
+## `Client(myApp)` Request for resources from `Resource server`
+- To request resource `http.Client` is created and details are attached
 
   ```go
 	client := config.Client(context.Background(), token)
-	response, err := client.Get(userInfoURL)
-	if err != nil {
-		c.String(http.StatusBadRequest, "Failed to fetch user info: %v", err)
-		return
-	}
-	defer response.Body.Close()
+  ```
+
+- Then resoures are requested using client
+
+  ```go
+	client := config.Client(context.Background(), token)
+	resp, err := client.Get(userInfoURL)
+	if err != nil {return}
+  ```
+
+- Resources are extracted from body
+
+  ```go
+  // Close body once used
+	defer resp.Body.Close()
 
 	var userInfo map[string]interface{}
-	err = json.NewDecoder(response.Body).Decode(&userInfo)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Failed to decode user info")
-		return
-	}
-
-	c.JSON(http.StatusOK, userInfo)
+	err = json.NewDecoder(resp.Body).Decode(&userInfo)
+	if err != nil {return}
   ```
+
+> [!NOTE]
+> <details>
+>    <summary style="font-size:2vw"> Request Response Details </summary> 
+> 
+>    ```yaml
+>    --- Request Details (Logging RoundTripper) ---
+>    URL: https://api.github.com/user
+>    Method: GET
+>    Headers:
+>    --- Response Details (Logging RoundTripper) ---
+>    Status: 200 OK
+>    Response Headers:
+>      X-Ratelimit-Remaining: [4996]
+>      X-Content-Type-Options: [nosniff]
+>      X-Github-Request-Id: [F5C2:70FEF:A89865:D0A7FC:67ED4214]
+>      Etag: [W/"0f72aea8fa2339b480f5f9b60f11f8555d4612368b760e58d3d37ff3f44ba550"]
+>      X-Ratelimit-Reset: [1743603332]
+>      X-Ratelimit-Resource: [core]
+>      Access-Control-Expose-Headers: [ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset]
+>      Strict-Transport-Security: [max-age=31536000; includeSubdomains; preload]
+>      Content-Type: [application/json; charset=utf-8]
+>      Cache-Control: [private, max-age=60, s-maxage=60]
+>      Last-Modified: [Sat, 15 Mar 2025 12:38:33 GMT]
+>      X-Accepted-Oauth-Scopes: []
+>      X-Oauth-Client-Id: [Ov23liJBVEBB87xNNsmm]
+>      X-Github-Api-Version-Selected: [2022-11-28]
+>      X-Ratelimit-Limit: [5000]
+>      X-Ratelimit-Used: [4]
+>      Date: [Wed, 02 Apr 2025 13:56:36 GMT]
+>      X-Github-Media-Type: [github.v3; format=json]
+>      Access-Control-Allow-Origin: [*]
+>      X-Frame-Options: [deny]
+>      X-Xss-Protection: [0]
+>      Referrer-Policy: [origin-when-cross-origin, strict-origin-when-cross-origin]
+>      Content-Security-Policy: [default-src 'none']
+>      Server: [github.com]
+>      Vary: [Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With]
+>      X-Oauth-Scopes: [user:email]
+>      Response Body: {"login":"ohmvaghela","id":58502850,"node_id":"MDQ6VXNlcjU4NTAyODUw","avatar_url":"https://avatars.githubusercontent.com/u/58502850?v=4","gravatar_id":"","url":"https://api.github.com/users/ohmvaghela","html_url":"https://github.com/ohmvaghela","followers_url":"https://api.github.com/users/ohmvaghela/followers","following_url":"https://api.github.com/users/ohmvaghela/following{/other_user}","gists_url":"https://api.github.com/users/ohmvaghela/gists{/gist_id}","starred_url":"https://api.github.com/users/ohmvaghela/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/ohmvaghela/subscriptions","organizations_url":"https://api.github.com/users/ohmvaghela/orgs","repos_url":"https://api.github.com/users/ohmvaghela/repos","events_url":"https://api.github.com/users/ohmvaghela/events{/privacy}","received_events_url":"https://api.github.com/users/ohmvaghela/received_events","type":"User","user_view_type":"public","site_admin":false,"name":"Ohm Vaghela","company":null,"blog":"","location":null,"email":null,"hireable":null,"bio":null,"twitter_username":null,"notification_email":null,"public_repos":6,"public_gists":0,"followers":7,"following":11,"created_at":"2019-12-04T06:34:28Z","updated_at":"2025-03-15T12:38:33Z"}
+>    --- End RoundTrip ---
+>    ```
+> </details>
+
+## Full working code
+
+<details>
+  <summary style="font-size:2vw"> Full Working code </summary> 
+
+  ```go
+  package main
+
+  import (
+  	"context"
+  	"encoding/json"
+  	"fmt"
+  	"html/template"
+  	"log"
+  	"net/http"
+
+  	// "myUtils"
+
+  	"github.com/gin-gonic/gin"
+  	"golang.org/x/oauth2"
+  	"golang.org/x/oauth2/github"
+  	"golang.org/x/oauth2/google"
+  )
+
+  var (
+  	GOOGLE_CLIENT_ID = "<string-preset-values>"
+  	GOOGLE_CLIENT_SECRET = "<string-preset-values>"
+  	GITHUB_CLIENT_ID = "<string-preset-values>"
+  	GITHUB_CLIENT_SECRET = "<string-preset-values>"
+  )
+
+  type App struct {
+  	googleConfig *oauth2.Config
+  	githubConfig *oauth2.Config
+  }
+
+  func (a *App) loginHandler(c *gin.Context) {
+  	t, err := template.ParseFiles("index.html")
+  	if err != nil {
+  		log.Println(err)
+  		c.String(http.StatusInternalServerError, "Internal Server Error")
+  		return
+  	}
+  	t.Execute(c.Writer, nil)
+  }
+
+  func (a *App) oAuthHandler(c *gin.Context) {
+  	provider := c.Param("provider")
+  	var config *oauth2.Config
+
+  	switch provider {
+  	case "google":
+  		config = a.googleConfig
+  	case "github":
+  		config = a.githubConfig
+  	default:
+  		c.String(http.StatusBadRequest, "Unsupported provider")
+  		return
+  	}
+
+  	// url := config.AuthCodeURL("state-token", oauth2.AccessTypeOnline)
+  	url := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline )
+  	fmt.Println("url : ",url)
+  	c.Redirect(http.StatusTemporaryRedirect, url)
+  }
+
+  func (a *App) oAuthCallbackHandler(c *gin.Context) {
+  	provider := c.Param("provider")
+  	var config *oauth2.Config
+  	var userInfoURL string
+
+  	// myUtils.PrintRequest(c.Request)	
+
+  	switch provider {
+  	case "google":
+  		config = a.googleConfig
+  		userInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
+  	case "github":
+  		config = a.githubConfig
+  		userInfoURL = "https://api.github.com/user"
+  	default:
+  		c.String(http.StatusBadRequest, "Unsupported provider")
+  		return
+  	}
+
+  	code := c.Query("code")
+  	
+  	token, err := config.Exchange(context.Background(), code)
+  	if err != nil {
+  		c.String(http.StatusBadRequest, "Failed to exchange token: %v", err)
+  		return
+  	}
+
+  	client := config.Client(context.Background(), token)
+  	resp, err := client.Get(userInfoURL)
+  	if err != nil {
+  		c.String(http.StatusBadRequest, "Failed to fetch user info: %v", err)
+  		return
+  	}
+  	defer resp.Body.Close()
+
+  	var userInfo map[string]interface{}
+  	err = json.NewDecoder(resp.Body).Decode(&userInfo)
+  	if err != nil {
+  		c.String(http.StatusInternalServerError, "Failed to decode user info")
+  		return
+  	}
+
+  	// c.JSON(http.StatusOK, userInfo)
+  	c.Redirect(http.StatusFound, "/auth/login") 
+  }
+
+  func main() {
+  	app := App{
+  		googleConfig: &oauth2.Config{
+  			ClientID:     GOOGLE_CLIENT_ID,
+  			ClientSecret: GOOGLE_CLIENT_SECRET,
+  			RedirectURL:  "http://localhost:8080/auth/google/callback",
+  			Scopes:       []string{"email", "profile"},
+  			Endpoint:     google.Endpoint,
+  		},
+  		githubConfig: &oauth2.Config{
+  			ClientID:     GITHUB_CLIENT_ID,
+  			ClientSecret: GITHUB_CLIENT_SECRET,
+  			// RedirectURL:  "http://localhost:8080/auth/login",
+  			RedirectURL:  "http://localhost:8080/auth/github/callback",
+  			Scopes:       []string{"user:email"},
+  			Endpoint:     github.Endpoint,
+  		},
+  	}
+
+  	router := gin.Default()
+  	router.GET("/auth/login", app.loginHandler)
+  	router.GET("/auth/:provider/oauth", app.oAuthHandler)
+  	router.GET("/auth/:provider/callback", app.oAuthCallbackHandler)
+
+  	router.Run(":8080")
+  }
+  ```
+
+</details>
