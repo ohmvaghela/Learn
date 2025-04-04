@@ -1,11 +1,12 @@
 # GoLang
 
 > [!NOTE]
-> - [<u>**Basic Syntax**</u>](./basic_syntax.md)
-> - [<u>**Http Routing**</u>](./http_routing.md)
-> - [<u>**Gin**</u>](./gin.md)
-> - [<u>**Database connectivity**</u>](./database_connectivity.md)
-> - [<u>**Authorization/ Authentication**</u>](./authorization_authentication.md)
+> - [<u>**Basic Syntax**</u>](./sub_files/basic_syntax.md)
+> - [<u>**Http Routing**</u>](./sub_files/http_routing.md)
+> - [<u>**Gin**</u>](./sub_files/gin.md)
+> - [<u>**Database connectivity**</u>](./sub_files/database_connectivity.md)
+> - [<u>**Authorization/ Authentication**</u>](./sub_files/authorization_authentication.md)
+> - [<u>**Kafka**</u>](./sub_files/kafka.md)
 
 - [GoLang](#golang)
   - [Basic Commands](#basic-commands)

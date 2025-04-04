@@ -582,8 +582,11 @@ select {
 - Say a function that only recives data in reciver channel and send data in sender channel
 
 ```go
+// receiver <-chan int | only recieve | no send
 // We can't send data to receiver in the function
 // We can only accept (receive) data from receiver in the function
+
+// sender chan<- int | only send | no recieve
 // We can't receive data from sender in the function
 // We can only send data to sender in the function
 func worker(receiver <-chan int, sender chan<- int) {}
