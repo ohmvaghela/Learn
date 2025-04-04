@@ -1,6 +1,12 @@
-# Kafka
-- Distributed event streaming platform
-- Primarily used for real time data pipeline and streaming applications
+<h1> Kafka </h1>
+
+- [Core Componenets](#core-componenets)
+  - [Other details about kafka](#other-details-about-kafka)
+- [Data flow in kafka](#data-flow-in-kafka)
+- [Starting kafka](#starting-kafka)
+- [Basic kafka commands](#basic-kafka-commands)
+- [Creating multiple brokers on same node](#creating-multiple-brokers-on-same-node)
+- [Kafka Consumer Group Rebalancing](#kafka-consumer-group-rebalancing)
 
 ![alt text](image.png)
 
@@ -175,4 +181,10 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic gft-topi
   bin/kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093 --topic multi-broker-topic --from-beginning
   ```
 
-  
+## Kafka Consumer Group Rebalancing
+
+- **Trigger:** Rebalancing happens when consumers join or leave a group, or when topic partitions increase, causing a change in partition assignments to consumers.
+
+- **Workload Shift:** If a topic has multiple partitions and a new consumer joins the group, Kafka rebalances to distribute partitions more evenly among the consumers.
+
+- **Partition Handoff:** When a partition is reassigned, the new consumer starts processing from the last **committed offset** for that partition. Processed and committed messages are skipped. Uncommitted messages might be re-processed ("at-least-once" delivery).  
