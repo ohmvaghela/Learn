@@ -5,6 +5,7 @@
   - [Basic HTTP Methods](#basic-http-methods)
   - [Idempotency](#idempotency)
   - [Different Request Body](#different-request-body)
+  - [Headers](#headers)
   - [Ways to send Token in header](#ways-to-send-token-in-header)
   - [Common Status code](#common-status-code)
   - [API versioning](#api-versioning)
@@ -123,6 +124,26 @@
 
 - application/octet-stream
   - Used for data streaming, blob
+
+## Headers
+- Use of different headers
+  - Connection
+    - `connection: keep-alive`: keeps connection alive 
+      - `Keep-Alive: 100` : time in ms
+    - `connection: close` : close onnection after response is sent
+  - Content-MD5
+    - Used to check integrity of message
+    - a base64 encoded string is generated out of message which is used to compare integrity of message
+  - ETag (Entity Tag)
+    - Sort of version of resource so that same resource is not sent multipe times
+  - Server: Info about the server used like nginx, tomcat etc...
+  - Api-Version
+  - Request-id : Unique ID for each request 
+  - Response-Time : time taken for respose in ms
+  - Access-Control-Expose-Headers
+    - Tells the list of headers js can access
+    - There is a list of default headers which are accessable
+    - For any other it needs to be mentioned here
 
 ## Ways to send Token in header
 - There 3 common ways to send in header
