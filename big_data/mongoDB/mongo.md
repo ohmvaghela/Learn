@@ -9,7 +9,7 @@
 - [Partitioning v/s Sharding](./mongo.md#partitioning-vs-sharding)
 - [Sharded Cluster](./mongo.md#sharded-cluster)
 - [Search Indices](./mongo.md#search-indices)
-
+- [Search Index configuration](./mongo.md#search-index-configuration)
 ## BASE 
 - BASE
   - Baiscally Available
@@ -622,4 +622,76 @@ db.articles.aggregate([
 
 </details>
 
+## Search Index configuration
+- Configuration options
+	- Dynamic mapping : bool
+ 		- Auto-index new fields with default index type
+   		- Discouraged
+	- Stored Source Fields: array
+ 		- Name of the fields to store in raw form
+   		- Say I have Stored field `description` then with _id, full `description` field will be stored so no fetching is required
+	- type of index
+ 		- `autocomplete`, `string`, `text`, `date`, `number`
+   	- minGram, maxGram
+   		- Affects tokenization: how to tokenize
+   	 	- Say minGram is 3 and maxGram is 10
+   	  	- So it will tokenize all substrings from length 3-10 and not more then 10
+- Eg:
+
+```json
+{
+  "mappings": {
+    "dynamic": true,   // automatically index new fields if not explicitly defined
+    "fields": {
+      "name": {
+        "type": "autocomplete",
+        "minGrams": 2,
+        "maxGrams": 5,
+        "foldDiacritics": true,
+        "analyzer": "lucene.standard"
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "lucene.standard",
+        "searchAnalyzer": "lucene.standard",
+        "foldDiacritics": false
+      },
+      "tags": {
+        "type": "string"   // exact match for filters
+      },
+      "price": {
+        "type": "number"   // numeric range queries
+      },
+      "available": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "date"
+      },
+      "location": {
+        "type": "geo",
+        "coordinates": { "lat": "latField", "lon": "lonField" }
+      },
+      "metadata": {
+        "type": "object",
+        "dynamic": true, // nested object auto-indexed
+        "fields": {
+          "color": { "type": "string" },
+          "size": { "type": "string" }
+        }
+      }
+    }
+  },
+  "storedSourceFields": ["name", "description", "price"],  // store original values for retrieval
+  "synonyms": [
+    {
+      "name": "car_synonyms",
+      "synonyms": [
+        { "input": ["car", "automobile"], "synonymFor": "vehicle" },
+        { "input": ["bike", "bicycle"], "synonymFor": "cycle" }
+      ]
+    }
+  ]
+}
+```
 
