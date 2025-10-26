@@ -632,7 +632,7 @@ db.articles.aggregate([
    		- Say I have Stored field `description` then with _id, full `description` field will be stored so no fetching is required
 	- type of index
  		- `autocomplete`, `string`, `text`, `date`, `number`
-   	- minGram, maxGram
+   	- minGram, maxGram (only autocompelete supports it)
    		- Affects tokenization: how to tokenize
    	 	- Say minGram is 3 and maxGram is 10
    	  	- So it will tokenize all substrings from length 3-10 and not more then 10
