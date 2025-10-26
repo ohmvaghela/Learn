@@ -156,6 +156,16 @@
   - `mongod` and `mongot`
 - `mongod` is main deamon that runs mongo
 - `mongot` is sidecar, only called for `Atlas Search` or `Vector Search` queries i.e. `$search`
+- each replica of `mongod` has a `mongot` for `Co-Located Architecture`
+- And `mongot` updates using the `oplogs`(operation logs)
+- If `mongot` fails it wont affect `mongod` as `mongot` is not critial process
+  - so all search queries will throw error
+- Updates in `mongot`
+  - A working set is stored in-memory
+  - Full data is stored in storage
+    - Full Lucene index is persisted on the same storage as mongod data files (so disk is shared). Segments are written in compressed form.
+- Both mongod and mongot have different RAM but same storage, so queries on mongot wont affect mongod
+
 
 ### Apache Lucence
 - Search engine toolkit written in java
@@ -458,7 +468,7 @@ db.articles.aggregate([
     ```
 
   #### Faceted Search 
-  - Count + grouping like group by in search indices
+  - `Count` + `Grouping` like group by in search indices
   - Eg: Number of docs that match `name` field `concert` and group by `city` and `start_date`
 
     ```js
@@ -479,8 +489,112 @@ db.articles.aggregate([
       }
     ])
     ```
+  - Highlight preview
+    - Preview snippets from matching documents showing exactly where the query terms appear.
 
-  - 
+    ```js
+    db.events.aggregate([
+      {
+        $searchMeta: {
+          index: "eventSearchIndex",
+          facet: {
+            operator: { text: { query: "concert", path: "description" } },
+            facets: {
+              cityFacet: { type: "string", path: "city" },
+              dateFacet: { type: "date", path: "start_date" }
+            }
+          },
+          highlight: { path: "description" }
+        }
+      }
+    ])
+    ```
+    ```json
+    {
+      "highlight": [
+        { "description": ["...the <em>concert</em> was amazing..."] },
+        { "description": ["...live <em>concert</em> in Mumbai..."] }
+      ]
+    }
+    ```
+
+  > #### Explain plans
+  > To see why and how results are generated, use `explain` flag to `true`
+  > It provides:
+  > - How documents were scored.
+  > - How facets/buckets were computed.
+  > - How queries are optimized internally.
+  > Eg:
+  > ```js
+  > db.events.aggregate([
+  >   {
+  >     $searchMeta: {
+  >       index: "eventSearchIndex",
+  >       facet: {
+  >         operator: { text: { query: "concert", path: "description" } },
+  >         facets: {
+  >           cityFacet: { type: "string", path: "city" },
+  >           dateFacet: { type: "date", path: "start_date" }
+  >         }
+  >       },
+  >       explain: true
+  >     }
+  >   }
+  > ])
+  > ```
+
+<details>
+<summary>Facet Results & Explain Details</summary>
+
+	> ```json
+	> {
+	>   "facet": {
+	>     "cityFacet": {
+	>       "buckets": [
+	>         { "_id": "Mumbai", "count": 20 },
+	>         { "_id": "Delhi", "count": 15 },
+	>         { "_id": "Bangalore", "count": 10 }
+	>       ]
+	>     },
+	>     "dateFacet": {
+	>       "buckets": [
+	>         { "_id": "2025-01-01T00:00:00Z", "count": 5 },
+	>         { "_id": "2025-01-05T00:00:00Z", "count": 8 },
+	>         { "_id": "2025-01-10T00:00:00Z", "count": 12 }
+	>       ]
+	>     }
+	>   },
+	>   "explain": {
+	>     "index": "eventSearchIndex",
+	>     "parsedQuery": {
+	>       "type": "text",
+	>       "path": ["description"],
+	>       "query": "concert"
+	>     },
+	>     "scoreDetails": {
+	>       "totalDocsMatched": 45,
+	>       "BM25Components": [
+	>         {
+	>           "field": "description",
+	>           "term": "concert",
+	>           "idf": 1.5,
+	>           "tf": 1,
+	>           "scoreContribution": 1.5
+	>         }
+	>       ]
+	>     },
+	>     "facetsEvaluated": {
+	>       "cityFacet": "using string buckets on field 'city'",
+	>       "dateFacet": "using date buckets on field 'start_date'"
+	>     },
+	>     "indexTraversal": "Lucene inverted index traversal info here"
+	>   }
+	> }
+	> ```
+
+</details>
+
+
 -----
 # temp
 - Each mongod (primary & secondaries) has its own local mongot process.
