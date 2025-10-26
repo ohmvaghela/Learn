@@ -149,6 +149,8 @@
 | **Use Cases** | Data protection, read-heavy workloads           | Large datasets, high throughput, horizontal scaling |
 | **Data Distribution** | Duplicated data across all members | Partitioned data across multiple shards |
 
+## Atlas Search Nuances
+- At the time of index creation they are CPU / memory / I/O intensive, but run on seperate 
 
 
 ## Search Indices
@@ -165,6 +167,7 @@
   - Full data is stored in storage
     - Full Lucene index is persisted on the same storage as mongod data files (so disk is shared). Segments are written in compressed form.
 - Both mongod and mongot have different RAM but same storage, so queries on mongot wont affect mongod
+	- Though both have same VM but, dymanic schedular have prevents `mongot` from throttling `mongod`
 
 
 ### Apache Lucence
@@ -175,6 +178,31 @@
     - Eg. "Ohm is software engineer" to "Ohm", "is", "software", "engineer"
   - Each tokenized work is mapped to docuemnt_ids
   - When a search query is called `mongot` ties to map most relevent doc using algos like `TD-IDS`, `BM25`...
+
+### Index building
+- normal index at `mongod` :
+	- Foreground : stop read-write on a collection's cluster and create index
+ 		- Has downtime
+	- Background : concurrent, slow, but without any downtime
+- Search index on `mongot`:
+	- Foreground : `mongot` will use extensive CPU, can lead to downtime <u> `rarely used` </u>
+	- Background : Incremental, rolling build. less CPU throttling, wont result in downtime <u> `mostly used in production` </u>
+ 		- Only metadata lock at start/end. Uses RAM throttling.
+   - In both the case can hold lock on metadata: so new field insertion should be avoided
+- `Falls off the oplog` while builing
+	- mongot scans the entire document and for the recent changes it depends on `oplogs`
+ 	- So once the collection is scanned the `oplogs` are scanned for new entires
+  	- Now `oplogs` have a limitation
+  		- oplogs have limit on size of logs it can store, and write rate Eg:
+  	 	- Say Oplog size: 20 GB and Write rate: 5 GB/hour
+  	  	- So max oplog covers roughly 4 hours of history in worst case
+  	- So assmune `mongot` performed a full db scan and then it finds oplogs have some missing records then it throws error and starts entire process again
+- Another pain point: Horizontal scalling
+	- `Adding a shard to an already sharded collection`
+ 	- Mongodb performs initial sync on db for craetion of replica set
+  	- New shard creates it own `mongot` luance from scratch
+  	- So Until this `initial sync`(mongod replica) + `index build`(mongot) is complete,
+  		- `$search` queries across the collection may fail — because the new shard doesn’t yet have a valid Search index.
 
 
 ### Atlas Search v/s Atlas Vector Search
@@ -595,6 +623,3 @@ db.articles.aggregate([
 </details>
 
 
------
-# temp
-- Each mongod (primary & secondaries) has its own local mongot process.
