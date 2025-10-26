@@ -198,12 +198,15 @@
 > ```
 
 ### Atlas Search Features
-- Search Natural Language Text
-  - Searches on lucence's tokanized words
-  - Also performs Stemming: reduces words to their root form (“running” → “run”)
-  - Stop words removal: ignores common words like “the”, “in”, “of”
-  - When returning the result it also returns the score which is `Relevance-based ranking`
-- Example of most basic query
+
+#### 1. Search Natural Language Text
+
+* Searches on Lucene's tokenized words.
+* Performs **Stemming**: reduces words to their root form (`“running” → “run”`).
+* **Stop words removal**: ignores common words like “the”, “in”, “of”.
+* Returns a **relevance-based ranking** score along with the results.
+
+**Example of a basic query:**
 
 ```js
 db.events.aggregate([
@@ -216,6 +219,9 @@ db.events.aggregate([
   { $project: { title: 1, score: { $meta: "searchScore" } } }
 ])
 ```
+
+**Sample results:**
+
 ```json
 [
   { "title": "Music Festival 2025", "score": 9.1 },
@@ -223,45 +229,55 @@ db.events.aggregate([
   { "title": "Summer Concert", "score": 3.5 }
 ]
 ```
-- Other features include
-  1. Fuzzy
-     - Allows misspells to a certain limit
-     - Example of fuzzy text search
 
-     ```js
-      db.events.aggregate([
-        {
-          $search: {
-            index: "eventSearchIndex",
-            text: { // Text search
-              query: "festval",      // typo
-              path: "title",
-              fuzzy: { maxEdits: 1 } // typo tolerance
-            }
-          }
-        }
-      ])
-      ```
-  2. Autocomplete
-      - Returns the rest of the words completed
+---
 
-     ```js
-     db.events.aggregate([
-        {
-          $search: {
-            index: "eventSearchIndex",
-            autocomplete: { // Autocompelete
-              query: "roc",              // partial input
-              path: "title",
-              fuzzy: { maxEdits: 1 } // typo tolerace
-            }
-          }
-        }
-      ])
-     ```
+### 2. Other Features
 
-  3. Highlighting
-     - Returns highlighted words that matches the query like
+#### a. Fuzzy
+
+* Allows misspells up to a certain limit.
+
+**Example:**
+
+```js
+db.events.aggregate([
+  {
+    $search: {
+      index: "eventSearchIndex",
+      text: {
+        query: "festval", // typo
+        path: "title",
+        fuzzy: { maxEdits: 1 } // typo tolerance
+      }
+    }
+  }
+])
+```
+
+#### b. Autocomplete
+
+* Returns suggested completions for partial words.
+
+```js
+db.events.aggregate([
+  {
+    $search: {
+      index: "eventSearchIndex",
+      autocomplete: {
+        query: "roc",          // partial input
+        path: "title",
+        fuzzy: { maxEdits: 1 } // typo tolerance
+      }
+    }
+  }
+])
+```
+
+#### c. Highlighting
+
+* Returns the exact parts of the text that match the query.
+
 ```js
 db.events.aggregate([
   {
@@ -276,11 +292,14 @@ db.events.aggregate([
   }
 ])
 ```
+
+**Sample result:**
+
 ```js
 {
   "title": "Rock Music Festival 2025",
   "description": "Join us for a music festival in Mumbai this summer.",
-  "highlights": [ // What exactly matched in the doc
+  "highlights": [
     {
       "path": "description",
       "texts": ["music festival"]
@@ -289,55 +308,47 @@ db.events.aggregate([
 }
 ```
 
+#### d. Synonyms
 
-  4. Synonyms
-     - They need to be defined at the time of index creation
-     - example of defining synonyms
+* Must be defined at index creation.
+* Example mapping with synonyms:
 
-     ```js
-      {
-        "mappings": {
-          "dynamic": false,
-          "fields": {
-            "description": {
-              "type": "string",
-              "analyzer": "lucene.standard",
-              "synonyms": [
-                {
-                  "name": "carSynonyms",
-                  "inputs": ["car", "automobile", "vehicle"]
-                },
-                {
-                  "name": "bikeSynonyms",
-                  "inputs": ["bike", "bicycle", "cycle"]
-                }
-              ]
-            }
-          }
-        }
+```js
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "description": {
+        "type": "string",
+        "analyzer": "lucene.standard",
+        "synonyms": [
+          { "name": "carSynonyms", "inputs": ["car", "automobile", "vehicle"] },
+          { "name": "bikeSynonyms", "inputs": ["bike", "bicycle", "cycle"] }
+        ]
       }
-      ```
+    }
+  }
+}
+```
 
-      - Now when using the synonyms the match similar works that are present
-        - Like in query if we define carSymptoms then while searching it also searchs for works in input provided at time of index creation
-        - Eg:
+**Query using synonyms:**
 
-      ```js
-        db.events.aggregate([
-          {
-            $search: {
-              index: "eventSearchIndex",
-              text: {
-                query: "car",
-                path: "description",
-                synonyms: "carSynonyms"
-              }
-            }
-          }
-        ])
-      ```
+```js
+db.events.aggregate([
+  {
+    $search: {
+      index: "eventSearchIndex",
+      text: {
+        query: "car",
+        path: "description",
+        synonyms: "carSynonyms"
+      }
+    }
+  }
+])
+```
 
-- A combination of all
+#### e. Combining Features
 
 ```js
 db.events.aggregate([
@@ -355,3 +366,121 @@ db.events.aggregate([
   }
 ])
 ```
+
+#### f. Compound
+
+* Supports combining multiple criteria:
+
+  * `must`: required
+  * `should`: optional, boosts score
+  * `mustNot`: exclude
+  * `filter`: required, doesn’t affect score (e.g., range filters)
+
+```js
+db.products.aggregate([
+  {
+    $search: {
+      compound: {
+        must: [{ text: { query: "laptop", path: "title" } }],
+        should: [{ text: { query: "gaming", path: "description", score: { boost: { value: 2 } } } }],
+        mustNot: [{ text: { query: "refurbished", path: "condition" } }],
+        filter: [{ range: { path: "price", gte: 500, lte: 2000 } }]
+      }
+    }
+  }
+])
+```
+
+#### g. Range
+
+* Search text within numeric or date ranges.
+
+```js
+db.events.aggregate([
+  {
+    $search: {
+      range: {
+        path: "event_date",
+        gte: ISODate("2024-01-01"),
+        lte: ISODate("2025-12-31")
+      }
+    }
+  }
+])
+```
+
+#### h. Phrase
+
+* Matches exact word order.
+
+```js
+db.articles.aggregate([
+  {
+    $search: {
+      phrase: {
+        query: "climate change impact",
+        path: "content"
+      }
+    }
+  }
+])
+```
+
+
+### Search Meta (`$SearchMeta`)
+- Returns metadata about search rather then the docs it self like aggregation
+- We use them when we need 
+  - Counts
+  - Facets (groupings)
+  - Explain plans
+  - Highlight previews (without fetching all docs)
+- Eg:
+  #### Count
+  - number of doc that matches the name `Rock Concert`
+
+    ```js
+    db.events.aggregate([
+      {
+        $searchMeta: {
+          index: "eventSearchIndex",
+          text: {
+            query: "rock concert",
+            path: ["title", "description"]
+          }
+        }
+      }
+    ])
+    ```
+    ```
+    {
+      "count": { "lowerBound": 25 }
+    }
+    ```
+
+  #### Faceted Search 
+  - Count + grouping like group by in search indices
+  - Eg: Number of docs that match `name` field `concert` and group by `city` and `start_date`
+
+    ```js
+    db.events.aggregate([
+      {
+        $searchMeta: {
+          index: "eventSearchIndex",
+          facet: {
+            operator: {
+              text: { query: "concert", path: "description" }
+            },
+            facets: {
+              cityFacet: { type: "string", path: "city" },
+              dateFacet: { type: "date", path: "start_date" }
+            }
+          }
+        }
+      }
+    ])
+    ```
+
+  - 
+-----
+# temp
+- Each mongod (primary & secondaries) has its own local mongot process.
