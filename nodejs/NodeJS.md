@@ -36,6 +36,7 @@
   	- `heapUsed`: live memory used by node
   	- `external`: Buffers, C++ backed memory. Other memory by packages and dirvers like mongo-driver
 
+```mermaid
 flowchart TD
 
     OS["macOS / Linux OS"]
@@ -61,7 +62,7 @@ flowchart TD
     Native --> JITCache["JIT code cache"]
 
     RSS --> Swap["If RAM is full → OS uses SWAP (slow disk)"]
-
+```
 
 
 ## Basic Setup
