@@ -36,31 +36,31 @@
   	- `heapUsed`: live memory used by node
   	- `external`: Buffers, C++ backed memory. Other memory by packages and dirvers like mongo-driver
 
- ┌───────────────────────── macOS / Linux OS ──────────────────────────┐
- │                                                                     │
- │   ┌────────────────────── Process RSS (Resident Set Size) ───────┐ │
- │   │                                                              │ │
- │   │  ┌────────────── V8 Heap (heapTotal) ───────────────┐        │ │
- │   │  │                                                  │        │ │
- │   │  │   new_space           (young objects)            │        │ │
- │   │  │   old_space           (long-lived objects)       │        │ │
- │   │  │   large_object_space  (big arrays/docs)          │        │ │
- │   │  │   code_space           (JIT code)                │        │ │
- │   │  │   map_space            (object shapes)           │        │ │
- │   │  │   read_only_space      (metadata)                │        │ │
- │   │  └──────────────────────────────────────────────────┘        │ │
- │   │                                                              │ │
- │   │   + Native memory (outside V8)                               │ │
- │   │       - Node.js C++ internals                                │ │
- │   │       - Buffers (Mongo, fs, http)                            │ │
- │   │       - Shared libraries                                     │ │
- │   │       - Stacks                                               │ │
- │   │       - JIT code cache                                       │ │
- │   │                                                              │ │
- │   └──────────────────────────────────────────────────────────────┘ │
- │                                                                     │
- │   When RAM becomes full → OS uses SWAP (slow disk memory)           │
- └─────────────────────────────────────────────────────────────────────┘
+flowchart TD
+
+    OS["macOS / Linux OS"]
+
+    OS --> RSS["Process RSS (Resident Set Size)"]
+
+    RSS --> V8["V8 Heap (heapTotal)"]
+    RSS --> Native["Native Memory (outside V8)"]
+
+    %% V8 Heap Breakdown
+    V8 --> NewSpace["new_space<br>(young objects)"]
+    V8 --> OldSpace["old_space<br>(long-lived objects)"]
+    V8 --> LargeObj["large_object_space<br>(big arrays/docs)"]
+    V8 --> CodeSpace["code_space<br>(JIT code)"]
+    V8 --> MapSpace["map_space<br>(object shapes)"]
+    V8 --> ReadOnly["read_only_space<br>(metadata)"]
+
+    %% Native Memory Breakdown
+    Native --> Internals["Node.js C++ internals"]
+    Native --> Buffers["Buffers<br>(Mongo, fs, http, network)"]
+    Native --> Libs["Shared libraries"]
+    Native --> Stacks["Call stacks"]
+    Native --> JITCache["JIT code cache"]
+
+    RSS --> Swap["If RAM is full → OS uses SWAP (slow disk)"]
 
 
 
