@@ -1,5 +1,6 @@
 # NodeJS
 - [Basics](./NodeJS.md#basics)
+- [Indepth Node](./NodeJS.md#indepth)
 - [Basic Setup](./NodeJS.md#basic-setup)
 - [Package.json](./NodeJS.md#packagejson)
 - [Importing/Exporting Packages (Import vs Require)](./NodeJS.md#importingexporting-packages)
@@ -27,6 +28,41 @@
 - NodeJs is on server side
 - HTML,CSS,JS are on client side
 - NodeJs developer create API
+
+## Indepth
+- Types of spaces
+	- `RSS (Resident Set Size)`: actual size of memory allocated by OS
+ 	- `heapTotal`: max memory consumable by node
+  	- `heapUsed`: live memory used by node
+  	- `external`: Buffers, C++ backed memory. Other memory by packages and dirvers like mongo-driver
+
+ ┌───────────────────────── macOS / Linux OS ──────────────────────────┐
+ │                                                                     │
+ │   ┌────────────────────── Process RSS (Resident Set Size) ───────┐ │
+ │   │                                                              │ │
+ │   │  ┌────────────── V8 Heap (heapTotal) ───────────────┐        │ │
+ │   │  │                                                  │        │ │
+ │   │  │   new_space           (young objects)            │        │ │
+ │   │  │   old_space           (long-lived objects)       │        │ │
+ │   │  │   large_object_space  (big arrays/docs)          │        │ │
+ │   │  │   code_space           (JIT code)                │        │ │
+ │   │  │   map_space            (object shapes)           │        │ │
+ │   │  │   read_only_space      (metadata)                │        │ │
+ │   │  └──────────────────────────────────────────────────┘        │ │
+ │   │                                                              │ │
+ │   │   + Native memory (outside V8)                               │ │
+ │   │       - Node.js C++ internals                                │ │
+ │   │       - Buffers (Mongo, fs, http)                            │ │
+ │   │       - Shared libraries                                     │ │
+ │   │       - Stacks                                               │ │
+ │   │       - JIT code cache                                       │ │
+ │   │                                                              │ │
+ │   └──────────────────────────────────────────────────────────────┘ │
+ │                                                                     │
+ │   When RAM becomes full → OS uses SWAP (slow disk memory)           │
+ └─────────────────────────────────────────────────────────────────────┘
+
+
 
 ## Basic Setup
 - Initializing environemnt
